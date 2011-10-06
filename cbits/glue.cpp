@@ -15,6 +15,7 @@
 #include "crypto_hash_sha512.h"
 
 // Glue definitions exposed via FFI
+#include "devurandom.h"
 #include "glue.h"
 
 
@@ -23,15 +24,31 @@
  */
 
 // Returns the amount of bytes in the resulting hash
-int glue_crypto_hash(const unsigned char* m, unsigned long long mlen, unsigned char* out) {
+int 
+glue_crypto_hash(const unsigned char* m, unsigned long long mlen, unsigned char* out)
+{
   int r = crypto_hash_sha512(out,m,mlen);
   assert(r == 0);
   return crypto_hash_sha512_BYTES;
 }
 
 // Returns the amount of bytes in the resulting hash
-int glue_crypto_hash_sha256(const unsigned char* m, unsigned long long mlen, unsigned char* out) {
+int
+glue_crypto_hash_sha256(const unsigned char* m, unsigned long long mlen, unsigned char* out)
+{
   int r = crypto_hash_sha256(out,m,mlen);
   assert(r == 0);
   return crypto_hash_sha256_BYTES;
+}
+
+/*
+ * Random bytes
+ */
+
+// Returns the amount of bytes it generated
+int 
+glue_randombytes(unsigned char * out, unsigned long long len)
+{
+  randombytes(out, len);
+  return len;
 }

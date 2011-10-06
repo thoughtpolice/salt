@@ -44,6 +44,7 @@ cabal-version:       >=1.10
 extra-Source-Files:
   README.md
   cbits/devurandom.c
+  cbits/devurandom.h
   cbits/glue.cpp
   cbits/glue.h
   tests/Properties.hs
@@ -60,6 +61,7 @@ library
     Crypto.NaCl.Secret.Authentication
     Crypto.NaCl.Secret.Encrypt
     Crypto.NaCl.Hash
+    Crypto.NaCl.Random
   build-depends:
     base >= 4,
     bytestring >= 0.9
