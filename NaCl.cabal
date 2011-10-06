@@ -1,0 +1,75 @@
+Name:                NaCl
+Version:             0.1
+Synopsis:            Haskell binding to the NaCl cryptography library
+Description:
+  NaCl is a safe, high-speed, easy to use cryptography library. This
+  package intends to provide a high-level Haskell binding to NaCl,
+  allowing you to easily write code utilizing cryptographic primitives
+  for public-key and private-key encryption, authentication, and
+  signatures.
+  .
+  The NaCl project (<http://nacl.cace-project.eu/>) was initiated
+  by CACE (Computer Aided Cryptography Engineering,) and is currently
+  lead by Dan J. Bernstein and Tanja Lange. It's designed to be
+  considerably faster and easier to use (example: simple APIs, good
+  selection of default primitives) than alternatives like OpenSSL,
+  while providing more security. As an example, it systematically
+  avoids all conditional branches in order to make sure secrets cannot
+  leak out via timing attacks. Similarly, there are no data-dependent
+  array index accesses. It also does not allocate memory dynamically
+  at all (via @malloc@) so the primitives only require small amounts
+  of stack space. Cryptographic implementations are tuned on a
+  CPU-specific basis.
+  .
+  NaCl has an odd build structure. In order to install the bindings
+  properly, please follow the 'Installation' section located in the
+  @README.md@, which you can find online here: TODO FIXME
+  .
+  Point of note: NaCl is, like much DJB software, released in the
+  public domain (which isn't recognized by all jurisdictions.) These
+  bindings however, are BSD3 licensed, and do not redistribute the
+  source code.
+Homepage:            http://github.com/thoughtpolice/hs-NaCl
+Bug-reports:         http://github.com/thoughtpolice/hs-NaCl/issues
+License:             BSD3
+License-file:        LICENSE
+Author:              Austin Seipp
+Maintainer:          as@hacks.yi.org
+Category:            Cryptography
+Build-type:          Simple
+Cabal-version:       >=1.10
+
+Extra-Source-Files:
+  README.md
+
+Source-repository head
+  Type: git
+  Location: https://github.com/thoughtpolice/hs-NaCl.git
+
+Library
+  Exposed-modules:
+    Crypto.NaCl.Public.Encrypt
+    Crypto.NaCl.Public.ScalarMult
+    Crypto.NaCl.Public.Signature
+    Crypto.NaCl.Secret.Authentication
+    Crypto.NaCl.Secret.Encrypt
+    Crypto.NaCl.Hash    
+  Other-modules:
+  Build-depends:
+    base >= 4
+
+  Default-language: Haskell2010
+
+test-suite properties
+  Hs-source-dirs: tests
+  Main-is:        Properties.hs
+  Type:           exitcode-stdio-1.0
+
+  Build-depends:
+    base           >= 4,
+    QuickCheck     == 2.4.*,
+    test-framework == 0.4.*,
+    test-framework-quickcheck2 == 0.2.*,
+    NaCl
+
+  Default-language: Haskell2010
