@@ -1,3 +1,12 @@
+/* Haskell <-> NaCl FFI glue
+
+   Copyright (C) 2011 Austin Seipp. See LICENSE for details.
+
+   These bindings are currently written in C++ and exposed with a C
+   interface for simplicity when dealing with NaCl. In the future,
+   this may need to be rewritten in C for efficiency (i.e. to not
+   construct/deconstruct std::strings) if it's deemed necessary.
+ */
 #include <string>
 #include <cassert>
 

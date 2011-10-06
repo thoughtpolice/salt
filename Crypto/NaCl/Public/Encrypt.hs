@@ -1,5 +1,5 @@
 -- |
--- Module      : Crypto.NaCl
+-- Module      : Crypto.NaCl.Public.Encrypt
 -- Copyright   : (c) Austin Seipp 2011
 -- License     : BSD3
 -- 
@@ -7,5 +7,8 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
+-- Public-key encryption.
 -- 
-module Crypto.NaCl.Public.Encrypt where
+module Crypto.NaCl.Public.Encrypt 
+       (
+       ) where

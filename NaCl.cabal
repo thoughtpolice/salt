@@ -27,8 +27,10 @@ description:
   .
   Point of note: NaCl is, like much DJB software, released in the
   public domain (which isn't recognized by all jurisdictions.) These
-  bindings however, are BSD3 licensed, and do not redistribute the
-  source code.
+  bindings however, are BSD3 licensed - and as of current,
+  redistribute a small amount of the NaCl source (the @randombytes@
+  function based on @/dev/urandom@.)
+
 homepage:            http://github.com/thoughtpolice/hs-NaCl
 bug-reports:         http://github.com/thoughtpolice/hs-NaCl/issues
 license:             BSD3
@@ -41,6 +43,7 @@ cabal-version:       >=1.10
 
 extra-Source-Files:
   README.md
+  cbits/devurandom.c
   cbits/glue.cpp
   cbits/glue.h
   tests/Properties.hs
@@ -61,7 +64,9 @@ library
     base >= 4,
     bytestring >= 0.9
 
-  c-sources:        cbits/glue.cpp
+  c-sources:        
+    cbits/glue.cpp
+    cbits/devurandom.c
   include-dirs:     cbits
   extra-libraries:  nacl stdc++
 
