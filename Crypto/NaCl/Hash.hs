@@ -27,16 +27,12 @@ import Data.ByteString.Unsafe as SU
 -- | Strong cryptographic hash - currently an implementation
 -- of SHA-512.
 cryptoHash :: ByteString -> ByteString
-cryptoHash xs
-  | S.null xs = S.empty
-  | otherwise = hashByteString glue_crypto_hash xs
+cryptoHash xs = hashByteString glue_crypto_hash xs
       
 -- | Alternative cryptographic hash function, providing only
 -- SHA-256.
 cryptoHash_SHA256 :: ByteString -> ByteString
-cryptoHash_SHA256 xs
-  | S.null xs = S.empty
-  | otherwise = hashByteString glue_crypto_hash_sha256 xs
+cryptoHash_SHA256 xs = hashByteString glue_crypto_hash_sha256 xs
 
 
 --
