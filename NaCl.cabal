@@ -63,7 +63,7 @@ library
     Crypto.NaCl.Hash
     Crypto.NaCl.Random
   build-depends:
-    base >= 4,
+    base       >= 4,
     bytestring >= 0.9
 
   c-sources:        
