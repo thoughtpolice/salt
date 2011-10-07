@@ -47,7 +47,7 @@ glue_crypto_hash_sha256(const unsigned char* m, unsigned long long mlen, unsigne
 
 // Returns the amount of bytes it generated
 int 
-glue_randombytes(unsigned char * out, unsigned long long len)
+glue_randombytes(unsigned char *out, unsigned long long len)
 {
   randombytes(out, len);
   return len;
