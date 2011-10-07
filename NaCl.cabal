@@ -90,5 +90,5 @@ test-suite properties
     test-framework-quickcheck2 == 0.2.*,
     NaCl
 
-  ghc-options:      -Wall -fno-cse
+  ghc-options:      -Wall -fno-cse -fno-warn-orphans
   default-language: Haskell2010
