@@ -30,8 +30,9 @@ randomBytes n
   | n <= 0    = error "Crypto.NaCl.Random.randomBytes: length must be greater than 0"
   | otherwise = SI.create n $ \out -> void $ randombytes out (fromIntegral n)
 
--- FFI imports
+--
+-- FFI
+-- 
 
-#include "glue.h"
-
-NACL_GLUE(randombytes, Ptr Word8 -> CULLong -> IO Int)
+foreign import ccall unsafe "randombytes"
+  randombytes :: Ptr Word8 -> CULLong -> IO Int

@@ -14,6 +14,8 @@
 #include "crypto_hash_sha256.h"
 #include "crypto_hash_sha512.h"
 
+#include "crypto_box.h"
+
 /*
  * Hashing
  */
@@ -30,6 +32,14 @@ extern "C" int
 glue_crypto_hash_sha256(unsigned char *out, const unsigned char* m, unsigned long long mlen)
 {
   int r = crypto_hash_sha256(out,m,mlen);
+  assert(r == 0);
+  return 0;
+}
+
+extern "C" int
+glue_crypto_box_keypair(unsigned char *pk, unsigned char *sk)
+{
+  int r = crypto_box_keypair(pk,sk);
   assert(r == 0);
   return 0;
 }

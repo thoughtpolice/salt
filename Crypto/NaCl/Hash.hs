@@ -49,9 +49,10 @@ cryptoHash_SHA256 xs =
 -- FFI
 --
 
-#include "glue.h"
-
 type HashFunc = Ptr Word8 -> Ptr CChar -> CULLong -> IO CInt
 
-NACL_GLUE(glue_crypto_hash_sha512, HashFunc)
-NACL_GLUE(glue_crypto_hash_sha256, HashFunc)
+foreign import ccall unsafe "glue_crypto_hash_sha512"
+  glue_crypto_hash_sha512 :: HashFunc
+
+foreign import ccall unsafe "glue_crypto_hash_sha256"
+  glue_crypto_hash_sha256 :: HashFunc

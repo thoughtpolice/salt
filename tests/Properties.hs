@@ -13,19 +13,24 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Crypto.NaCl.Hash (cryptoHash, cryptoHash_SHA256)
 import Crypto.NaCl.Random (randomBytes)
+import Crypto.NaCl.Public.Encrypt (createKeypair, keypair_pk_size, keypair_sk_size)
 
 main :: IO ()
 main = defaultMain [ 
-  testGroup "Public key" [
-                         ]
-  , testGroup "Secret key" [
-                           ]
-  , testGroup "Hashing" [
-       testProperty "sha256/pure"   prop_sha256_pure
-     , testProperty "sha256/length" prop_sha256_length
-     , testProperty "sha512/pure"   prop_sha512_pure
-     , testProperty "sha512/length" prop_sha512_length
-     ]
+    testGroup "Public key" 
+    [ testCase "generated key length" case_pubkey_len
+    ]
+  , testGroup "Secret key" 
+    [
+    ]
+  , testGroup "Hashing" 
+    [ testProperty "sha256/pure"   prop_sha256_pure
+    , testProperty "sha256/length" prop_sha256_length
+    , testProperty "sha512/pure"   prop_sha512_pure
+    , testProperty "sha512/length" prop_sha512_length
+    ]
+    
+  -- Misc
   , testCase "randomness" case_random
   ]
 
@@ -49,7 +54,14 @@ prop_sha512_length xs = S.length (cryptoHash xs) == 64
 
 -- Randomness
 case_random :: Assertion
-case_random = do
+case_random =
   sequence_ $ flip map [1..20] $ \i -> do
     x <- randomBytes i
     S.length x @?= i
+
+case_pubkey_len :: Assertion
+case_pubkey_len =
+  sequence_ $ flip map [1..(20::Int)] $ \_ -> do
+    (pk,sk) <- createKeypair
+    S.length pk @?= keypair_pk_size
+    S.length sk @?= keypair_sk_size

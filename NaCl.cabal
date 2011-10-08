@@ -45,7 +45,6 @@ extra-Source-Files:
   README.md
   cbits/devurandom.c
   cbits/glue.cpp
-  cbits/glue.h
   tests/Properties.hs
 
 source-repository head
