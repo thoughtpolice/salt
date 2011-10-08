@@ -23,10 +23,12 @@ main = do
   k2 <- PEnc.createKeypair
   n  <- randomBytes nonceBytes
   
+  s1 <- Sign.createKeypair
   defaultMain [ testGroup "Public key" 
                 [ testCase "generated key length (encryption)" case_pubkey_len
                 , testCase "generated key length (signatures)" case_signkey_len
-                , testProperty "decrypt . encrypt == id" (prop_pubkey_pure k1 k2 n)
+                , testProperty "encrypt/decrypt" (prop_pubkey_pure k1 k2 n)
+                , testProperty "sign/verify" (prop_sign_verify s1)
                 ]
               , testGroup "Secret key" 
                 [
@@ -85,6 +87,12 @@ prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
   = let enc = encrypt n xs pk2 sk1
         dec = decrypt n enc pk1 sk2
     in maybe False (== xs) dec
+
+prop_sign_verify :: Sign.KeyPair -> ByteString -> Bool
+prop_sign_verify (pk,sk) xs
+  = let s = sign sk xs
+        d = verify pk s
+    in maybe False (== xs) d
 
 -- Utilities
   
