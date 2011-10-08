@@ -1,14 +1,14 @@
 #ifndef __HS_NACL_GLUE_H__
 #define __HS_NACL_GLUE_H__
 
-extern "C" {
+#if defined(__GLASGOW_HASKELL__)
 
-  // Hashing functions
-  int glue_crypto_hash(const unsigned char*, unsigned long long, unsigned char*);
-  int glue_crypto_hash_sha256(const unsigned char*, unsigned long long, unsigned char*);
+#define NACL_GLUE(f,ty)			\
+  foreign import ccall unsafe #f	\
+    f :: ty
 
-  // Random byte generation
-  int glue_randombytes(unsigned char*, unsigned long long);
-}
+#else
+#error What are you doing?
+#endif
 
 #endif /* __HS_NACL_GLUE_H__ */

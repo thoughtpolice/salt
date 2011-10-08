@@ -16,7 +16,10 @@
 module Crypto.NaCl.Random
        ( randomBytes -- :: Int -> IO ByteString
        ) where
+import Foreign.C.Types
 import Foreign.Ptr
+import Control.Monad (void)
+import Data.Word
 
 import Data.ByteString as S
 import Data.ByteString.Internal as SI
@@ -25,9 +28,10 @@ import Data.ByteString.Internal as SI
 randomBytes :: Int -> IO ByteString
 randomBytes n 
   | n <= 0    = error "Crypto.NaCl.Random.randomBytes: length must be greater than 0"
-  | otherwise = SI.createAndTrim n $ \out -> glue_randombytes out n
+  | otherwise = SI.create n $ \out -> void $ randombytes out (fromIntegral n)
 
 -- FFI imports
 
-foreign import ccall unsafe "glue_randombytes"
-  glue_randombytes :: Ptr a -> Int -> IO Int
+#include "glue.h"
+
+NACL_GLUE(randombytes, Ptr Word8 -> CULLong -> IO Int)

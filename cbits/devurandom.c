@@ -1,3 +1,5 @@
+/* Taken from NaCl-20110221 */
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

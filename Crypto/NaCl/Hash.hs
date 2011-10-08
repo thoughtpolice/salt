@@ -17,6 +17,7 @@ module Crypto.NaCl.Hash
        ) where
 import Foreign.C
 import Foreign.Ptr
+import Control.Monad (void)
 import Data.Word
 import System.IO.Unsafe (unsafePerformIO)
 
@@ -27,34 +28,30 @@ import Data.ByteString.Unsafe as SU
 -- | Strong cryptographic hash - currently an implementation
 -- of SHA-512.
 cryptoHash :: ByteString -> ByteString
-cryptoHash xs = hashByteString glue_crypto_hash xs
-      
+cryptoHash xs =
+  -- The default primitive of SHA512 has 64 bytes of output.      
+  unsafePerformIO . SI.create 64 $ \out ->
+    SU.unsafeUseAsCStringLen xs $ \(cstr,clen) ->
+      void $ glue_crypto_hash_sha512 out cstr (fromIntegral clen)
+{-# INLINEABLE cryptoHash #-}
+
 -- | Alternative cryptographic hash function, providing only
 -- SHA-256.
 cryptoHash_SHA256 :: ByteString -> ByteString
-cryptoHash_SHA256 xs = hashByteString glue_crypto_hash_sha256 xs
-
-
---
--- Internals
---
-
--- The type of hashing functions exposed by the C code.
-type HashFunc = Ptr CChar -> Int -> Ptr Word8 -> IO Int
-
-hashByteString :: HashFunc -> ByteString -> ByteString
-hashByteString f xs = 
-  -- NOTE: 64 is the max result size exposed by NaCl hashing functions.
-  -- The default primitive of SHA512 has 64 bytes of output.
-  unsafePerformIO . SI.createAndTrim 64 $ \out ->
+cryptoHash_SHA256 xs =
+  -- SHA256 has 32 bytes of output
+  unsafePerformIO . SI.create 32 $ \out ->
     SU.unsafeUseAsCStringLen xs $ \(cstr,clen) ->
-      f cstr clen out
-{-# INLINE hashByteString #-}
+      void $ glue_crypto_hash_sha256 out cstr (fromIntegral clen)
+{-# INLINEABLE cryptoHash_SHA256 #-}
 
--- FFI imports
+--
+-- FFI
+--
 
-foreign import ccall unsafe "glue_crypto_hash"
-  glue_crypto_hash :: HashFunc
+#include "glue.h"
 
-foreign import ccall unsafe "glue_crypto_hash_sha256"
-  glue_crypto_hash_sha256 :: HashFunc
+type HashFunc = Ptr Word8 -> Ptr CChar -> CULLong -> IO CInt
+
+NACL_GLUE(glue_crypto_hash_sha512, HashFunc)
+NACL_GLUE(glue_crypto_hash_sha256, HashFunc)
