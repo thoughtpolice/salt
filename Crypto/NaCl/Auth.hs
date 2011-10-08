@@ -9,8 +9,8 @@
 -- 
 -- 
 module Crypto.NaCl.Auth
-       ( module Crypto.NaCl.Secret.Auth
-       , module Crypto.NaCl.Secret.OneTimeAuth
+       ( module Crypto.NaCl.Auth.Auth
+       , module Crypto.NaCl.Auth.OneTimeAuth
        ) where
-import Crypto.NaCl.Secret.Auth
-import Crypto.NaCl.Secret.OneTimeAuth
+import Crypto.NaCl.Auth.Auth
+import Crypto.NaCl.Auth.OneTimeAuth

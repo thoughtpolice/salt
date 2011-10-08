@@ -9,6 +9,7 @@
 #include "crypto_hash_sha256.h"
 #include "crypto_hash_sha512.h"
 #include "crypto_box.h"
+#include "crypto_secretbox.h"
 #include "crypto_sign.h"
 
 
@@ -92,4 +93,25 @@ int glue_crypto_sign_open(unsigned char *m, unsigned long long* mlen,
 			  const unsigned char* pk)
 {
   return crypto_sign_open(m, mlen, sm, smlen, pk);
+}
+
+/*
+ * Authenticated, secret-key cryptography
+ */
+
+int glue_crypto_secretbox(unsigned char* c, const unsigned char* m,
+			  unsigned long long mlen, const unsigned char* n,
+			  const unsigned char* k)
+{
+  int r = crypto_secretbox(c, m, mlen, n, k);
+  assert(r == 0);
+  return r;
+}
+
+// Note: must check return value!
+int glue_crypto_secretbox_open(unsigned char* m, const unsigned char* c,
+			       unsigned long long clen, const unsigned char* n,
+			       const unsigned char* k)
+{
+  return crypto_secretbox_open(m, c, clen, n, k);
 }

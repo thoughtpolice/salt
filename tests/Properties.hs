@@ -14,16 +14,20 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Crypto.NaCl.Hash (cryptoHash, cryptoHash_SHA256)
 import Crypto.NaCl.Random (randomBytes)
-import Crypto.NaCl.Encrypt as PEnc
+import Crypto.NaCl.Encrypt.PublicKey as PubKey
+import Crypto.NaCl.Encrypt.SecretKey as SecretKey
 import Crypto.NaCl.Sign as Sign
 
 main :: IO ()
 main = do
-  k1 <- PEnc.createKeypair
-  k2 <- PEnc.createKeypair
-  n  <- randomBytes nonceBytes
+  k1 <- PubKey.createKeypair
+  k2 <- PubKey.createKeypair
+  n  <- randomBytes PubKey.nonceLength
   
   s1 <- Sign.createKeypair
+  
+  key <- randomBytes SecretKey.keyLength
+  n2  <- randomBytes SecretKey.nonceLength
   defaultMain [ testGroup "Public key" 
                 [ testCase "generated key length (encryption)" case_pubkey_len
                 , testCase "generated key length (signatures)" case_signkey_len
@@ -31,7 +35,7 @@ main = do
                 , testProperty "sign/verify" (prop_sign_verify s1)
                 ]
               , testGroup "Secret key" 
-                [
+                [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 ]
               , testGroup "Hashing" 
                 [ testProperty "sha256/pure"   prop_sha256_pure
@@ -72,21 +76,23 @@ case_random = doit 20 $ \i -> do
 
 case_pubkey_len :: Assertion
 case_pubkey_len = doit 20 $ \_ -> do
-  (pk,sk) <- PEnc.createKeypair
-  S.length pk @?= keypair_pk_size
-  S.length sk @?= keypair_sk_size
+  (pk,sk) <- PubKey.createKeypair
+  S.length pk @?= publicKeyLength
+  S.length sk @?= secretKeyLength
 
 case_signkey_len :: Assertion
 case_signkey_len = doit 20 $ \_ -> do
   (pk,sk) <- Sign.createKeypair
-  S.length pk @?= sign_pk_size
-  S.length sk @?= sign_sk_size
+  S.length pk @?= signPublicKeyLength
+  S.length sk @?= signSecretKeyLength
 
-prop_pubkey_pure :: PEnc.KeyPair -> PEnc.KeyPair -> ByteString -> ByteString -> Bool
+prop_pubkey_pure :: PubKey.KeyPair -> PubKey.KeyPair -> ByteString -> ByteString -> Bool
 prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
-  = let enc = encrypt n xs pk2 sk1
-        dec = decrypt n enc pk1 sk2
+  = let enc = PubKey.encrypt n xs pk2 sk1
+        dec = PubKey.decrypt n enc pk1 sk2
     in maybe False (== xs) dec
+
+-- Signatures
 
 prop_sign_verify :: Sign.KeyPair -> ByteString -> Bool
 prop_sign_verify (pk,sk) xs
@@ -94,6 +100,14 @@ prop_sign_verify (pk,sk) xs
         d = verify pk s
     in maybe False (== xs) d
 
+-- Secret-key authenticated encryption
+
+prop_secretkey_pure :: SecretKey.SecretKey -> ByteString -> ByteString -> Bool
+prop_secretkey_pure k n xs
+  = let enc = SecretKey.encrypt n xs k
+        dec = SecretKey.decrypt n enc k
+    in maybe False (== xs) dec
+       
 -- Utilities
   
 doit :: Int -> (Int -> IO a) -> IO ()

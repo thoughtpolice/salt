@@ -1,5 +1,5 @@
 -- |
--- Module      : Crypto.NaCl.Public.Encrypt
+-- Module      : Crypto.NaCl.Encrypt.PublicKey
 -- Copyright   : (c) Austin Seipp 2011
 -- License     : BSD3
 -- 
@@ -9,17 +9,19 @@
 -- 
 -- Public-key encryption.
 -- 
-module Crypto.NaCl.Public.Encrypt 
+module Crypto.NaCl.Encrypt.PublicKey
        (
-       -- ** Types  
+       -- ** Types
          PublicKey, SecretKey, KeyPair -- :: *
-       -- ** Keypair creation                        
+       -- ** Keypair creation
        , createKeypair                 -- :: IO (ByteString, ByteString)
        -- ** Encryption, Decryption                   
        , encrypt                       -- :: ByteString -> ByteString -> PublicKey -> SecretKey -> ByteString -- ^ Ciphertext
        , decrypt                       -- :: ByteString -> ByteString -> PublicKey -> SecretKey -> ByteString -- ^ Ciphertext
        -- ** Miscellaneous
-       , keypair_pk_size, keypair_sk_size, nonceBytes -- :: Int
+       , publicKeyLength               -- :: Int
+       , secretKeyLength               -- :: Int
+       , nonceLength                   -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
@@ -44,15 +46,15 @@ type KeyPair = (PublicKey, SecretKey)
 -- for doing authenticated encryption.
 createKeypair :: IO KeyPair
 createKeypair = do
-  pk <- SI.mallocByteString keypair_pk_size
-  sk <- SI.mallocByteString keypair_sk_size
+  pk <- SI.mallocByteString publicKeyLength
+  sk <- SI.mallocByteString secretKeyLength
 
   void $ withForeignPtr pk $ \ppk ->
     void $ withForeignPtr sk $ \psk ->
       glue_crypto_box_keypair ppk psk
       
-  return (SI.fromForeignPtr pk 0 keypair_pk_size, 
-          SI.fromForeignPtr sk 0 keypair_sk_size)
+  return (SI.fromForeignPtr pk 0 publicKeyLength, 
+          SI.fromForeignPtr sk 0 secretKeyLength)
 
 encrypt :: ByteString
         -> ByteString
@@ -107,16 +109,19 @@ decrypt n cipher pk sk = unsafePerformIO $ do
 -- 
   
 -- | Length of a nonce needed for encryption/decryption
-nonceBytes :: Int
-nonceBytes      = #{const crypto_box_NONCEBYTES}
+nonceLength :: Int
+nonceLength      = #{const crypto_box_NONCEBYTES}
+
+publicKeyLength :: Int
+publicKeyLength  = #{const crypto_box_PUBLICKEYBYTES}
+
+secretKeyLength :: Int
+secretKeyLength = #{const crypto_box_SECRETKEYBYTES}
+  
 
 msg_ZEROBYTES,msg_BOXZEROBYTES :: Int
 msg_ZEROBYTES    = #{const crypto_box_ZEROBYTES}
 msg_BOXZEROBYTES = #{const crypto_box_BOXZEROBYTES}
-
-keypair_sk_size, keypair_pk_size :: Int
-keypair_sk_size = #{const crypto_box_SECRETKEYBYTES}
-keypair_pk_size = #{const crypto_box_PUBLICKEYBYTES}
 
 
 foreign import ccall unsafe "glue_crypto_box_keypair"

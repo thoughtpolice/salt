@@ -1,5 +1,5 @@
 -- |
--- Module      : Crypto.NaCl.Public.Sign
+-- Module      : Crypto.NaCl.Sign
 -- Copyright   : (c) Austin Seipp 2011
 -- License     : BSD3
 -- 
@@ -8,13 +8,14 @@
 -- Portability : portable
 -- 
 -- 
-module Crypto.NaCl.Public.Sign
+module Crypto.NaCl.Sign
        ( PublicKey, SecretKey, KeyPair -- :: *
        , createKeypair                 -- :: IO KeyPair
        , sign                          -- :: 
        , verify                        -- :: 
        -- * Misc
-       , sign_pk_size, sign_sk_size    -- :: Int
+       , signPublicKeyLength           -- :: Int
+       , signSecretKeyLength           -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
@@ -41,15 +42,15 @@ type KeyPair = (PublicKey, SecretKey)
 -- for doing authenticated encryption.
 createKeypair :: IO KeyPair
 createKeypair = do
-  pk <- SI.mallocByteString sign_pk_size
-  sk <- SI.mallocByteString sign_sk_size
+  pk <- SI.mallocByteString signPublicKeyLength
+  sk <- SI.mallocByteString signSecretKeyLength
 
   void $ withForeignPtr pk $ \ppk ->
     void $ withForeignPtr sk $ \psk ->
       glue_crypto_sign_keypair ppk psk
       
-  return (SI.fromForeignPtr pk 0 sign_pk_size, 
-          SI.fromForeignPtr sk 0 sign_sk_size)
+  return (SI.fromForeignPtr pk 0 signPublicKeyLength,
+          SI.fromForeignPtr sk 0 signSecretKeyLength)
 
 sign :: SecretKey -> ByteString -> ByteString
 sign sk xs = 
@@ -77,9 +78,10 @@ verify pk xs =
 -- FFI
 -- 
 
-sign_pk_size, sign_sk_size :: Int
-sign_pk_size = #{const crypto_sign_PUBLICKEYBYTES}
-sign_sk_size = #{const crypto_sign_SECRETKEYBYTES}
+signPublicKeyLength :: Int
+signPublicKeyLength = #{const crypto_sign_PUBLICKEYBYTES}
+signSecretKeyLength :: Int
+signSecretKeyLength = #{const crypto_sign_SECRETKEYBYTES}
 
 sign_BYTES :: Int
 sign_BYTES = #{const crypto_sign_BYTES}
