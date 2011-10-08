@@ -10,12 +10,15 @@
 -- Public-key encryption.
 -- 
 module Crypto.NaCl.Public.Encrypt 
-       ( PublicKey, SecretKey, KeyPair -- :: *
+       (
+       -- ** Types  
+         PublicKey, SecretKey, KeyPair -- :: *
+       -- ** Keypair creation                        
        , createKeypair                 -- :: IO (ByteString, ByteString)
-       -- * Encryption, Decryption                   
+       -- ** Encryption, Decryption                   
        , encrypt                       -- :: ByteString -> ByteString -> PublicKey -> SecretKey -> ByteString -- ^ Ciphertext
        , decrypt                       -- :: ByteString -> ByteString -> PublicKey -> SecretKey -> ByteString -- ^ Ciphertext
-       -- * Miscellaneous
+       -- ** Miscellaneous
        , keypair_pk_size, keypair_sk_size, nonceBytes -- :: Int
        ) where
 import Foreign.Ptr

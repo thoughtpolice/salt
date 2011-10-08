@@ -29,7 +29,7 @@ description:
   public domain (which isn't recognized by all jurisdictions.) These
   bindings however, are BSD3 licensed - and as of current,
   redistribute a small amount of the NaCl source (the @randombytes@
-  function based on @/dev/urandom@.)
+  function based on @\/dev\/urandom@.)
 
 homepage:            http://github.com/thoughtpolice/hs-NaCl
 bug-reports:         http://github.com/thoughtpolice/hs-NaCl/issues
