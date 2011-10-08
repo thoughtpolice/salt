@@ -1,5 +1,5 @@
 -- |
--- Module      : Crypto.NaCl.Public.Encrypt
+-- Module      : Crypto.NaCl.Public.Sign
 -- Copyright   : (c) Austin Seipp 2011
 -- License     : BSD3
 -- 
@@ -7,16 +7,14 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
--- Public-key encryption.
 -- 
-module Crypto.NaCl.Public.Encrypt 
+module Crypto.NaCl.Public.Sign
        ( PublicKey, SecretKey, KeyPair -- :: *
-       , createKeypair                 -- :: IO (ByteString, ByteString)
-       -- * Encryption, Decryption                   
-       , encrypt                       -- :: ByteString -> ByteString -> PublicKey -> SecretKey -> ByteString -- ^ Ciphertext
-       , decrypt                       -- :: ByteString -> ByteString -> PublicKey -> SecretKey -> ByteString -- ^ Ciphertext
-       -- * Miscellaneous
-       , keypair_pk_size, keypair_sk_size, nonceBytes -- :: Int
+       , createKeypair                 -- :: IO KeyPair
+       , sign                          -- :: 
+       , verify                        -- :: 
+       -- * Misc
+       , sign_pk_size, sign_sk_size    -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
@@ -35,22 +33,26 @@ type SecretKey = ByteString
 
 type KeyPair = (PublicKey, SecretKey)
 
-#include "crypto_box.h"
+#include "crypto_sign.h"
 
 -- | Randomly generate a public and private key
 -- for doing authenticated encryption.
 createKeypair :: IO KeyPair
 createKeypair = do
-  pk <- SI.mallocByteString keypair_pk_size
-  sk <- SI.mallocByteString keypair_sk_size
+  pk <- SI.mallocByteString sign_pk_size
+  sk <- SI.mallocByteString sign_sk_size
 
   void $ withForeignPtr pk $ \ppk ->
     void $ withForeignPtr sk $ \psk ->
-      glue_crypto_box_keypair ppk psk
+      glue_crypto_sign_keypair ppk psk
       
-  return (SI.fromForeignPtr pk 0 keypair_pk_size, 
-          SI.fromForeignPtr sk 0 keypair_sk_size)
+  return (SI.fromForeignPtr pk 0 sign_pk_size, 
+          SI.fromForeignPtr sk 0 sign_sk_size)
 
+sign = undefined
+verify = undefined
+
+{-
 encrypt :: ByteString
         -> ByteString
         -> PublicKey
@@ -98,31 +100,23 @@ decrypt n cipher pk sk = unsafePerformIO $ do
             else
              let bs = SI.fromForeignPtr m 0 clen
              in Just $ SU.unsafeDrop msg_ZEROBYTES bs
+-}
 
 --
 -- FFI
 -- 
-  
--- | Length of a nonce needed for encryption/decryption
-nonceBytes :: Int
-nonceBytes      = #{const crypto_box_NONCEBYTES}
 
-msg_ZEROBYTES,msg_BOXZEROBYTES :: Int
-msg_ZEROBYTES    = #{const crypto_box_ZEROBYTES}
-msg_BOXZEROBYTES = #{const crypto_box_BOXZEROBYTES}
+sign_pk_size, sign_sk_size :: Int
+sign_pk_size = #{const crypto_sign_PUBLICKEYBYTES}
+sign_sk_size = #{const crypto_sign_SECRETKEYBYTES}
 
-keypair_sk_size, keypair_pk_size :: Int
-keypair_sk_size = #{const crypto_box_SECRETKEYBYTES}
-keypair_pk_size = #{const crypto_box_PUBLICKEYBYTES}
+foreign import ccall unsafe "glue_crypto_sign_keypair"
+  glue_crypto_sign_keypair :: Ptr Word8 -> Ptr Word8 -> IO Int
 
+foreign import ccall unsafe "glue_crypto_sign"
+  glue_crypto_sign :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                      Ptr CChar -> Ptr CChar -> Ptr CChar -> IO Int
 
-foreign import ccall unsafe "glue_crypto_box_keypair"
-  glue_crypto_box_keypair :: Ptr Word8 -> Ptr Word8 -> IO Int
-
-foreign import ccall unsafe "glue_crypto_box"
-  glue_crypto_box :: Ptr Word8 -> Ptr CChar -> CULLong -> 
-                     Ptr CChar -> Ptr CChar -> Ptr CChar -> IO Int
-
-foreign import ccall unsafe "glue_crypto_box_open"
-  glue_crypto_box_open :: Ptr Word8 -> Ptr CChar -> CULLong -> 
-                          Ptr CChar -> Ptr CChar -> Ptr CChar -> IO Int
+foreign import ccall unsafe "glue_crypto_sign_open"
+  glue_crypto_sign_open :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                           Ptr CChar -> Ptr CChar -> Ptr CChar -> IO Int

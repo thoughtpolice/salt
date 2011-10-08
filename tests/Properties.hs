@@ -14,16 +14,18 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Crypto.NaCl.Hash (cryptoHash, cryptoHash_SHA256)
 import Crypto.NaCl.Random (randomBytes)
-import Crypto.NaCl.Public.Encrypt
+import Crypto.NaCl.Public.Encrypt as PEnc
+import Crypto.NaCl.Public.Sign as Sign
 
 main :: IO ()
 main = do
-  k1 <- createKeypair
-  k2 <- createKeypair
+  k1 <- PEnc.createKeypair
+  k2 <- PEnc.createKeypair
   n  <- randomBytes nonceBytes
   
   defaultMain [ testGroup "Public key" 
-                [ testCase "generated key length" case_pubkey_len
+                [ testCase "generated key length (encryption)" case_pubkey_len
+                , testCase "generated key length (signatures)" case_signkey_len
                 , testProperty "decrypt . encrypt == id" (prop_pubkey_pure k1 k2 n)
                 ]
               , testGroup "Secret key" 
@@ -68,11 +70,17 @@ case_random = doit 20 $ \i -> do
 
 case_pubkey_len :: Assertion
 case_pubkey_len = doit 20 $ \_ -> do
-  (pk,sk) <- createKeypair
+  (pk,sk) <- PEnc.createKeypair
   S.length pk @?= keypair_pk_size
   S.length sk @?= keypair_sk_size
 
-prop_pubkey_pure :: KeyPair -> KeyPair -> ByteString -> ByteString -> Bool
+case_signkey_len :: Assertion
+case_signkey_len = doit 20 $ \_ -> do
+  (pk,sk) <- Sign.createKeypair
+  S.length pk @?= sign_pk_size
+  S.length sk @?= sign_sk_size
+
+prop_pubkey_pure :: PEnc.KeyPair -> PEnc.KeyPair -> ByteString -> ByteString -> Bool
 prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
   = let enc = encrypt n xs pk2 sk1
         dec = decrypt n enc pk1 sk2

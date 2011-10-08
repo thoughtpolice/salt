@@ -1,5 +1,5 @@
 -- |
--- Module      : Crypto.NaCl
+-- Module      : Crypto.NaCl.Secret.Auth
 -- Copyright   : (c) Austin Seipp 2011
 -- License     : BSD3
 -- 
@@ -8,4 +8,6 @@
 -- Portability : portable
 -- 
 -- 
-module Crypto.NaCl.Secret.Encrypt where
+module Crypto.NaCl.Secret.Auth 
+       (
+       ) where
