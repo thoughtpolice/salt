@@ -11,6 +11,7 @@
 #include "crypto_box.h"
 #include "crypto_secretbox.h"
 #include "crypto_sign.h"
+#include "crypto_auth.h"
 #include "crypto_onetimeauth.h"
 
 
@@ -121,6 +122,22 @@ int glue_crypto_secretbox_open(unsigned char* m, const unsigned char* c,
 /*
  * Authentication
  */
+int glue_crypto_auth(unsigned char* a, const unsigned char* m,
+		     unsigned long long mlen, const unsigned char* k)
+{
+  int r = crypto_auth(a, m, mlen, k);
+  assert(r == 0);
+  return r;
+}
+
+// Note: must check return value!
+int glue_crypto_auth_verify(const unsigned char* a, const unsigned char* m,
+			    unsigned long long mlen, const unsigned char* k)
+{
+  return crypto_auth_verify(a, m, mlen, k);
+}
+
+
 int glue_crypto_onetimeauth(unsigned char* a, const unsigned char* m,
 			    unsigned long long mlen, const unsigned char* k)
 {

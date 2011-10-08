@@ -11,14 +11,12 @@
 module Crypto.NaCl.Auth.Auth
        ( authenticate   -- :: ByteString -> ByteString -> ByteString
        , verify         -- :: ByteString -> ByteString -> ByteString -> Bool
+       , authKeyLength  -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
-import Foreign.ForeignPtr (withForeignPtr)
-import Foreign.Marshal.Alloc (alloca)
-import Foreign.Storable
 import Data.Word
-import Control.Monad (void, liftM)
+import Control.Monad (void)
 
 import System.IO.Unsafe (unsafePerformIO)
 
@@ -28,8 +26,47 @@ import Data.ByteString.Unsafe as SU
 
 #include "crypto_auth.h"
 
-authenticate :: ByteString -> ByteString -> ByteString
-authenticate = undefined
+authenticate :: ByteString
+             -- ^ Message
+             -> ByteString 
+             -- ^ Secret key
+             -> ByteString
+             -- ^ Authenticator
+authenticate msg k = 
+  unsafePerformIO . SI.create auth_BYTES $ \out ->
+    SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
+      SU.unsafeUseAsCString k $ \pk ->
+        void $ glue_crypto_auth out cstr (fromIntegral clen) pk
 
-verify :: ByteString -> ByteString -> ByteString -> Bool
-verify = undefined
+verify :: ByteString 
+       -- ^ Authenticator
+       -> ByteString 
+       -- ^ Message
+       -> ByteString 
+       -- ^ Key
+       -> Bool
+verify auth msg k =
+  unsafePerformIO $ SU.unsafeUseAsCString auth $ \pauth ->
+    SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
+      SU.unsafeUseAsCString k $ \pk -> do
+        b <- glue_crypto_auth_verify pauth cstr (fromIntegral clen) pk
+        return $ if b == 0 then True else False
+
+--
+-- FFI
+--
+
+authKeyLength :: Int
+authKeyLength = #{const crypto_auth_KEYBYTES}
+
+auth_BYTES :: Int
+auth_BYTES = #{const crypto_auth_BYTES}
+
+
+foreign import ccall unsafe "glue_crypto_auth"
+  glue_crypto_auth :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                      Ptr CChar -> IO Int
+
+foreign import ccall unsafe "glue_crypto_auth_verify"
+  glue_crypto_auth_verify :: Ptr CChar -> Ptr CChar -> CULLong -> 
+                             Ptr CChar -> IO Int
