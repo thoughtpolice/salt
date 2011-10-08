@@ -43,3 +43,22 @@ glue_crypto_box_keypair(unsigned char *pk, unsigned char *sk)
   assert(r == 0);
   return 0;
 }
+
+extern "C" int
+glue_crypto_box(unsigned char *c, const unsigned char *m,
+		unsigned long long mlen, const unsigned char *n,
+		const unsigned char *pk, const unsigned char *sk)
+{
+  int r = crypto_box(c,m,mlen,n,pk,sk);
+  assert(r == 0);
+  return 0;
+}
+
+// NOTE: return value must be checked for ciphertext verification!
+extern "C" int
+glue_crypto_box_open(unsigned char *m, const unsigned char *c,
+		     unsigned long long clen, const unsigned char *n,
+		     const unsigned char *pk, const unsigned char *sk)
+{
+  return crypto_box_open(m,c,clen,n,pk,sk);
+}

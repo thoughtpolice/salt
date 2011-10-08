@@ -4,6 +4,7 @@ module Main
 import Data.Word
 import Control.Monad (liftM)
 import Data.ByteString as S (pack, length, ByteString)
+import Data.Maybe
 
 import Test.Framework (defaultMain, testGroup)
 import Test.QuickCheck
@@ -13,26 +14,31 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Crypto.NaCl.Hash (cryptoHash, cryptoHash_SHA256)
 import Crypto.NaCl.Random (randomBytes)
-import Crypto.NaCl.Public.Encrypt (createKeypair, keypair_pk_size, keypair_sk_size)
+import Crypto.NaCl.Public.Encrypt
 
 main :: IO ()
-main = defaultMain [ 
-    testGroup "Public key" 
-    [ testCase "generated key length" case_pubkey_len
-    ]
-  , testGroup "Secret key" 
-    [
-    ]
-  , testGroup "Hashing" 
-    [ testProperty "sha256/pure"   prop_sha256_pure
-    , testProperty "sha256/length" prop_sha256_length
-    , testProperty "sha512/pure"   prop_sha512_pure
-    , testProperty "sha512/length" prop_sha512_length
-    ]
-    
-  -- Misc
-  , testCase "randomness" case_random
-  ]
+main = do
+  k1 <- createKeypair
+  k2 <- createKeypair
+  n  <- randomBytes nonceBytes
+  
+  defaultMain [ testGroup "Public key" 
+                [ testCase "generated key length" case_pubkey_len
+                , testProperty "decrypt . encrypt == id" (prop_pubkey_pure k1 k2 n)
+                ]
+              , testGroup "Secret key" 
+                [
+                ]
+              , testGroup "Hashing" 
+                [ testProperty "sha256/pure"   prop_sha256_pure
+                , testProperty "sha256/length" prop_sha256_length
+                , testProperty "sha512/pure"   prop_sha512_pure
+                , testProperty "sha512/length" prop_sha512_length
+                ]
+                
+                -- Misc
+              , testCase "randomness" case_random
+              ]
 
 -- Orphan arbitrary instance for ByteString
 instance Arbitrary ByteString where
@@ -54,14 +60,25 @@ prop_sha512_length xs = S.length (cryptoHash xs) == 64
 
 -- Randomness
 case_random :: Assertion
-case_random =
-  sequence_ $ flip map [1..20] $ \i -> do
-    x <- randomBytes i
-    S.length x @?= i
+case_random = doit 20 $ \i -> do
+  x <- randomBytes i
+  S.length x @?= i
+
+-- Public-key encryption etc
 
 case_pubkey_len :: Assertion
-case_pubkey_len =
-  sequence_ $ flip map [1..(20::Int)] $ \_ -> do
-    (pk,sk) <- createKeypair
-    S.length pk @?= keypair_pk_size
-    S.length sk @?= keypair_sk_size
+case_pubkey_len = doit 20 $ \_ -> do
+  (pk,sk) <- createKeypair
+  S.length pk @?= keypair_pk_size
+  S.length sk @?= keypair_sk_size
+
+prop_pubkey_pure :: KeyPair -> KeyPair -> ByteString -> ByteString -> Bool
+prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
+  = let enc = encrypt n xs pk2 sk1
+        dec = decrypt n enc pk1 sk2
+    in maybe False (== xs) dec
+
+-- Utilities
+  
+doit :: Int -> (Int -> IO a) -> IO ()
+doit n f = sequence_ $ map f [1..n]
