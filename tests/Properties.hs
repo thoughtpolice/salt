@@ -41,7 +41,7 @@ main = do
                 ]
                 
                 -- Misc
-              , testCase "randomness" case_random
+              , testCase "Randomness" case_random
               ]
 
 -- Orphan arbitrary instance for ByteString

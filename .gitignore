@@ -4,3 +4,5 @@
 *.hi
 /cabal-dev
 /dist
+/.hpc
+*.tix
