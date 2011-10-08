@@ -11,6 +11,7 @@
 #include "crypto_box.h"
 #include "crypto_secretbox.h"
 #include "crypto_sign.h"
+#include "crypto_onetimeauth.h"
 
 
 /*
@@ -22,7 +23,7 @@ glue_crypto_hash_sha512(unsigned char *out, const unsigned char* m, unsigned lon
 {
   int r = crypto_hash_sha512(out, m, mlen);
   assert(r == 0);
-  return 0;
+  return r;
 }
 
 int
@@ -30,7 +31,7 @@ glue_crypto_hash_sha256(unsigned char *out, const unsigned char* m, unsigned lon
 {
   int r = crypto_hash_sha256(out, m, mlen);
   assert(r == 0);
-  return 0;
+  return r;
 }
 
 /*
@@ -42,7 +43,7 @@ glue_crypto_box_keypair(unsigned char *pk, unsigned char *sk)
 {
   int r = crypto_box_keypair(pk, sk);
   assert(r == 0);
-  return 0;
+  return r;
 }
 
 int
@@ -52,7 +53,7 @@ glue_crypto_box(unsigned char *c, const unsigned char *m,
 {
   int r = crypto_box(c, m, mlen, n, pk, sk);
   assert(r == 0);
-  return 0;
+  return r;
 }
 
 // NOTE: return value must be checked for ciphertext verification!
@@ -74,9 +75,10 @@ glue_crypto_sign_keypair(unsigned char* pk, unsigned char* sk)
 {
   int r = crypto_sign_keypair(pk, sk);
   assert(r == 0);
-  return 0;
+  return r;
 }
 
+// NOTE: this returns smlen!
 int
 glue_crypto_sign(unsigned char* sm, const unsigned char* m, 
 		 unsigned long long mlen, const unsigned char* sk)
@@ -114,4 +116,22 @@ int glue_crypto_secretbox_open(unsigned char* m, const unsigned char* c,
 			       const unsigned char* k)
 {
   return crypto_secretbox_open(m, c, clen, n, k);
+}
+
+/*
+ * Authentication
+ */
+int glue_crypto_onetimeauth(unsigned char* a, const unsigned char* m,
+			    unsigned long long mlen, const unsigned char* k)
+{
+  int r = crypto_onetimeauth(a, m, mlen, k);
+  assert(r == 0);
+  return r;
+}
+
+// Note: must check return value!
+int glue_crypto_onetimeauth_verify(const unsigned char* a, const unsigned char* m,
+				   unsigned long long mlen, const unsigned char* k)
+{
+  return crypto_onetimeauth_verify(a, m, mlen, k);
 }
