@@ -1,5 +1,5 @@
 name:                NaCl
-version:             0.1
+version:             0.0
 synopsis:            Haskell binding to the NaCl cryptography library
 description:
   NaCl is a safe, high-speed, easy to use cryptography library. This
@@ -43,8 +43,8 @@ cabal-version:       >=1.10
 
 extra-Source-Files:
   README.md
-  cbits/devurandom.c
   cbits/glue.c
+  cbits/devurandom.c
   tests/Properties.hs
 
 source-repository head
@@ -53,16 +53,22 @@ source-repository head
 
 library
   exposed-modules:
+    Crypto.NaCl.Auth
+    Crypto.NaCl.Encrypt
+    Crypto.NaCl.Hash
+    Crypto.NaCl.Random
+    Crypto.NaCl.Sign
+  other-modules:
     Crypto.NaCl.Public.Encrypt
     Crypto.NaCl.Public.Sign
     Crypto.NaCl.Secret.Auth
+    Crypto.NaCl.Secret.AuthEncrypt
     Crypto.NaCl.Secret.Encrypt
-    Crypto.NaCl.Hash
-    Crypto.NaCl.Random
+    Crypto.NaCl.Secret.OneTimeAuth
+
   build-depends:
     base       >= 4,
-    bytestring >= 0.9,
-    cpphs      >= 1.13
+    bytestring >= 0.9
   c-sources:        
     cbits/glue.c
     cbits/devurandom.c

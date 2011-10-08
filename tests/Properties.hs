@@ -14,8 +14,8 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Crypto.NaCl.Hash (cryptoHash, cryptoHash_SHA256)
 import Crypto.NaCl.Random (randomBytes)
-import Crypto.NaCl.Public.Encrypt as PEnc
-import Crypto.NaCl.Public.Sign as Sign
+import Crypto.NaCl.Encrypt as PEnc
+import Crypto.NaCl.Sign as Sign
 
 main :: IO ()
 main = do

@@ -27,7 +27,7 @@ import Data.ByteString.Internal as SI
 -- | Generate a random ByteString which is internally based on @/dev/urandom@.
 randomBytes :: Int -> IO ByteString
 randomBytes n 
-  | n <= 0    = error "Crypto.NaCl.Random.randomBytes: length must be greater than 0"
+  | n < 0     = error "Crypto.NaCl.Random.randomBytes: length must be greater than 0"
   | otherwise = SI.create n $ \out -> void $ randombytes out (fromIntegral n)
 
 --
