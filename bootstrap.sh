@@ -78,10 +78,7 @@ $CABAL install --extra-include-dirs=$INCDIR --extra-lib-dirs=$LIBDIR --enable-te
 # test
 echo 
 say "Testing..."
-$CABAL test
-echo
-say "Test results:"
-cat dist/test/NaCl-*-properties.log
+./dist/build/properties/properties +RTS -N
 
 echo
 say "Completed"

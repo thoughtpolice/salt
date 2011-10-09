@@ -55,7 +55,7 @@ library
     Crypto.NaCl.Auth
     Crypto.NaCl.Encrypt.PublicKey
     Crypto.NaCl.Encrypt.SecretKey
-    Crypto.NaCl.Encrypt.Stream
+--  Crypto.NaCl.Encrypt.Stream
     Crypto.NaCl.Hash
     Crypto.NaCl.Random
     Crypto.NaCl.Sign
@@ -95,4 +95,5 @@ test-suite properties
     NaCl
 
   ghc-options:      -Wall -fno-cse -fno-warn-orphans
+                    -threaded -rtsopts
   default-language: Haskell2010
