@@ -7,3 +7,5 @@
 /.hpc
 *.tix
 *.tix
+/bench/*.png
+/bench/Bench

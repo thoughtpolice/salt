@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-DEV=1
+DEV=0
 VERSION=nacl-20110221
 
 # No configuration needed past this point
