@@ -23,7 +23,9 @@ description:
   .
   NaCl has an odd build structure. In order to install the bindings
   properly, please follow the 'Installation' section located in the
-  @README.md@, which you can find online here: TODO FIXME
+  @README.md@, which you can find online here:
+  .
+  <http://thoughtpolice.github.com/hs-nacl>
   .
   Point of note: NaCl is, like much DJB software, released in the
   public domain (which isn't recognized by all jurisdictions.) These
@@ -31,8 +33,8 @@ description:
   redistribute a small amount of the NaCl source (the @randombytes@
   function based on @\/dev\/urandom@.)
 
-homepage:            http://github.com/thoughtpolice/hs-NaCl
-bug-reports:         http://github.com/thoughtpolice/hs-NaCl/issues
+homepage:            http://thoughtpolice.github.com/hs-nacl
+bug-reports:         http://github.com/thoughtpolice/hs-nacl/issues
 license:             BSD3
 license-file:        LICENSE
 author:              Austin Seipp <as@hacks.yi.org>
@@ -42,14 +44,15 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 extra-Source-Files:
-  README.md
+  bootstrap.sh
   cbits/glue.c
   cbits/devurandom.c
+  README.md
   tests/Properties.hs
 
 source-repository head
   type: git
-  location: https://github.com/thoughtpolice/hs-NaCl.git
+  location: https://github.com/thoughtpolice/hs-nacl.git
 
 flag hpc
   default: False
@@ -76,7 +79,7 @@ library
   include-dirs:     cbits
   extra-libraries:  nacl
 
-  cc-options:       -Wall -O2
+  cc-options:       -Wall
   ghc-options:      -Wall -O2
   if flag(hpc)
     ghc-options:    -fhpc
