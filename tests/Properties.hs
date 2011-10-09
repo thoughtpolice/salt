@@ -44,7 +44,8 @@ main = do
                 , testProperty "onetimeauth works" prop_onetimeauth_works
                 ]
               , testGroup "Nonce"
-                [ testProperty "incNonce/pure"    prop_nonce_pure
+                [ testCase "randomNonce" case_nonce_random
+                , testProperty "incNonce/pure"    prop_nonce_pure
                 , testProperty "length"  prop_nonce_length
                 , testProperty "clearBytes invariant" prop_nonce_clear_inv
                 , testProperty "clearBytes/pure" prop_nonce_clear_pure
@@ -152,6 +153,11 @@ prop_nonce_clear_inv n
 prop_nonce_clear_pure :: Nonce -> NonNegative Int -> Property
 prop_nonce_clear_pure n (NonNegative i)
   = i <= nonceLen n ==> clearBytes i n == clearBytes i n
+
+case_nonce_random :: Assertion
+case_nonce_random = doit 20 $ \i -> do
+  n <- createRandomNonce i
+  nonceLen n @?= i
 
 -- Authentication
 
