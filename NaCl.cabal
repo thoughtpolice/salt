@@ -2,11 +2,11 @@ name:                NaCl
 version:             0.0
 synopsis:            Haskell binding to the NaCl cryptography library
 description:
-  NaCl is a safe, high-speed, easy to use cryptography library. This
-  package intends to provide a high-level Haskell binding to NaCl,
-  allowing you to easily write code utilizing cryptographic primitives
-  for public-key and private-key encryption, authentication, and
-  signatures.
+  NaCl (pronounced \"salt\") is a safe, high-speed, easy to use
+  cryptography library. This package intends to provide a high-level
+  Haskell binding to NaCl, allowing you to easily write code utilizing
+  cryptographic primitives for public-key and private-key encryption,
+  authentication, and signatures.
   .
   The NaCl project (<http://nacl.cace-project.eu/>) was initiated
   by CACE (Computer Aided Cryptography Engineering,) and is currently
