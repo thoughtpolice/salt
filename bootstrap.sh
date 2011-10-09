@@ -73,7 +73,7 @@ $CABAL install -v0 QuickCheck HUnit test-framework test-framework-quickcheck2 te
 # build with cabal 
 say "Building with cabal..."
 #echo " cabal-dev install --extra-include-dirs=$INCDIR --extra-lib-dirs=$LIBDIR --enable-tests"
-$CABAL install --extra-include-dirs=$INCDIR --extra-lib-dirs=$LIBDIR --enable-tests
+$CABAL install --extra-include-dirs=$INCDIR --extra-lib-dirs=$LIBDIR --enable-tests $@
 
 # test
 echo 
