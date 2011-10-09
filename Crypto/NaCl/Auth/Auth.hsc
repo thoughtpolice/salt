@@ -37,7 +37,7 @@ authenticate msg k =
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk ->
         void $ glue_crypto_auth out cstr (fromIntegral clen) pk
-
+{-# INLINEABLE authenticate #-}
 verify :: ByteString 
        -- ^ Authenticator
        -> ByteString 
@@ -51,6 +51,7 @@ verify auth msg k =
       SU.unsafeUseAsCString k $ \pk -> do
         b <- glue_crypto_auth_verify pauth cstr (fromIntegral clen) pk
         return $ if b == 0 then True else False
+{-# INLINEABLE verify #-}
 
 --
 -- FFI

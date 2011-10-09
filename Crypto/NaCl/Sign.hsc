@@ -58,6 +58,7 @@ sign sk xs =
     SU.unsafeUseAsCString sk $ \psk ->
       SI.createAndTrim (mlen+sign_BYTES) $ \out ->
        fromIntegral `liftM` glue_crypto_sign out mstr (fromIntegral mlen) psk
+{-# INLINEABLE sign #-}
 
 verify :: PublicKey -> ByteString -> Maybe ByteString
 verify pk xs =
@@ -73,6 +74,7 @@ verify pk xs =
           else do
             l <- peek pmlen
             return $ Just $ SI.fromForeignPtr out 0 (fromIntegral l)
+{-# INLINEABLE verify #-}
 
 --
 -- FFI

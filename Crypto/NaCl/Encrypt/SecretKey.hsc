@@ -58,7 +58,8 @@ encrypt n msg k = unsafePerformIO $ do
   
   let r = SI.fromForeignPtr c 0 mlen
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
-  
+{-# INLINEABLE encrypt #-}
+
 decrypt :: ByteString
         -- ^ Nonce
         -> ByteString
@@ -85,6 +86,7 @@ decrypt n cipher k = unsafePerformIO $ do
             else
              let bs = SI.fromForeignPtr m 0 clen
              in Just $ SU.unsafeDrop msg_ZEROBYTES bs
+{-# INLINEABLE decrypt #-}
 
 --
 -- FFI

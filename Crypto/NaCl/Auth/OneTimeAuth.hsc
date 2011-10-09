@@ -37,6 +37,7 @@ authenticateOnce msg k =
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk ->
         void $ glue_crypto_onetimeauth out cstr (fromIntegral clen) pk
+{-# INLINEABLE authenticateOnce #-}
 
 verifyOnce :: ByteString 
            -- ^ Authenticator
@@ -51,6 +52,7 @@ verifyOnce auth msg k =
       SU.unsafeUseAsCString k $ \pk -> do
         b <- glue_crypto_onetimeauth_verify pauth cstr (fromIntegral clen) pk
         return $ if b == 0 then True else False
+{-# INLINEABLE verifyOnce #-}
 
 --
 -- FFI
