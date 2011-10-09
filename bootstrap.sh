@@ -10,7 +10,7 @@ HSNACLDIR=$HOME/.hs-nacl
 TARBALL=$HSNACLDIR/$VERSION.tar.bz2
 
 say () {
-    echo "=== " $1 " ================"
+    echo "==> " $1 ""
     return 0
 }
 
@@ -67,7 +67,7 @@ LIBDIR=$HSNACLDIR/$VERSION/build/$SHORTHOST/lib/$ARCH/
 # get test prerequisites
 say "Grabbing test prerequisuites..."
 #echo " cabal-dev install QuickCheck HUnit test-framework test-framework-quickcheck2 test-framework-hunit"
-$CABAL install QuickCheck HUnit test-framework test-framework-quickcheck2 test-framework-hunit
+$CABAL install -v0 QuickCheck HUnit test-framework test-framework-quickcheck2 test-framework-hunit
 
 # build with cabal 
 echo 

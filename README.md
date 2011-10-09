@@ -1,7 +1,7 @@
 # Fast cryptography for Haskell
 
-[NaCl](http://nacl.cace-project.eu) is a fast cryptography
-library. These are the awesome Haskell bindings.
+[NaCl](http://nacl.cace-project.eu) (pronounced "salt") is a fast
+cryptography library. These are the awesome Haskell bindings.
 
 # Installation
 
