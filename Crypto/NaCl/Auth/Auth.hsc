@@ -7,6 +7,7 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
+-- Fast, cryptographically strong authentication.
 -- 
 module Crypto.NaCl.Auth.Auth
        ( authenticate   -- :: ByteString -> ByteString -> ByteString
@@ -45,6 +46,7 @@ verify :: ByteString
        -> ByteString 
        -- ^ Key
        -> Bool
+       -- ^ Result: @True@ if properly verified, @False@ otherwise
 verify auth msg k =
   unsafePerformIO $ SU.unsafeUseAsCString auth $ \pauth ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
@@ -57,6 +59,9 @@ verify auth msg k =
 -- FFI
 --
 
+-- | @authKeyLength@ is the required key length for a key given
+-- to 'authenticate' or 'verify'. Using any other key length will
+-- result in error.
 authKeyLength :: Int
 authKeyLength = #{const crypto_auth_KEYBYTES}
 

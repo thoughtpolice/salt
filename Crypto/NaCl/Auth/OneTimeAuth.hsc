@@ -7,6 +7,7 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
+-- Fast, cryptographically strong one-time authentication
 -- 
 module Crypto.NaCl.Auth.OneTimeAuth 
        ( authenticateOnce     -- :: ByteString -> ByteString -> ByteString
@@ -46,6 +47,7 @@ verifyOnce :: ByteString
            -> ByteString 
            -- ^ Key
            -> Bool
+           -- ^ Result: @True@ if verified, @False@ otherwise
 verifyOnce auth msg k =
   unsafePerformIO $ SU.unsafeUseAsCString auth $ \pauth ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
@@ -57,7 +59,9 @@ verifyOnce auth msg k =
 --
 -- FFI
 --
-
+-- | @oneTimeAuthKeyLength@ is the required key length for a key given
+-- to 'authenticateOnce' or 'verifyOnce'. Using any other key length
+-- will result in error.
 oneTimeAuthKeyLength :: Int
 oneTimeAuthKeyLength = #{const crypto_onetimeauth_KEYBYTES}
 

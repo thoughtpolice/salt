@@ -7,9 +7,14 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
+-- Fast, cryptographically strong authentication and one-time
+-- authentication.
 -- 
+
 module Crypto.NaCl.Auth
-       ( module Crypto.NaCl.Auth.Auth
+       ( -- * Secret-key authentication
+         module Crypto.NaCl.Auth.Auth
+         -- * Secret-key one-time authentication
        , module Crypto.NaCl.Auth.OneTimeAuth
        ) where
 import Crypto.NaCl.Auth.Auth
