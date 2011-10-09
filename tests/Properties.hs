@@ -17,6 +17,7 @@ import Crypto.NaCl.Encrypt.PublicKey as PubKey
 import Crypto.NaCl.Encrypt.SecretKey as SecretKey
 import Crypto.NaCl.Sign as Sign
 import Crypto.NaCl.Nonce
+import Crypto.NaCl.Auth as Auth
 
 main :: IO ()
 main = do
@@ -38,6 +39,10 @@ main = do
               , testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 ]
+              , testGroup "Authentication"
+                [ testProperty "auth works" prop_auth_works
+                , testProperty "onetimeauth works" prop_onetimeauth_works
+                ]
               , testGroup "Nonce"
                 [ testProperty "incNonce/pure"    prop_nonce_pure
                 , testProperty "length"  prop_nonce_length
@@ -49,7 +54,6 @@ main = do
                 , testProperty "sha512/pure"   prop_sha512_pure
                 , testProperty "sha512/length" prop_sha512_length
                 ]
-                
                 -- Misc
               , testCase "Randomness" case_random
               ]
@@ -57,8 +61,20 @@ main = do
 -- Orphan Arbitrary instances
 instance Arbitrary ByteString where
   arbitrary = pack `liftM` arbitrary
+
 instance Arbitrary Nonce where
   arbitrary = fromBS `liftM` arbitrary
+
+newtype AuthKey = AuthKey ByteString deriving (Eq, Show)
+instance Arbitrary AuthKey where
+  arbitrary = (AuthKey . pack) `liftM` (vectorOf authKeyLength arbitrary)
+
+newtype OneTimeAuthKey = OneTimeAuthKey ByteString deriving (Eq, Show)
+instance Arbitrary OneTimeAuthKey where
+  arbitrary = (OneTimeAuthKey . pack) `liftM` (vectorOf oneTimeAuthKeyLength arbitrary)
+    
+
+
 
 -- Hashing properties
 prop_sha256_pure :: ByteString -> Bool
@@ -103,8 +119,8 @@ prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
 
 prop_sign_verify :: Sign.KeyPair -> ByteString -> Bool
 prop_sign_verify (pk,sk) xs
-  = let s = sign sk xs
-        d = verify pk s
+  = let s = Sign.sign sk xs
+        d = Sign.verify pk s
     in maybe False (== xs) d
 
 -- Secret-key authenticated encryption
@@ -129,6 +145,16 @@ prop_nonce_length
 prop_nonce_clear_inv :: Nonce -> Bool
 prop_nonce_clear_inv n = clearBytes (nonceLen n) n == createZeroNonce (nonceLen n)
 
+
+-- Authentication
+
+prop_auth_works :: AuthKey -> ByteString -> Bool
+prop_auth_works (AuthKey k) msg
+  = Auth.verify (Auth.authenticate msg k) msg k
+
+prop_onetimeauth_works :: OneTimeAuthKey -> ByteString -> Bool
+prop_onetimeauth_works (OneTimeAuthKey k) msg
+  = Auth.verifyOnce (Auth.authenticateOnce msg k) msg k
 -- Utilities
   
 doit :: Int -> (Int -> IO a) -> IO ()
