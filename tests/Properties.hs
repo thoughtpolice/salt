@@ -69,6 +69,7 @@ instance Arbitrary Nonce where
   arbitrary = do
     n <- choose (0, 128) :: Gen Int
     (fromBS . pack) `liftM` (vectorOf n arbitrary)
+
 newtype AuthKey = AuthKey ByteString deriving (Eq, Show)
 instance Arbitrary AuthKey where
   arbitrary = (AuthKey . pack) `liftM` (vectorOf authKeyLength arbitrary)
