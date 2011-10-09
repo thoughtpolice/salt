@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -O2 -fforce-recomp #-}
 module Main
        ( main -- :: IO ()
        ) where
@@ -12,7 +11,7 @@ main =
   defaultMain [ bgroup "" 
                 [
                 ]
-              , bgroup "Randomness"
+              , bgroup "randomBytes"
                 [ bench "32"  $ void $ randomBytes 32
                 , bench "64"  $ void $ randomBytes 64
                 , bench "128" $ void $ randomBytes 128

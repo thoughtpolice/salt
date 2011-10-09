@@ -9,3 +9,4 @@
 *.tix
 /bench/*.png
 /bench/Bench
+/bench/*.html
