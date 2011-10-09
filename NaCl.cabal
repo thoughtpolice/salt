@@ -41,6 +41,7 @@ maintainer:          Austin Seipp <as@hacks.yi.org>
 category:            Cryptography
 build-type:          Simple
 cabal-version:       >=1.10
+tested-with:         GHC==7.0.4,GHC==7.2.1
 
 extra-Source-Files:
   bootstrap.sh
