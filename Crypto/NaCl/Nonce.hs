@@ -79,8 +79,10 @@ fromBS bs = Nonce (S.length bs) bs
 -- > clearBytes (nonceLen nonce) nonce == createZeroNonce (nonceLen nonce)
 -- 
 clearBytes :: Int -> Nonce -> Nonce
-clearBytes n (Nonce l nonce) 
-  | n > l = error "Crypto.NaCl.Nonce.clearBytes: "
+clearBytes n x@(Nonce l nonce) 
+  | n > l  = error "Crypto.NaCl.Nonce.clearBytes: n > length of nonce"
+  | n == 0 = x
+  | n == l = Nonce l $ S.replicate l 0x0
   | otherwise =
     Nonce l $ SI.unsafeCreate l $ \out -> do
       SU.unsafeUseAsCString nonce $ \b -> do

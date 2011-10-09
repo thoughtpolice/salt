@@ -41,7 +41,7 @@ main = do
               , testGroup "Nonce"
                 [ testProperty "incNonce/pure"    prop_nonce_pure
                 , testProperty "length"  prop_nonce_length
-                --, testProperty "nonce/clearBytes" prop_nonce_clear_inv
+                , testProperty "nonce/clearBytes" prop_nonce_clear_inv
                 ]
               , testGroup "Hashing" 
                 [ testProperty "sha256/pure"   prop_sha256_pure
