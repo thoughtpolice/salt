@@ -39,7 +39,7 @@ main =
                 , bench "incNonce 8/256" $ nf (incNonceBench 8) 256
                 , bench "incNonce 64/10000" $ nf (incNonceBench 64) 10000
                 ]
-              , bgroup "randomBytes"
+              , bgroup "random bytes"
                 [ bench "32"  $ nfIO $ randomBytes 32
                 , bench "64"  $ nfIO $ randomBytes 64
                 , bench "128" $ nfIO $ randomBytes 128

@@ -28,15 +28,17 @@ main = do
   (gitsha1:date:machine:rest) <- getArgs
   
   let pngs = filter (\f -> exttype == takeExtension f) rest
-  let files = map (\f -> (init . splitOn "-" . fst $ splitExtension f, f)) pngs
+  let files = flip map pngs $ \f -> 
+        (init . splitOn "-" . dropExtension $ f, f)
   files' <- forM files $ \(x,f) -> do
     bs <- (encode . S.concat . L.toChunks) `liftM` (L.readFile f)
     return (x,bs)
   
-  let values = map (\(x,f) -> (toHtml $ Prelude.concat $ intersperse " " x, f)) files'
+  let values = map (\(x,f) -> (gather " " x, gather "-" x, f)) files'
   L.putStrLn $ renderHtml $ page gitsha1 date machine values
-
-page :: String -> String -> String -> [(Html, S.ByteString)] -> Html
+ where gather s x = Prelude.concat $ intersperse s x
+       
+page :: String -> String -> String -> [(String, String, S.ByteString)] -> Html
 page sha1 date machine lnks = html $ do
   head $ title "hs-NaCl benchmark results"
   body $ do
@@ -48,9 +50,14 @@ page sha1 date machine lnks = html $ do
       b (toHtml ("Commit: " :: String)) >> toHtml sha1' >> br
       br
       b (toHtml ("Results:" :: String)) >> br
-      p $ ul $ forM_ lnks $ \(n,image) -> 
+      ul $ forM_ lnks $ \(n,anc,_) -> 
+        li $ a ! href (toValue $ '#':anc) $ (toHtml n)
+      br
+      b (toHtml ("Graphs:" :: String)) >> br
+      p $ ul $ forM_ lnks $ \(n,anc,image) -> 
         li $ do
-          p n >> br
+          a ! name (toValue anc) $ p (toHtml n)
+          br
           img ! alt "Image data" ! 
             (src $ toValue $ "data:Image/png;base64,"++(unpack image))
   where
