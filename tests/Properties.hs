@@ -46,7 +46,8 @@ main = do
               , testGroup "Nonce"
                 [ testProperty "incNonce/pure"    prop_nonce_pure
                 , testProperty "length"  prop_nonce_length
-                , testProperty "nonce/clearBytes" prop_nonce_clear_inv
+                , testProperty "clearBytes invariant" prop_nonce_clear_inv
+                , testProperty "clearBytes/pure" prop_nonce_clear_pure
                 ]
               , testGroup "Hashing" 
                 [ testProperty "sha256/pure"   prop_sha256_pure
@@ -63,8 +64,10 @@ instance Arbitrary ByteString where
   arbitrary = pack `liftM` arbitrary
 
 instance Arbitrary Nonce where
-  arbitrary = fromBS `liftM` arbitrary
-
+  -- Nonces shouldn't be arbitrarily huge
+  arbitrary = do
+    n <- choose (0, 128) :: Gen Int
+    (fromBS . pack) `liftM` (vectorOf n arbitrary)
 newtype AuthKey = AuthKey ByteString deriving (Eq, Show)
 instance Arbitrary AuthKey where
   arbitrary = (AuthKey . pack) `liftM` (vectorOf authKeyLength arbitrary)
@@ -143,8 +146,12 @@ prop_nonce_length
   = forAll (choose (0, 128)) $ \x -> nonceLen (createZeroNonce x) == x
 
 prop_nonce_clear_inv :: Nonce -> Bool
-prop_nonce_clear_inv n 
+prop_nonce_clear_inv n
   = clearBytes (nonceLen n) n == createZeroNonce (nonceLen n)
+
+prop_nonce_clear_pure :: Nonce -> NonNegative Int -> Property
+prop_nonce_clear_pure n (NonNegative i)
+  = i <= nonceLen n ==> clearBytes i n == clearBytes i n
 
 -- Authentication
 

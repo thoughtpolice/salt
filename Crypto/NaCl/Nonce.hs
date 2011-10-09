@@ -81,6 +81,7 @@ fromBS bs = Nonce (S.length bs) bs
 clearBytes :: Int -> Nonce -> Nonce
 clearBytes n x@(Nonce l nonce) 
   | n > l  = error "Crypto.NaCl.Nonce.clearBytes: n > length of nonce"
+  | n < 0  = error "Crypto.NaCl.Nonce.clearBytes: n < 0"  
   | n == 0 = x
   | n == l = Nonce l $ S.replicate l 0x0
   | otherwise =
