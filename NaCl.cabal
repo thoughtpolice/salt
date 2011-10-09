@@ -15,9 +15,9 @@ description:
   selection of default primitives) than alternatives like OpenSSL.
   .
   NaCl has an odd build structure. There's an included @bootstrap.sh@
-  script included in order to make installation easy. In order to
-  install the bindings properly, please follow the 'Installation'
-  section located in the @README.md@, which you can find online here:
+  script in order to make installation easy. In order to install the
+  bindings properly, please follow the 'Installation' section located
+  in the @README.md@, which you can find online here:
   .
   <http://thoughtpolice.github.com/hs-nacl>
   .
