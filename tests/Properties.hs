@@ -1,7 +1,6 @@
 module Main
        ( main -- :: IO ()
        ) where
-import Data.Word
 import Control.Monad (liftM)
 import Data.ByteString as S (pack, length, ByteString)
 import Data.Maybe
@@ -17,6 +16,7 @@ import Crypto.NaCl.Random (randomBytes)
 import Crypto.NaCl.Encrypt.PublicKey as PubKey
 import Crypto.NaCl.Encrypt.SecretKey as SecretKey
 import Crypto.NaCl.Sign as Sign
+import Crypto.NaCl.Nonce
 
 main :: IO ()
 main = do
@@ -37,6 +37,9 @@ main = do
               , testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 ]
+              , testGroup "Nonces"
+                [ testProperty "nonce/pure"    prop_nonce_pure
+                ]
               , testGroup "Hashing" 
                 [ testProperty "sha256/pure"   prop_sha256_pure
                 , testProperty "sha256/length" prop_sha256_length
@@ -48,10 +51,11 @@ main = do
               , testCase "Randomness" case_random
               ]
 
--- Orphan arbitrary instance for ByteString
+-- Orphan Arbitrary instances
 instance Arbitrary ByteString where
-  arbitrary = pack `liftM` (arbitrary :: Gen [Word8])
-
+  arbitrary = pack `liftM` arbitrary
+instance Arbitrary Nonce where
+  arbitrary = fromBS `liftM` arbitrary
 
 -- Hashing properties
 prop_sha256_pure :: ByteString -> Bool
@@ -108,6 +112,13 @@ prop_secretkey_pure k n xs
         dec = SecretKey.decrypt n enc k
     in maybe False (== xs) dec
        
+
+-- Nonces
+
+prop_nonce_pure :: Nonce -> Bool
+prop_nonce_pure n = incNonce n == incNonce n
+
+
 -- Utilities
   
 doit :: Int -> (Int -> IO a) -> IO ()

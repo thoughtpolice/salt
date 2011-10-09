@@ -152,3 +152,16 @@ int glue_crypto_onetimeauth_verify(const unsigned char* a, const unsigned char* 
 {
   return crypto_onetimeauth_verify(a, m, mlen, k);
 }
+
+/*
+ * Nonces
+ */
+
+void
+glue_incnonce(unsigned char* p, size_t len)
+{
+  int i=len;
+  for(; --i >= 0;) {
+    if(++p[i] != 0) break;
+  }
+}

@@ -9,25 +9,26 @@
 -- 
 -- Simple API for cryptographic nonces.
 -- 
-
 module Crypto.NaCl.Nonce
        ( -- * Types
          Nonce              -- :: *
          -- * Creation
        , createZeroNonce    -- :: Int -> Nonce
-       , createRandomNonce  -- :: Int -> Nonce
+       , createRandomNonce  -- :: Int -> IO Nonce
+       , fromBS             -- :: ByteString -> Nonce
          -- * Incrementing a nonce
        , incNonce           -- :: Nonce -> Nonce
        ) where
-import Foreign.C
+import Foreign.C.Types
 import Foreign.Ptr
 import Control.Monad (void)
 import Data.Word
-import System.IO.Unsafe (unsafePerformIO)
 
 import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
+
+import Crypto.NaCl.Random (randomBytes)
 
 -- | A cryptographic nonce used for client-server communication.
 data Nonce = Nonce !Int !ByteString
@@ -36,15 +37,38 @@ data Nonce = Nonce !Int !ByteString
 instance Show Nonce where
   show (Nonce l bs) = "nonce["++show l++"]" ++ show (S.unpack bs)
 
--- | Create an 'empty' nonce of length @n@ where
+-- | Create an empty 'Nonce' of length @n@ where
 -- all the bytes are zero.
 createZeroNonce :: Int -> Nonce
-createZeroNonce = undefined
+createZeroNonce n =
+  Nonce n $ SI.unsafeCreate n $ \out ->
+    void $ SI.memset out 0x0 (fromIntegral n)
+{-# INLINEABLE createZeroNonce #-}
 
--- | Create a random nonce of length @n@.
+-- | Create a random 'Nonce' of length @n@.
 createRandomNonce :: Int -> IO Nonce
-createRandomNonce = undefined
+createRandomNonce n = do
+  b <- randomBytes n
+  return $! Nonce n b
+{-# INLINEABLE createRandomNonce #-}
 
--- | Increment a nonce by 1.
+-- | Create a 'Nonce' from a 'ByteString'.
+fromBS :: ByteString -> Nonce
+fromBS bs = Nonce (S.length bs) bs
+{-# INLINEABLE fromBS #-}
+
+-- | Increment a 'Nonce' by 1.
 incNonce :: Nonce -> Nonce
-incNonce = undefined
+incNonce (Nonce l bs) =
+  Nonce l $ SI.unsafeCreate l $ \out -> do
+    SU.unsafeUseAsCStringLen bs $ \(b,blen) ->
+      SI.memcpy out (castPtr b) (fromIntegral blen)
+    glue_incnonce out (fromIntegral l)
+{-# INLINEABLE incNonce #-}
+
+-- 
+-- FFI
+-- 
+
+foreign import ccall unsafe "glue_incnonce"
+  glue_incnonce :: Ptr Word8 -> CSize -> IO ()
