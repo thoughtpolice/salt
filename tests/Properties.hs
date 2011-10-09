@@ -23,12 +23,12 @@ main :: IO ()
 main = do
   k1 <- PubKey.createKeypair
   k2 <- PubKey.createKeypair
-  n  <- randomBytes PubKey.nonceLength
+  n  <- createRandomNonce PubKey.nonceLength
   
   s1 <- Sign.createKeypair
   
   key <- randomBytes SecretKey.keyLength
-  n2  <- randomBytes SecretKey.nonceLength
+  n2  <- createRandomNonce SecretKey.nonceLength
   
   defaultMain [ testGroup "Public key"
                 [ testCase "generated key length (encryption)" case_pubkey_len
@@ -114,7 +114,7 @@ case_signkey_len = doit 20 $ \_ -> do
   S.length pk @?= signPublicKeyLength
   S.length sk @?= signSecretKeyLength
 
-prop_pubkey_pure :: PubKey.KeyPair -> PubKey.KeyPair -> ByteString -> ByteString -> Bool
+prop_pubkey_pure :: PubKey.KeyPair -> PubKey.KeyPair -> Nonce -> ByteString -> Bool
 prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
   = let enc = PubKey.encrypt n xs pk2 sk1
         dec = PubKey.decrypt n enc pk1 sk2
@@ -130,7 +130,7 @@ prop_sign_verify (pk,sk) xs
 
 -- Secret-key authenticated encryption
 
-prop_secretkey_pure :: SecretKey.SecretKey -> ByteString -> ByteString -> Bool
+prop_secretkey_pure :: SecretKey.SecretKey -> Nonce -> ByteString -> Bool
 prop_secretkey_pure k n xs
   = let enc = SecretKey.encrypt n xs k
         dec = SecretKey.decrypt n enc k

@@ -16,6 +16,7 @@ module Crypto.NaCl.Nonce
        , createZeroNonce    -- :: Int -> Nonce
        , createRandomNonce  -- :: Int -> IO Nonce
        , fromBS             -- :: ByteString -> Nonce
+       , toBS               -- :: Nonce -> ByteString
          -- * Clearing the lower bytes of a Nonce
        , clearBytes         -- :: Int -> Nonce -> Nonce
          -- * Incrementing a nonce
@@ -63,6 +64,11 @@ createRandomNonce n
 fromBS :: ByteString -> Nonce
 fromBS bs = Nonce (S.length bs) bs
 {-# INLINEABLE fromBS #-}
+
+-- | Get the underlying 'ByteString' from a 'Nonce'.
+toBS :: Nonce -> ByteString
+toBS (Nonce _ b) = b
+{-# INLINEABLE toBS #-}
 
 -- | @clearBytes n nonce@ clears the last @n@ bytes of the 'Nonce' and
 -- makes them all 0. This is useful for the pattern of generating a

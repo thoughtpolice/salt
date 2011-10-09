@@ -35,6 +35,8 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
+import Crypto.NaCl.Nonce
+
 type PublicKey = ByteString
 type SecretKey = ByteString
 
@@ -56,11 +58,16 @@ createKeypair = do
   return (SI.fromForeignPtr pk 0 publicKeyLength, 
           SI.fromForeignPtr sk 0 secretKeyLength)
 
-encrypt :: ByteString
+encrypt :: Nonce
+        -- ^ Nonce
         -> ByteString
+        -- ^ Message
         -> PublicKey
+        -- ^ Recievers public key
         -> SecretKey
-        -> ByteString -- ^ Ciphertext
+        -- ^ Senders secret key
+        -> ByteString 
+        -- ^ Ciphertext
 encrypt n msg pk sk = unsafePerformIO $ do
   let mlen = S.length msg + msg_ZEROBYTES
   c <- SI.mallocByteString mlen
@@ -71,7 +78,7 @@ encrypt n msg pk sk = unsafePerformIO $ do
   -- as you can tell, this is unsafe
   void $ withForeignPtr c $ \pc ->
     SU.unsafeUseAsCString m $ \pm ->
-      SU.unsafeUseAsCString n $ \pn -> 
+      SU.unsafeUseAsCString (toBS n) $ \pn -> 
         SU.unsafeUseAsCString pk $ \ppk ->
           SU.unsafeUseAsCString sk $ \psk ->
             glue_crypto_box pc pm (fromIntegral mlen) pn ppk psk
@@ -80,10 +87,14 @@ encrypt n msg pk sk = unsafePerformIO $ do
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
 {-# INLINEABLE encrypt #-}
   
-decrypt :: ByteString
+decrypt :: Nonce
+        -- ^ Nonce
         -> ByteString
+        -- ^ Input ciphertext
         -> PublicKey
+        -- ^ Senders public key
         -> SecretKey
+        -- ^ Recievers secret key
         -> Maybe ByteString -- ^ Ciphertext
 decrypt n cipher pk sk = unsafePerformIO $ do
   let clen = S.length cipher + msg_BOXZEROBYTES
@@ -95,7 +106,7 @@ decrypt n cipher pk sk = unsafePerformIO $ do
   -- as you can tell, this is unsafe
   r <- withForeignPtr m $ \pm ->
     SU.unsafeUseAsCString c $ \pc ->
-      SU.unsafeUseAsCString n $ \pn -> 
+      SU.unsafeUseAsCString (toBS n) $ \pn -> 
         SU.unsafeUseAsCString pk $ \ppk ->
           SU.unsafeUseAsCString sk $ \psk ->
             glue_crypto_box_open pm pc (fromIntegral clen) pn ppk psk
@@ -110,13 +121,15 @@ decrypt n cipher pk sk = unsafePerformIO $ do
 -- FFI
 -- 
   
--- | Length of a nonce needed for encryption/decryption
+-- | Length of a 'Nonce' needed for encryption/decryption
 nonceLength :: Int
 nonceLength      = #{const crypto_box_NONCEBYTES}
 
+-- | Length of a 'PublicKey' in bytes.
 publicKeyLength :: Int
 publicKeyLength  = #{const crypto_box_PUBLICKEYBYTES}
 
+-- | Length of a 'SecretKey' in bytes.
 secretKeyLength :: Int
 secretKeyLength = #{const crypto_box_SECRETKEYBYTES}
   

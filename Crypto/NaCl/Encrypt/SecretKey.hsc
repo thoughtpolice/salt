@@ -31,11 +31,13 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
+import Crypto.NaCl.Nonce
+
 #include "crypto_secretbox.h"
 
 type SecretKey = ByteString
 
-encrypt :: ByteString
+encrypt :: Nonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input
@@ -53,7 +55,7 @@ encrypt n msg k = unsafePerformIO $ do
   -- as you can tell, this is unsafe
   void $ withForeignPtr c $ \pc ->
     SU.unsafeUseAsCString m $ \pm ->
-      SU.unsafeUseAsCString n $ \pn -> 
+      SU.unsafeUseAsCString (toBS n) $ \pn -> 
         SU.unsafeUseAsCString k $ \pk ->
           glue_crypto_secretbox pc pm (fromIntegral mlen) pn pk
   
@@ -61,7 +63,7 @@ encrypt n msg k = unsafePerformIO $ do
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
 {-# INLINEABLE encrypt #-}
 
-decrypt :: ByteString
+decrypt :: Nonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input
@@ -79,7 +81,7 @@ decrypt n cipher k = unsafePerformIO $ do
   -- as you can tell, this is unsafe
   r <- withForeignPtr m $ \pm ->
     SU.unsafeUseAsCString c $ \pc ->
-      SU.unsafeUseAsCString n $ \pn -> 
+      SU.unsafeUseAsCString (toBS n) $ \pn -> 
         SU.unsafeUseAsCString k $ \pk ->
           glue_crypto_secretbox_open pm pc (fromIntegral clen) pn pk
   
@@ -93,11 +95,11 @@ decrypt n cipher k = unsafePerformIO $ do
 -- FFI
 -- 
   
--- | Length of a nonce needed for encryption/decryption
+-- | Length of a 'Nonce' needed for encryption/decryption
 nonceLength :: Int
 nonceLength      = #{const crypto_secretbox_NONCEBYTES}
 
--- | Length of a secret key needed for encryption/decryption
+-- | Length of a 'SecretKey' needed for encryption/decryption.
 keyLength :: Int
 keyLength        = #{const crypto_secretbox_KEYBYTES}
 

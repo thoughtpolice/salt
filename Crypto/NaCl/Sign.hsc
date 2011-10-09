@@ -41,8 +41,8 @@ type KeyPair = (PublicKey, SecretKey)
 
 #include "crypto_sign.h"
 
--- | Randomly generate a public and private key
--- for doing authenticated encryption.
+-- | Randomly generate a public and private key for doing
+-- authenticated signing and verification.
 createKeypair :: IO KeyPair
 createKeypair = do
   pk <- SI.mallocByteString signPublicKeyLength
@@ -55,7 +55,13 @@ createKeypair = do
   return (SI.fromForeignPtr pk 0 signPublicKeyLength,
           SI.fromForeignPtr sk 0 signSecretKeyLength)
 
-sign :: SecretKey -> ByteString -> ByteString
+-- | Sign a message with a particular secret key.
+sign :: SecretKey 
+     -- ^ Signers secret key
+     -> ByteString 
+     -- ^ Input message
+     -> ByteString
+     -- ^ Resulting signed message
 sign sk xs = 
   unsafePerformIO $ SU.unsafeUseAsCStringLen xs $ \(mstr,mlen) ->
     SU.unsafeUseAsCString sk $ \psk ->
@@ -63,7 +69,15 @@ sign sk xs =
        fromIntegral `liftM` glue_crypto_sign out mstr (fromIntegral mlen) psk
 {-# INLINEABLE sign #-}
 
-verify :: PublicKey -> ByteString -> Maybe ByteString
+-- | Verifies a signed message. Returns @Nothing@ if verification
+-- fails, or @Just xs@ where @xs@ is the original message if it
+-- succeeds.
+verify :: PublicKey
+       -- ^ Signers public key
+       -> ByteString
+       -- ^ Signed message
+       -> Maybe ByteString
+       -- ^ Verification check
 verify pk xs =
   unsafePerformIO $ SU.unsafeUseAsCStringLen xs $ \(smstr,smlen) ->
     SU.unsafeUseAsCString pk $ \ppk ->
@@ -83,8 +97,11 @@ verify pk xs =
 -- FFI
 -- 
 
+-- | Length of a signers 'PublicKey', in bytes.
 signPublicKeyLength :: Int
 signPublicKeyLength = #{const crypto_sign_PUBLICKEYBYTES}
+
+-- | Length of a signers 'SecretKey', in bytes.
 signSecretKeyLength :: Int
 signSecretKeyLength = #{const crypto_sign_SECRETKEYBYTES}
 
