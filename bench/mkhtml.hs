@@ -25,7 +25,7 @@ exttype = ".png"
 
 main :: IO ()
 main = do
-  (date:machine:rest) <- getArgs
+  (gitsha1:date:machine:rest) <- getArgs
   
   let pngs = filter (\f -> exttype == takeExtension f) rest
   let files = map (\f -> (init . splitOn "-" . fst $ splitExtension f, f)) pngs
@@ -34,16 +34,18 @@ main = do
     return (x,bs)
   
   let values = map (\(x,f) -> (toHtml $ Prelude.concat $ intersperse " " x, f)) files'
-  L.putStrLn $ renderHtml $ page date machine values
+  L.putStrLn $ renderHtml $ page gitsha1 date machine values
 
-page :: String -> String -> [(Html, S.ByteString)] -> Html
-page date machine lnks = html $ do
+page :: String -> String -> String -> [(Html, S.ByteString)] -> Html
+page sha1 date machine lnks = html $ do
   head $ title "hs-NaCl benchmark results"
   body $ do
     h1 $ toHtml ("Criterion results" :: String)
     p $ do
       b (toHtml ("Date: " :: String)) >> toHtml date >> br
       b (toHtml ("Run on: " :: String)) >> toHtml machine >> br
+      let sha1' = a ! href (toValue ghcommit) $ toHtml sha1
+      b (toHtml ("Commit: " :: String)) >> toHtml sha1' >> br
       br
       b (toHtml ("Results:" :: String)) >> br
       p $ ul $ forM_ lnks $ \(n,image) -> 
@@ -51,3 +53,5 @@ page date machine lnks = html $ do
           p n >> br
           img ! alt "Image data" ! 
             (src $ toValue $ "data:Image/png;base64,"++(unpack image))
+  where
+    ghcommit = ("https://github.com/thoughtpolice/hs-nacl/commit/"++sha1)
