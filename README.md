@@ -13,11 +13,11 @@ installation instructions, dependencies, documentation, and examples.
 File bugs in the GitHub [issue
 tracker](http://github.com/thoughtpolice/hs-nacl/issues).
 
-Master git repository:
+Master [git repository](http://github.com/thoughtpolice/hs-nacl):
 
 * `git clone https://thoughtpolice@github.com/thoughtpolice/hs-nacl.git`
 
-There's also a BitBucket mirror:
+There's also a [BitBucket mirror](http://bitbucket.org/thoughtpolice/hs-nacl):
 
 * `git clone https://bitbucket.org/thoughtpolice/hs-nacl.git`
 
