@@ -41,7 +41,8 @@ main = do
               , testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 , testGroup "Stream"
-                  [ testProperty "encrypt/decrypt" (prop_stream_enc_pure n3)
+                  [ testProperty "stream/pure" (prop_stream_stream_pure n3)
+                  , testProperty "encrypt/decrypt" (prop_stream_enc_pure n3)
                   ]
                 ]
               , testGroup "Authentication"
@@ -184,6 +185,11 @@ prop_stream_enc_pure n (StreamKey sk) p
   = let enc = Stream.encryptXor n p sk
         dec = Stream.decryptXor n enc sk
     in dec == p
+
+prop_stream_stream_pure :: Nonce -> StreamKey -> Property
+prop_stream_stream_pure n (StreamKey sk)
+  -- Don't generate massive streams
+  = forAll (choose (0, 256)) $ \i -> Stream.cryptoStream n i sk == Stream.cryptoStream n i sk
 
 -- Utilities
   
