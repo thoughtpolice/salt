@@ -10,7 +10,7 @@ HSNACLDIR=$HOME/.hs-nacl
 TARBALL=$HSNACLDIR/$VERSION.tar.bz2
 
 say () {
-    echo "==> " $1 ""
+    echo "==> " $1
     return 0
 }
 
@@ -45,7 +45,8 @@ fi
 if [ ! -d "$HSNACLDIR/$VERSION/build" ]; then
     say "Now building $VERSION"
     say "This is going to take a while, grab some coffee..."
-    cd $HSNACLDIR/$VERSION/ && ./do
+    D=`pwd`
+    cd $HSNACLDIR/$VERSION && ./do && cd $D
     say "Done"
 else
     say "Using already-completed build."
