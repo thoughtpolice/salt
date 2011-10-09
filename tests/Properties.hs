@@ -143,8 +143,8 @@ prop_nonce_length
   = forAll (choose (0, 128)) $ \x -> nonceLen (createZeroNonce x) == x
 
 prop_nonce_clear_inv :: Nonce -> Bool
-prop_nonce_clear_inv n = clearBytes (nonceLen n) n == createZeroNonce (nonceLen n)
-
+prop_nonce_clear_inv n 
+  = clearBytes (nonceLen n) n == createZeroNonce (nonceLen n)
 
 -- Authentication
 
