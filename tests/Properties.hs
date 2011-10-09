@@ -28,7 +28,8 @@ main = do
   
   key <- randomBytes SecretKey.keyLength
   n2  <- randomBytes SecretKey.nonceLength
-  defaultMain [ testGroup "Public key" 
+  
+  defaultMain [ testGroup "Public key"
                 [ testCase "generated key length (encryption)" case_pubkey_len
                 , testCase "generated key length (signatures)" case_signkey_len
                 , testProperty "encrypt/decrypt" (prop_pubkey_pure k1 k2 n)
@@ -37,8 +38,10 @@ main = do
               , testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 ]
-              , testGroup "Nonces"
-                [ testProperty "nonce/pure"    prop_nonce_pure
+              , testGroup "Nonce"
+                [ testProperty "incNonce/pure"    prop_nonce_pure
+                , testProperty "length"  prop_nonce_length
+                --, testProperty "nonce/clearBytes" prop_nonce_clear_inv
                 ]
               , testGroup "Hashing" 
                 [ testProperty "sha256/pure"   prop_sha256_pure
@@ -111,13 +114,20 @@ prop_secretkey_pure k n xs
   = let enc = SecretKey.encrypt n xs k
         dec = SecretKey.decrypt n enc k
     in maybe False (== xs) dec
-       
 
 -- Nonces
 
 prop_nonce_pure :: Nonce -> Bool
 prop_nonce_pure n = incNonce n == incNonce n
 
+prop_nonce_length :: Property
+prop_nonce_length
+  -- We don't want to generate absurdly large nonces in this test.
+  -- Unless you like running out of memory, that is.
+  = forAll (choose (0, 128)) $ \x -> nonceLen (createZeroNonce x) == x
+
+prop_nonce_clear_inv :: Nonce -> Bool
+prop_nonce_clear_inv n = clearBytes (nonceLen n) n == createZeroNonce (nonceLen n)
 
 -- Utilities
   
