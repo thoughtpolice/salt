@@ -13,7 +13,7 @@
 #include "crypto_sign.h"
 #include "crypto_auth.h"
 #include "crypto_onetimeauth.h"
-
+#include "crypto_stream.h"
 
 /*
  * Hashing
@@ -164,4 +164,25 @@ glue_incnonce(unsigned char* p, size_t len)
   for(; --i >= 0;) {
     if(++p[i] != 0) break;
   }
+}
+
+/*
+ * Secret-key encryption
+ */
+int
+glue_crypto_stream(unsigned char* c, unsigned long long clen,
+		   const unsigned char* n, const unsigned char *k)
+{
+  int r = crypto_stream(c, clen, n, k);
+  assert(r == 0);
+  return r;
+}
+
+int
+glue_crypto_stream_xor(unsigned char* c, unsigned char* m, unsigned long long mlen,
+		       const unsigned char* n, const unsigned char* k)
+{
+  int r = crypto_stream_xor(c, m, mlen, n, k);
+  assert(r == 0);
+  return r;
 }

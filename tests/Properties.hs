@@ -15,6 +15,7 @@ import Crypto.NaCl.Hash (cryptoHash, cryptoHash_SHA256)
 import Crypto.NaCl.Random (randomBytes)
 import Crypto.NaCl.Encrypt.PublicKey as PubKey
 import Crypto.NaCl.Encrypt.SecretKey as SecretKey
+import Crypto.NaCl.Encrypt.Stream as Stream
 import Crypto.NaCl.Sign as Sign
 import Crypto.NaCl.Nonce
 import Crypto.NaCl.Auth as Auth
@@ -30,6 +31,7 @@ main = do
   key <- randomBytes SecretKey.keyLength
   n2  <- createRandomNonce SecretKey.nonceLength
   
+  n3 <- createRandomNonce Stream.nonceLength
   defaultMain [ testGroup "Public key"
                 [ testCase "generated key length (encryption)" case_pubkey_len
                 , testCase "generated key length (signatures)" case_signkey_len
@@ -38,6 +40,9 @@ main = do
                 ]
               , testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
+                , testGroup "Stream"
+                  [ testProperty "encrypt/decrypt" (prop_stream_enc_pure n3)
+                  ]
                 ]
               , testGroup "Authentication"
                 [ testProperty "auth works" prop_auth_works
@@ -78,7 +83,9 @@ newtype OneTimeAuthKey = OneTimeAuthKey ByteString deriving (Eq, Show)
 instance Arbitrary OneTimeAuthKey where
   arbitrary = (OneTimeAuthKey . pack) `liftM` (vectorOf oneTimeAuthKeyLength arbitrary)
     
-
+newtype StreamKey = StreamKey ByteString deriving (Eq, Show)
+instance Arbitrary StreamKey where
+  arbitrary = (StreamKey . pack) `liftM` (vectorOf Stream.keyLength arbitrary)
 
 
 -- Hashing properties
@@ -169,6 +176,15 @@ prop_auth_works (AuthKey k) msg
 prop_onetimeauth_works :: OneTimeAuthKey -> ByteString -> Bool
 prop_onetimeauth_works (OneTimeAuthKey k) msg
   = Auth.verifyOnce (Auth.authenticateOnce msg k) msg k
+
+-- Streaming encryption
+
+prop_stream_enc_pure :: Nonce -> StreamKey -> ByteString -> Bool
+prop_stream_enc_pure n (StreamKey sk) p
+  = let enc = Stream.encryptXor n p sk
+        dec = Stream.decryptXor n enc sk
+    in dec == p
+
 -- Utilities
   
 doit :: Int -> (Int -> IO a) -> IO ()
