@@ -96,7 +96,4 @@ test-suite properties
     NaCl
 
   ghc-options:      -Wall -fno-cse -fno-warn-orphans
-  if flag(hpc)
-    ghc-options:    -fhpc
-
   default-language: Haskell2010
