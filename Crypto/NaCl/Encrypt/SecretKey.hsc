@@ -7,6 +7,7 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
+-- Test
 -- 
 module Crypto.NaCl.Encrypt.SecretKey
        ( -- * Types

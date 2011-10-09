@@ -7,13 +7,16 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
+-- TODO FIXME
 -- 
 module Crypto.NaCl.Sign
-       ( PublicKey, SecretKey, KeyPair -- :: *
+       ( -- * Types
+         PublicKey, SecretKey, KeyPair -- :: *
+         -- * Keypair creation
        , createKeypair                 -- :: IO KeyPair
-       , sign                          -- :: 
-       , verify                        -- :: 
-       -- * Misc
+         -- * Signing and verifying messages
+       , sign                          -- :: SecretKey -> ByteString -> ByteString
+       , verify                        -- :: PublicKey -> ByteString -> Maybe ByteString
        , signPublicKeyLength           -- :: Int
        , signSecretKeyLength           -- :: Int
        ) where

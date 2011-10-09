@@ -13,6 +13,7 @@
 -- randomness.  This is really only here for completeness because
 -- internally certain NaCl primitives use the @randombytes@ call.
 -- 
+
 module Crypto.NaCl.Random
        ( randomBytes -- :: Int -> IO ByteString
        ) where

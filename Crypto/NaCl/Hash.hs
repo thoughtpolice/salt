@@ -9,6 +9,7 @@
 -- 
 -- Fast, cryptographically strong hashing functions.
 -- 
+
 module Crypto.NaCl.Hash
        ( -- * Selected primitive
          cryptoHash        -- :: ByteString -> ByteString

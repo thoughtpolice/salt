@@ -14,6 +14,9 @@ description:
   considerably faster and easier to use (example: simple APIs, good
   selection of default primitives) than alternatives like OpenSSL.
   .
+  Please check out the NaCl home page for more information about the
+  underlying features: <http://nacl.cace-project.eu/features.html>
+  .
   NaCl itself has an odd build structure. There's an included
   @bootstrap.sh@ script in order to make installation easy. Please
   follow the 'Install' section on the home page:
@@ -60,6 +63,7 @@ library
     Crypto.NaCl.Encrypt.SecretKey
 --  Crypto.NaCl.Encrypt.Stream
     Crypto.NaCl.Hash
+    Crypto.NaCl.Nonce
     Crypto.NaCl.Random
     Crypto.NaCl.Sign
   other-modules:
