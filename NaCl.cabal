@@ -20,6 +20,9 @@ description:
   .
   <http://thoughtpolice.github.com/hs-nacl>
   .
+  The homepage also contains documentation, benchmarks, code coverage
+  results, and examples.
+  .
   Point of note: NaCl is, like much DJB software, released in the
   public domain (which isn't recognized by all jurisdictions.) These
   bindings however, are BSD3 licensed - and as of current,
