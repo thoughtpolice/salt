@@ -69,6 +69,5 @@ incNonce (Nonce l bs) =
 -- 
 -- FFI
 -- 
-
 foreign import ccall unsafe "glue_incnonce"
   glue_incnonce :: Ptr Word8 -> CSize -> IO ()
