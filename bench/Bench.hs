@@ -41,8 +41,8 @@ main = do
               , bgroup "Stream"
                 [ bench "pure streamgen 64/1000" $ nf (cryptoStreamBench streamk1  64) 1000
                 , bench "enum encrypt 512mb /dev/null" $ nfIO $ streamEncBench streamk1 512
-                , bench "enum encrypt 10gb /dev/null" $ nfIO $ streamEncBench streamk1 (1024*10)
---              , bench "enum encrypt 100gb /dev/null" $ nfIO $ streamEncBench streamk1 (1024*100)
+                  --  This takes 45 minutes on my core i5.
+--              , bench "enum encrypt 10gb /dev/null" $ nfIO $ streamEncBench streamk1 (1024*10)
                 ]
               , bgroup "Hashing"
                 [ bgroup "sha512"
