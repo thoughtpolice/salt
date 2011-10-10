@@ -88,18 +88,17 @@ if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
     C="$C --enable-tests"
 fi
 
-# echo $CABAL $C $@
+if [ "$HADDOCK" == "YES" ]; then
+    C="$C --enable-documentation"
+fi
+
+#echo $CABAL $C $@
 $CABAL $C $@
 
 # test
 if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
     say "Testing..."
     ./dist/build/properties/properties +RTS -N
-fi
-
-if [ "$HADDOCK" == "YES" ]; then
-    say "Building documentation..."
-    $CABAL haddock --hyperlink-source
 fi
 
 say "Completed"
