@@ -26,21 +26,22 @@ main = putStrLn ("Key length is " ++ show keyLength) >> getArgs >>= go
           n <- clearBytes 8 `liftM` createRandomNonce nonceLength
           S.writeFile (file <.> "nonce") (toBS n)
           h <- openFile (file <.> "enc") WriteMode
-          run_ $ (enumFile file $= encEnee (pack key) n) $$ iterHandle h
+          run_ $ pipeline file key n h
           hClose h
         go ("decrypt":nonce:key:file:[]) = do
           checkKey key
           n  <- fromBS `liftM` (S.readFile nonce)
           checkNonce n
           h <- openFile (dropExtension file <.> "dec") WriteMode
-          run_ $ (enumFile file $= encEnee (pack key) n) $$ iterHandle h
+          run_ $ pipeline file key n h
           hClose h
         go _ = error "Try --help"
 
-encEnee :: Monad m => SecretKey -> Nonce -> Enumeratee ByteString ByteString m b
-encEnee k = EL.mapAccum $ \n bs ->
-  let bs' = encryptXor n bs k
-  in (incNonce n, bs')
+pipeline :: FilePath -> String -> Nonce -> Handle -> Iteratee ByteString IO ()
+pipeline file k n h = (enumFile file $= encrypt (pack k) n) $$ iterHandle h
+
+encrypt :: Monad m => SecretKey -> Nonce -> Enumeratee ByteString ByteString m b
+encrypt k = EL.mapAccum $ \n bs -> (incNonce n, encryptXor n bs k)
 
 checkKey :: String -> IO ()
 checkKey k = 
