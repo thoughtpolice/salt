@@ -51,7 +51,7 @@ if [ ! -d "$HSNACLDIR/$VERSION/build" ]; then
     cd $HSNACLDIR/$VERSION && ./do && cd $D
     say "Done"
 else
-    say "Using already-completed build."
+    say "Using already-completed NaCl build."
 fi
 
 SHORTHOST=`hostname | sed 's/\..*//' | tr -cd '[a-z][A-Z][0-9]'`
@@ -67,6 +67,11 @@ say "ARCH = $ARCH, HOST = $SHORTHOST"
 INCDIR=$HSNACLDIR/$VERSION/build/$SHORTHOST/include/$ARCH/
 LIBDIR=$HSNACLDIR/$VERSION/build/$SHORTHOST/lib/$ARCH/
 
+if [ "$CLEAN" == "YES" ]; then
+    say "Cleaning..."
+    $CABAL clean -v0
+fi
+
 # get test prerequisites
 if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
     say "Grabbing test prerequisuites..."
@@ -76,7 +81,7 @@ if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
 fi
 
 # build with cabal 
-say "Building with cabal..."
+say "Building with $CABAL..."
 
 C="install --extra-include-dirs=$INCDIR --extra-lib-dirs=$LIBDIR"
 if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
@@ -90,6 +95,11 @@ $CABAL $C $@
 if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
     say "Testing..."
     ./dist/build/properties/properties +RTS -N
+fi
+
+if [ "$HADDOCK" == "YES" ]; then
+    say "Building documentation..."
+    $CABAL haddock --hyperlink-source
 fi
 
 say "Completed"
