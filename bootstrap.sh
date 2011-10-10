@@ -1,6 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-DEV=1
+DEV=YES
 VERSION=nacl-20110221
 
 # No configuration needed past this point
@@ -14,9 +14,11 @@ say () {
     return 0
 }
 
-if [ $DEV -eq 1 ]; then
+if [ "$DEV" == "YES" ] ; then
+    say "In development mode"
     CABAL=cabal-dev
 else
+    say "Using release tarball"
     CABAL=cabal
 fi
 
@@ -66,19 +68,28 @@ INCDIR=$HSNACLDIR/$VERSION/build/$SHORTHOST/include/$ARCH/
 LIBDIR=$HSNACLDIR/$VERSION/build/$SHORTHOST/lib/$ARCH/
 
 # get test prerequisites
-say "Grabbing test prerequisuites..."
-#echo " cabal-dev install QuickCheck HUnit test-framework test-framework-quickcheck2 test-framework-hunit"
-$CABAL install -v0 QuickCheck HUnit test-framework test-framework-quickcheck2 test-framework-hunit
+if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
+    say "Grabbing test prerequisuites..."
+    C="install -v0 QuickCheck HUnit test-framework test-framework-quickcheck2 test-framework-hunit"
+    # echo $CABAL $C
+    $CABAL $C
+fi
 
 # build with cabal 
 say "Building with cabal..."
-#echo " cabal-dev install --extra-include-dirs=$INCDIR --extra-lib-dirs=$LIBDIR --enable-tests"
-$CABAL install --extra-include-dirs=$INCDIR --extra-lib-dirs=$LIBDIR --enable-tests $@
+
+C="install --extra-include-dirs=$INCDIR --extra-lib-dirs=$LIBDIR"
+if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
+    C="$C --enable-tests"
+fi
+
+# echo $CABAL $C $@
+$CABAL $C $@
 
 # test
-echo 
-say "Testing..."
-./dist/build/properties/properties +RTS -N
+if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
+    say "Testing..."
+    ./dist/build/properties/properties +RTS -N
+fi
 
-echo
 say "Completed"
