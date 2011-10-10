@@ -1,7 +1,7 @@
 module Main
        ( main -- :: IO ()
        ) where
-import Control.Monad (when)
+import Control.Monad (when, liftM)
 import System.Environment (getArgs)
 import System.Exit
 import Data.ByteString.Char8 as S hiding (putStrLn)
@@ -14,17 +14,19 @@ main :: IO ()
 main = putStrLn ("Key length is " ++ show keyLength) >> getArgs >>= go
   where go []         = error "Try --help"
         go ["--help"] =
-          putStrLn "USAGE ./encfile [encrypt|decrypt] <key> <infile>"
+          putStrLn "USAGE ./encfile [encrypt|decrypt <nonce>] <key> <infile>"
         go ("encrypt":key:file:[]) = do
           checkKey key
           bs <- S.readFile file
-          let n = createZeroNonce nonceLength
+          n <- createRandomNonce nonceLength
           let e = encryptXor n bs (pack key)
           S.writeFile (file <.> "enc") e
-        go ("decrypt":key:file:[]) = do
+          S.writeFile (file <.> "nonce") (toBS n)
+        go ("decrypt":nonce:key:file:[]) = do
           checkKey key
+          n  <- fromBS `liftM` (S.readFile nonce)
+          checkNonce n
           bs <- S.readFile file
-          let n = createZeroNonce nonceLength
           let e = decryptXor n bs (pack key)
           S.writeFile (dropExtension file <.> "dec") e
         go _ = error "Try --help"
@@ -33,3 +35,8 @@ checkKey :: String -> IO ()
 checkKey k = 
   when (Prelude.length k /= keyLength) $
     putStrLn "Invalid key length" >> exitWith (ExitFailure 1)
+
+checkNonce :: Nonce -> IO ()
+checkNonce k = 
+  when (nonceLen k /= nonceLength) $
+    putStrLn "Invalid nonce length" >> exitWith (ExitFailure 1)
