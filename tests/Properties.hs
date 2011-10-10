@@ -2,8 +2,9 @@ module Main
        ( main -- :: IO ()
        ) where
 import Control.Monad (liftM)
-import Data.ByteString as S (pack, length, ByteString)
+import Data.ByteString as S (pack, length, ByteString, zipWith)
 import Data.Maybe
+import Data.Bits
 
 import Test.Framework (defaultMain, testGroup)
 import Test.QuickCheck
@@ -42,6 +43,7 @@ main = do
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 , testGroup "Stream"
                   [ testProperty "stream/pure" (prop_stream_stream_pure n3)
+                  , testProperty "stream/xor" (prop_stream_xor n3)
                   , testProperty "encrypt/decrypt" (prop_stream_enc_pure n3)
                   ]
                 ]
@@ -75,6 +77,12 @@ instance Arbitrary Nonce where
   arbitrary = do
     n <- choose (0, 128) :: Gen Int
     (fromBS . pack) `liftM` (vectorOf n arbitrary)
+
+newtype SmallBS = SBS ByteString deriving (Eq, Show)
+instance Arbitrary SmallBS where
+  arbitrary = do
+    n <- choose (0, 256) :: Gen Int
+    (SBS . pack) `liftM` (vectorOf n arbitrary)
 
 newtype AuthKey = AuthKey ByteString deriving (Eq, Show)
 instance Arbitrary AuthKey where
@@ -191,7 +199,16 @@ prop_stream_stream_pure n (StreamKey sk)
   -- Don't generate massive streams
   = forAll (choose (0, 256)) $ \i -> Stream.cryptoStream n i sk == Stream.cryptoStream n i sk
 
+prop_stream_xor :: Nonce -> StreamKey -> SmallBS -> Bool
+prop_stream_xor n (StreamKey sk) (SBS p)
+  = let enc = Stream.encryptXor n p sk
+        str = Stream.cryptoStream n (S.length p) sk
+    in enc == (p `xorBS` str)
+
 -- Utilities
-  
+
+xorBS :: ByteString -> ByteString -> ByteString
+xorBS x1 x2 = S.pack $ S.zipWith xor x1 x2
+
 doit :: Int -> (Int -> IO a) -> IO ()
 doit n f = sequence_ $ map f [1..n]
