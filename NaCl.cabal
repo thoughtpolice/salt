@@ -41,14 +41,15 @@ maintainer:          Austin Seipp <as@hacks.yi.org>
 category:            Cryptography
 build-type:          Simple
 cabal-version:       >=1.10
-tested-with:         GHC==7.0.4,GHC==7.2.1
+tested-with:         GHC==7.0.4, GHC==7.2.1
 
-extra-Source-Files:
+extra-source-files:
   bootstrap.sh
-  cbits/glue.c
-  cbits/devurandom.c
+  cbits/*.c
   README.md
-  tests/Properties.hs
+  tests/*.hs
+  bench/Bench.hs bench/makefile bench/mkhtml.hs
+  examples/*.hs
 
 source-repository head
   type: git
