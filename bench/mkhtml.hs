@@ -25,7 +25,7 @@ exttype = ".png"
 
 main :: IO ()
 main = do
-  (gitsha1:date:machine:rest) <- getArgs
+  (gitsha1:date:machine:cpu:rest) <- getArgs
   
   let pngs = filter (\f -> exttype == takeExtension f) rest
   let files = flip map pngs $ \f -> 
@@ -35,25 +35,26 @@ main = do
     return (x,bs)
   
   let values = map (\(x,f) -> (gather " " x, gather "-" x, f)) files'
-  L.putStrLn $ renderHtml $ page gitsha1 date machine values
+  L.putStrLn $ renderHtml $ page gitsha1 date machine cpu values
  where gather s x = Prelude.concat $ intersperse s x
        
-page :: String -> String -> String -> [(String, String, S.ByteString)] -> Html
-page sha1 date machine lnks = html $ do
+page :: String -> String -> String -> String -> [(String, String, S.ByteString)] -> Html
+page sha1 date machine cpu lnks = html $ do
   head $ title "hs-NaCl benchmark results"
   body $ do
-    h1 $ toHtml ("Criterion results" :: String)
+    h1 $ str "Criterion results"
     p $ do
-      b (toHtml ("Date: " :: String)) >> toHtml date >> br
-      b (toHtml ("Run on: " :: String)) >> toHtml machine >> br
+      b (str "Date: ") >> toHtml date >> br
+      b (str "Host machine: ") >> str machine >> br
+      b (str "Host CPU: ") >> str cpu >> br
       let sha1' = a ! href (toValue ghcommit) $ toHtml sha1
-      b (toHtml ("Commit: " :: String)) >> toHtml sha1' >> br
+      b (str "Commit: ") >> toHtml sha1' >> br
       br
-      b (toHtml ("Results:" :: String)) >> br
+      b (str "Results:") >> br
       ul $ forM_ lnks $ \(n,anc,_) -> 
         li $ a ! href (toValue $ '#':anc) $ (toHtml n)
       br
-      b (toHtml ("Graphs:" :: String)) >> br
+      b (str "Graphs:") >> br
       p $ ul $ forM_ lnks $ \(n,anc,image) -> 
         li $ do
           a ! name (toValue anc) $ p (toHtml n)
@@ -62,3 +63,5 @@ page sha1 date machine lnks = html $ do
             (src $ toValue $ "data:Image/png;base64,"++(unpack image))
   where
     ghcommit = ("https://github.com/thoughtpolice/hs-nacl/commit/"++sha1)
+    str :: String -> Html
+    str = toHtml
