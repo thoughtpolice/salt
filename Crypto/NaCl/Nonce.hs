@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Crypto.NaCl.Nonce
 -- Copyright   : (c) Austin Seipp 2011
@@ -36,11 +37,11 @@ import Data.ByteString.Unsafe as SU
 import Crypto.NaCl.Random (randomBytes)
 
 -- | A cryptographic nonce used for client-server communication.
-data Nonce = Nonce !Int !ByteString
+data Nonce = Nonce !ByteString
               deriving Eq
 
 instance Show Nonce where
-  show (Nonce l bs) = "nonce["++show l++"]" ++ show (S.unpack bs)
+  show (Nonce bs) = "nonce["++show (S.length bs)++"]" ++ show (S.unpack bs)
 
 -- | Create an empty 'Nonce' of length @n@ where
 -- all the bytes are zero.
@@ -48,7 +49,7 @@ createZeroNonce :: Int -> Nonce
 createZeroNonce n 
   | n < 0 = error "Crypto.NaCl.Nonce.createZeroNonce: n < 0"
   | otherwise = do
-      Nonce n $ SI.unsafeCreate n $ \out ->
+      Nonce $ SI.unsafeCreate n $ \out ->
         void $ SI.memset out 0x0 (fromIntegral n)
 {-# INLINEABLE createZeroNonce #-}
 
@@ -58,16 +59,16 @@ createRandomNonce n
   | n < 0 = error "Crypto.NaCl.Nonce.createRandomNonce: n < 0"
   | otherwise = do
       b <- randomBytes n
-      return $! Nonce n b
+      return $! Nonce b
 
 -- | Create a 'Nonce' from a 'ByteString'.
 fromBS :: ByteString -> Nonce
-fromBS bs = Nonce (S.length bs) bs
+fromBS = Nonce
 {-# INLINEABLE fromBS #-}
 
 -- | Get the underlying 'ByteString' from a 'Nonce'.
 toBS :: Nonce -> ByteString
-toBS (Nonce _ b) = b
+toBS (Nonce b) = b
 {-# INLINEABLE toBS #-}
 
 -- | @clearBytes n nonce@ clears the last @n@ bytes of the 'Nonce' and
@@ -85,30 +86,34 @@ toBS (Nonce _ b) = b
 -- > clearBytes (nonceLen nonce) nonce == createZeroNonce (nonceLen nonce)
 -- 
 clearBytes :: Int -> Nonce -> Nonce
-clearBytes n x@(Nonce l nonce) 
+clearBytes n x@(Nonce nonce) 
   | n > l  = error "Crypto.NaCl.Nonce.clearBytes: n > length of nonce"
   | n < 0  = error "Crypto.NaCl.Nonce.clearBytes: n < 0"  
   | n == 0 = x
-  | n == l = Nonce l $ S.replicate l 0x0
+  | n == l = Nonce $ S.replicate l 0x0
   | otherwise =
-    Nonce l $ SI.unsafeCreate l $ \out -> do
+    Nonce $ SI.unsafeCreate l $ \out -> do
       SU.unsafeUseAsCString nonce $ \b -> do
         void $ SI.memset out 0x0 (fromIntegral l)
         void $ SI.memcpy out (castPtr b) (fromIntegral n)
+  where
+    l = S.length nonce
 {-# INLINEABLE clearBytes #-}
 
 -- | Increment a 'Nonce' by 1.
 incNonce :: Nonce -> Nonce
-incNonce (Nonce l bs) =
-  Nonce l $ SI.unsafeCreate l $ \out -> do
-    SU.unsafeUseAsCStringLen bs $ \(b,blen) ->
+incNonce (Nonce nonce) =
+  Nonce $ SI.unsafeCreate l $ \out -> do
+    SU.unsafeUseAsCStringLen nonce $ \(b,blen) ->
       SI.memcpy out (castPtr b) (fromIntegral blen)
     glue_incnonce out (fromIntegral l)
+  where
+    l = S.length nonce
 {-# INLINEABLE incNonce #-}
 
 -- | Get the length of a 'Nonce'.
 nonceLen :: Nonce -> Int
-nonceLen (Nonce l _) = l
+nonceLen (Nonce n) = S.length n
 
 -- 
 -- FFI
