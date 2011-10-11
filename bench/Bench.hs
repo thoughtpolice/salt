@@ -29,7 +29,7 @@ instance NFData ByteString where
 main :: IO ()
 main = do
   s1 <- Sign.createKeypair
-  streamk1 <- randomBytes Stream.keyLength
+  streamk1 <- randomBytes $ Stream.keyLength Nothing
   
   defaultMain [ bgroup "Signing"
                 [ bench "createKeypair" $ nfIO Sign.createKeypair
@@ -86,9 +86,9 @@ main = do
 
         streamGenBench :: Stream.SecretKey -> Int -> Int -> ByteString
         streamGenBench sk sz i 
-          = go (createZeroNonce Stream.nonceLength) empty i
+          = go (createZeroNonce $ Stream.nonceLength Nothing) empty i
           where go !_ !bs 0  = bs
-                go !n !_ !x = go (incNonce n) (Stream.streamGen n sz sk) (x-1)
+                go !n !_ !x = go (incNonce n) (Stream.streamGen Nothing n sz sk) (x-1)
 
         streamEncBench :: Stream.SecretKey -> Int64 -> IO Int
         streamEncBench sk mb = do
@@ -96,7 +96,7 @@ main = do
               goI :: Int -> Int64 -> Nonce -> Iteratee ByteString IO Int
               goI !x !t !n = do
                 v <- EL.head_
-                let !_ = Stream.encrypt n v sk
+                let !_ = Stream.encrypt Nothing n v sk
                 let l = fromIntegral $ S.length v
                 if (t+l) > total then
                   return x
@@ -104,4 +104,4 @@ main = do
                   goI (x+1) (t+l) (incNonce n)
           Data.Enumerator.run_
                  (enumFile "/dev/zero"
-                  $$ (goI 0 0 $ createZeroNonce Stream.nonceLength))
+                  $$ (goI 0 0 $ createZeroNonce $ Stream.nonceLength Nothing))
