@@ -52,7 +52,7 @@ data CryptoMode = AES128CTR
 -- | Given a 'Nonce' @n@, size @s@ and 'SecretKey' @sk@, @streamGen n
 -- s sk@ generates a cryptographic stream of length @s@.
 -- 
--- Defaults to 'Crypto.NaCl.Encrypt.Stream.XSalsa20.streamGen'.
+-- Defaults to 'XSalsa20'.
 streamGen :: Maybe CryptoMode
           -- ^ Cryptographic mode to use.
           -- Defaults to 'Crypto.NaCl.Encrypt.Stream.XSalsa20'
@@ -100,6 +100,7 @@ encrypt (Just XSalsa20)  = XSalsa20.encrypt
 {-# INLINEABLE encrypt #-}
 
 -- | Simple alias for 'encrypt'.
+-- Defaults to 'XSalsa20'.
 decrypt :: Maybe CryptoMode
         -- ^ Cryptographic mode to use.
         -- Defaults to 'Crypto.NaCl.Decrypt.Stream.XSalsa20'  
@@ -111,11 +112,16 @@ decrypt :: Maybe CryptoMode
         -- ^ Secret key
         -> ByteString
         -- ^ Ciphertext
-decrypt = encrypt
+decrypt  Nothing         = XSalsa20.decrypt
+decrypt (Just AES128CTR) = AES128CTR.decrypt
+decrypt (Just Salsa20)   = Salsa20.decrypt
+decrypt (Just Salsa2012) = Salsa2012.decrypt
+decrypt (Just Salsa208)  = Salsa208.decrypt
+decrypt (Just XSalsa20)  = XSalsa20.decrypt
 {-# INLINEABLE decrypt #-}
 
 -- | Get the key length of a particular crypto mode.
--- Defaults to 'Crypto.NaCl.Encrypt.Stream.XSalsa20'
+-- Defaults to 'XSalsa20'.
 keyLength :: Maybe CryptoMode -> Int
 keyLength  Nothing         = XSalsa20.keyLength
 keyLength (Just AES128CTR) = AES128CTR.keyLength
@@ -126,7 +132,7 @@ keyLength (Just XSalsa20)  = XSalsa20.keyLength
 {-# INLINEABLE keyLength #-}
 
 -- | Get the length of a 'Nonce' of a particular crypto mode.
--- Defaults to 'Crypto.NaCl.Encrypt.Stream.XSalsa20'
+-- Defaults to 'XSalsa20'.
 nonceLength :: Maybe CryptoMode -> Int
 nonceLength  Nothing         = XSalsa20.nonceLength
 nonceLength (Just AES128CTR) = AES128CTR.nonceLength
