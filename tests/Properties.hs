@@ -42,13 +42,7 @@ main = do
   n3_salsa2012 <- createRandomNonce $ Stream.nonceLength $ Just Salsa2012
   n3_salsa208 <- createRandomNonce $ Stream.nonceLength $ Just Salsa208
   n3_xsalsa20 <- createRandomNonce $ Stream.nonceLength $ Just XSalsa20
-  defaultMain [ testGroup "Public key"
-                [ testCase "generated key length (encryption)" case_pubkey_len
-                , testCase "generated key length (signatures)" case_signkey_len
-                , testProperty "encrypt/decrypt" (prop_pubkey_pure k1 k2 n)
-                , testProperty "sign/verify" (prop_sign_verify s1)
-                ]
-              , testGroup "Secret key" 
+  defaultMain [ testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 , testGroup "Stream"
                   [ testGroup "high level API" 
@@ -99,6 +93,12 @@ main = do
                 , testProperty "sha256/length" prop_sha256_length
                 , testProperty "sha512/pure"   prop_sha512_pure
                 , testProperty "sha512/length" prop_sha512_length
+                ]
+              , testGroup "Public key"
+                [ testCase "generated key length (encryption)" case_pubkey_len
+                , testCase "generated key length (signatures)" case_signkey_len
+                , testProperty "encrypt/decrypt" (prop_pubkey_pure k1 k2 n)
+                , testProperty "sign/verify" (prop_sign_verify s1)
                 ]
                 -- Misc
               , testCase "Randomness" case_random
