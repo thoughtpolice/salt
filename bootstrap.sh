@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEV=NO
+DEV=YES
 VERSION=nacl-20110221
 
 # No configuration needed past this point
