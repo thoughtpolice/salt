@@ -20,7 +20,7 @@ module Crypto.NaCl.Encrypt.Stream.Salsa2012
        , keyLength       -- :: Int
        , nonceLength     -- :: Int
        ) where
-import Data.ByteString
+import Data.ByteString as S
 
 import Crypto.NaCl.Encrypt.Stream.Internal as Internal
 import Crypto.NaCl.Nonce
@@ -40,6 +40,11 @@ streamGen :: Nonce
           -> ByteString
           -- ^ Resulting crypto stream
 streamGen n sz sk 
+  | nonceLen n /= nonceLength
+  = error "Crypto.NaCl.Encrypt.Stream.Salsa2012.streamGen: bad nonce length"
+  | S.length sk /= keyLength
+  = error "Crypto.NaCl.Encrypt.Stream.Salsa2012.streamGen: bad key length"
+  | otherwise
   = Internal.streamGenWrapper c_crypto_stream_salsa2012 n sz sk
 {-# INLINEABLE streamGen #-}
 
@@ -58,6 +63,11 @@ encrypt :: Nonce
         -> ByteString
         -- ^ Ciphertext
 encrypt n p sk
+  | nonceLen n /= nonceLength
+  = error "Crypto.NaCl.Encrypt.Stream.Salsa2012.encrypt: bad nonce length"
+  | S.length sk /= keyLength
+  = error "Crypto.NaCl.Encrypt.Stream.Salsa2012.encrypt: bad key length"
+  | otherwise
   = Internal.encryptWrapper c_crypto_stream_xor_salsa2012 n p sk
 {-# INLINEABLE encrypt #-}
 
