@@ -5,7 +5,7 @@ CPU=`cat /proc/cpuinfo | grep "model name" | head -1 | awk '{$$1="";$$2="";$$3="
 all: testdata Bench
 	./mkhtml.hs "$(GITSHA1)" "`date`" "$(HOST)" "$(CPU)" `ls -v *.png` > results.html
 testdata:
-	dd if=/dev/urandom of=testdata bs=1M count=512
+	dd if=/dev/urandom of=testdata bs=1M count=1024
 Bench: Bench.hs
 	ghc -O2 Bench
 	./Bench -k png:640x480 $(BENCH)
