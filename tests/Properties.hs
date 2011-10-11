@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Main
        ( main -- :: IO ()
        ) where
@@ -16,7 +17,14 @@ import Crypto.NaCl.Hash (cryptoHash, cryptoHash_SHA256)
 import Crypto.NaCl.Random (randomBytes)
 import Crypto.NaCl.Encrypt.PublicKey as PubKey
 import Crypto.NaCl.Encrypt.SecretKey as SecretKey
+
 import Crypto.NaCl.Encrypt.Stream as Stream
+import qualified Crypto.NaCl.Encrypt.Stream.AES128CTR as AES128CTR
+import qualified Crypto.NaCl.Encrypt.Stream.Salsa20 as Salsa20
+import qualified Crypto.NaCl.Encrypt.Stream.Salsa2012 as Salsa2012
+import qualified Crypto.NaCl.Encrypt.Stream.Salsa208 as Salsa208
+import qualified Crypto.NaCl.Encrypt.Stream.XSalsa20 as XSalsa20
+
 import Crypto.NaCl.Sign as Sign
 import Crypto.NaCl.Nonce
 import Crypto.NaCl.Auth as Auth
@@ -32,7 +40,11 @@ main = do
   key <- randomBytes SecretKey.keyLength
   n2  <- createRandomNonce SecretKey.nonceLength
   
-  n3 <- createRandomNonce Stream.nonceLength
+  n3_aes128ctr <- createRandomNonce $ Stream.nonceLength $ Just AES128CTR
+  n3_salsa20 <- createRandomNonce $ Stream.nonceLength $ Just Salsa20
+  n3_salsa2012 <- createRandomNonce $ Stream.nonceLength $ Just Salsa2012
+  n3_salsa208 <- createRandomNonce $ Stream.nonceLength $ Just Salsa208
+  n3_xsalsa20 <- createRandomNonce $ Stream.nonceLength $ Just XSalsa20
   defaultMain [ testGroup "Public key"
                 [ testCase "generated key length (encryption)" case_pubkey_len
                 , testCase "generated key length (signatures)" case_signkey_len
@@ -42,9 +54,34 @@ main = do
               , testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 , testGroup "Stream"
-                  [ testProperty "stream/pure" (prop_stream_stream_pure n3)
-                  , testProperty "stream/xor" (prop_stream_xor n3)
-                  , testProperty "encrypt/decrypt" (prop_stream_enc_pure n3)
+                  [ testGroup "high level API" 
+                    [
+                    ]
+                  , testGroup "aes128ctr"
+                    [ testProperty "stream/pure" (prop_stream_stream_pure_aes128ctr n3_aes128ctr)
+                    , testProperty "stream/xor" (prop_stream_xor_aes128ctr n3_aes128ctr)
+                    , testProperty "encrypt/decrypt" (prop_stream_enc_pure_aes128ctr n3_aes128ctr)
+                    ]
+                  , testGroup "salsa20"
+                    [ testProperty "stream/pure" (prop_stream_stream_pure_salsa20 n3_salsa20)
+                    , testProperty "stream/xor" (prop_stream_xor_salsa20 n3_salsa20)
+                    , testProperty "encrypt/decrypt" (prop_stream_enc_pure_salsa20 n3_salsa20)
+                    ]
+                  , testGroup "salsa2012"
+                    [ testProperty "stream/pure" (prop_stream_stream_pure_salsa2012 n3_salsa2012)
+                    , testProperty "stream/xor" (prop_stream_xor_salsa2012 n3_salsa2012)
+                    , testProperty "encrypt/decrypt" (prop_stream_enc_pure_salsa2012 n3_salsa2012)
+                    ]                  
+                  , testGroup "salsa208"
+                    [ testProperty "stream/pure" (prop_stream_stream_pure_salsa208 n3_salsa208)
+                    , testProperty "stream/xor" (prop_stream_xor_salsa208 n3_salsa208)
+                    , testProperty "encrypt/decrypt" (prop_stream_enc_pure_salsa208 n3_salsa208)
+                    ]              
+                  , testGroup "xsalsa20"
+                    [ testProperty "stream/pure" (prop_stream_stream_pure_xsalsa20 n3_xsalsa20)
+                    , testProperty "stream/xor" (prop_stream_xor_xsalsa20 n3_xsalsa20)
+                    , testProperty "encrypt/decrypt" (prop_stream_enc_pure_xsalsa20 n3_xsalsa20)
+                    ]
                   ]
                 ]
               , testGroup "Authentication"
@@ -92,9 +129,26 @@ newtype OneTimeAuthKey = OneTimeAuthKey ByteString deriving (Eq, Show)
 instance Arbitrary OneTimeAuthKey where
   arbitrary = (OneTimeAuthKey . pack) `liftM` (vectorOf oneTimeAuthKeyLength arbitrary)
     
-newtype StreamKey = StreamKey ByteString deriving (Eq, Show)
-instance Arbitrary StreamKey where
-  arbitrary = (StreamKey . pack) `liftM` (vectorOf Stream.keyLength arbitrary)
+newtype AES128StreamKey = AES128SK ByteString deriving (Eq, Show)
+instance Arbitrary AES128StreamKey where
+  arbitrary = (AES128SK . pack) `liftM` (vectorOf AES128CTR.keyLength arbitrary)
+
+newtype Salsa20StreamKey = Salsa20SK ByteString deriving (Eq, Show)
+instance Arbitrary Salsa20StreamKey where
+  arbitrary = (Salsa20SK . pack) `liftM` (vectorOf Salsa20.keyLength arbitrary)
+
+newtype Salsa2012StreamKey = Salsa2012SK ByteString deriving (Eq, Show)
+instance Arbitrary Salsa2012StreamKey where
+  arbitrary = (Salsa2012SK . pack) `liftM` (vectorOf Salsa2012.keyLength arbitrary)
+
+newtype Salsa208StreamKey = Salsa208SK ByteString deriving (Eq, Show)
+instance Arbitrary Salsa208StreamKey where
+  arbitrary = (Salsa208SK . pack) `liftM` (vectorOf Salsa208.keyLength arbitrary)
+
+newtype XSalsa20StreamKey = XSalsa20SK ByteString deriving (Eq, Show)
+instance Arbitrary XSalsa20StreamKey where
+  arbitrary = (XSalsa20SK . pack) `liftM` (vectorOf XSalsa20.keyLength arbitrary)
+
 
 
 -- Hashing properties
@@ -188,22 +242,98 @@ prop_onetimeauth_works (OneTimeAuthKey k) msg
 
 -- Streaming encryption
 
-prop_stream_enc_pure :: Nonce -> StreamKey -> ByteString -> Bool
-prop_stream_enc_pure n (StreamKey sk) p
-  = let enc = Stream.encrypt n p sk
-        dec = Stream.decrypt n enc sk
+-- aes128ctr
+prop_stream_enc_pure_aes128ctr :: Nonce -> AES128StreamKey -> ByteString -> Bool
+prop_stream_enc_pure_aes128ctr n (AES128SK sk) p
+  = let enc = AES128CTR.encrypt n p sk
+        dec = AES128CTR.decrypt n enc sk
     in dec == p
 
-prop_stream_stream_pure :: Nonce -> StreamKey -> Property
-prop_stream_stream_pure n (StreamKey sk)
+prop_stream_stream_pure_aes128ctr :: Nonce -> AES128StreamKey -> Property
+prop_stream_stream_pure_aes128ctr n (AES128SK sk)
   -- Don't generate massive streams
-  = forAll (choose (0, 256)) $ \i -> Stream.streamGen n i sk == Stream.streamGen n i sk
+  = forAll (choose (0, 256)) $ \i -> AES128CTR.streamGen n i sk == AES128CTR.streamGen n i sk
 
-prop_stream_xor :: Nonce -> StreamKey -> SmallBS -> Bool
-prop_stream_xor n (StreamKey sk) (SBS p)
-  = let enc = Stream.encrypt n p sk
-        str = Stream.streamGen n (S.length p) sk
+prop_stream_xor_aes128ctr :: Nonce -> AES128StreamKey -> SmallBS -> Bool
+prop_stream_xor_aes128ctr n (AES128SK sk) (SBS p)
+  = let enc = AES128CTR.encrypt n p sk
+        str = AES128CTR.streamGen n (S.length p) sk
     in enc == (p `xorBS` str)
+
+-- salsa20
+prop_stream_enc_pure_salsa20 :: Nonce -> Salsa20StreamKey -> ByteString -> Bool
+prop_stream_enc_pure_salsa20 n (Salsa20SK sk) p
+  = let enc = Salsa20.encrypt n p sk
+        dec = Salsa20.decrypt n enc sk
+    in dec == p
+
+prop_stream_stream_pure_salsa20 :: Nonce -> Salsa20StreamKey -> Property
+prop_stream_stream_pure_salsa20 n (Salsa20SK sk)
+  -- Don't generate massive streams
+  = forAll (choose (0, 256)) $ \i -> Salsa20.streamGen n i sk == Salsa20.streamGen n i sk
+
+prop_stream_xor_salsa20 :: Nonce -> Salsa20StreamKey -> SmallBS -> Bool
+prop_stream_xor_salsa20 n (Salsa20SK sk) (SBS p)
+  = let enc = Salsa20.encrypt n p sk
+        str = Salsa20.streamGen n (S.length p) sk
+    in enc == (p `xorBS` str)
+
+-- salsa2012
+prop_stream_enc_pure_salsa2012 :: Nonce -> Salsa2012StreamKey -> ByteString -> Bool
+prop_stream_enc_pure_salsa2012 n (Salsa2012SK sk) p
+  = let enc = Salsa2012.encrypt n p sk
+        dec = Salsa2012.decrypt n enc sk
+    in dec == p
+
+prop_stream_stream_pure_salsa2012 :: Nonce -> Salsa2012StreamKey -> Property
+prop_stream_stream_pure_salsa2012 n (Salsa2012SK sk)
+  -- Don't generate massive streams
+  = forAll (choose (0, 256)) $ \i -> Salsa2012.streamGen n i sk == Salsa2012.streamGen n i sk
+
+prop_stream_xor_salsa2012 :: Nonce -> Salsa2012StreamKey -> SmallBS -> Bool
+prop_stream_xor_salsa2012 n (Salsa2012SK sk) (SBS p)
+  = let enc = Salsa2012.encrypt n p sk
+        str = Salsa2012.streamGen n (S.length p) sk
+    in enc == (p `xorBS` str)
+
+
+-- salsa208
+prop_stream_enc_pure_salsa208 :: Nonce -> Salsa208StreamKey -> ByteString -> Bool
+prop_stream_enc_pure_salsa208 n (Salsa208SK sk) p
+  = let enc = Salsa208.encrypt n p sk
+        dec = Salsa208.decrypt n enc sk
+    in dec == p
+
+prop_stream_stream_pure_salsa208 :: Nonce -> Salsa208StreamKey -> Property
+prop_stream_stream_pure_salsa208 n (Salsa208SK sk)
+  -- Don't generate massive streams
+  = forAll (choose (0, 256)) $ \i -> Salsa208.streamGen n i sk == Salsa208.streamGen n i sk
+
+prop_stream_xor_salsa208 :: Nonce -> Salsa208StreamKey -> SmallBS -> Bool
+prop_stream_xor_salsa208 n (Salsa208SK sk) (SBS p)
+  = let enc = Salsa208.encrypt n p sk
+        str = Salsa208.streamGen n (S.length p) sk
+    in enc == (p `xorBS` str)
+
+-- xsalsa20
+prop_stream_enc_pure_xsalsa20 :: Nonce -> XSalsa20StreamKey -> ByteString -> Bool
+prop_stream_enc_pure_xsalsa20 n (XSalsa20SK sk) p
+  = let enc = XSalsa20.encrypt n p sk
+        dec = XSalsa20.decrypt n enc sk
+    in dec == p
+
+prop_stream_stream_pure_xsalsa20 :: Nonce -> XSalsa20StreamKey -> Property
+prop_stream_stream_pure_xsalsa20 n (XSalsa20SK sk)
+  -- Don't generate massive streams
+  = forAll (choose (0, 256)) $ \i -> XSalsa20.streamGen n i sk == XSalsa20.streamGen n i sk
+
+prop_stream_xor_xsalsa20 :: Nonce -> XSalsa20StreamKey -> SmallBS -> Bool
+prop_stream_xor_xsalsa20 n (XSalsa20SK sk) (SBS p)
+  = let enc = XSalsa20.encrypt n p sk
+        str = XSalsa20.streamGen n (S.length p) sk
+    in enc == (p `xorBS` str)
+
+
 
 -- Utilities
 

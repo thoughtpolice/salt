@@ -29,7 +29,7 @@ import Crypto.NaCl.Nonce
 
 type SecretKey = ByteString
 
--- | Given a 'Nonce' @n@, size @s@ and 'SecretKey' @sk@, @cryptoStream n
+-- | Given a 'Nonce' @n@, size @s@ and 'SecretKey' @sk@, @streamGen n
 -- s sk@ generates a cryptographic stream of length @s@.
 streamGen :: Nonce
           -- ^ Nonce
@@ -44,11 +44,11 @@ streamGen n sz sk
 {-# INLINEABLE streamGen #-}
 
 
--- | Given a 'Nonce' @n@, plaintext @p@ and 'SecretKey' @sk@, @encryptXor n p sk@ encrypts the message @p@ using 'SecretKey' @sk@ and returns the result.
+-- | Given a 'Nonce' @n@, plaintext @p@ and 'SecretKey' @sk@, @encrypt n p sk@ encrypts the message @p@ using 'SecretKey' @sk@ and returns the result.
 -- 
--- 'encryptXor' guarantees the resulting ciphertext is the plaintext
--- bitwise XOR'd with the result of 'cryptoStream'. As a result,
--- 'encryptXor' can also be used to decrypt messages.
+-- 'encrypt' guarantees the resulting ciphertext is the plaintext
+-- bitwise XOR'd with the result of 'streamGen'. As a result,
+-- 'encrypt' can also be used to decrypt messages.
 encrypt :: Nonce
         -- ^ Nonce
         -> ByteString
@@ -61,7 +61,7 @@ encrypt n p sk
   = Internal.encryptWrapper c_crypto_stream_xor_aes128ctr n p sk
 {-# INLINEABLE encrypt #-}
 
--- | Simple alias for 'encryptXor'.
+-- | Simple alias for 'encrypt'.
 decrypt :: Nonce
         -- ^ Nonce
         -> ByteString
