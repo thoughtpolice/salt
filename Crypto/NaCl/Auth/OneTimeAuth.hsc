@@ -37,7 +37,7 @@ authenticateOnce msg k =
   unsafePerformIO . SI.create auth_BYTES $ \out ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk ->
-        void $ glue_crypto_onetimeauth out cstr (fromIntegral clen) pk
+        void $ c_crypto_onetimeauth out cstr (fromIntegral clen) pk
 {-# INLINEABLE authenticateOnce #-}
 
 verifyOnce :: ByteString 
@@ -52,7 +52,7 @@ verifyOnce auth msg k =
   unsafePerformIO $ SU.unsafeUseAsCString auth $ \pauth ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk -> do
-        b <- glue_crypto_onetimeauth_verify pauth cstr (fromIntegral clen) pk
+        b <- c_crypto_onetimeauth_verify pauth cstr (fromIntegral clen) pk
         return $ if b == 0 then True else False
 {-# INLINEABLE verifyOnce #-}
 
@@ -70,9 +70,9 @@ auth_BYTES = #{const crypto_onetimeauth_BYTES}
 
 
 foreign import ccall unsafe "glue_crypto_onetimeauth"
-  glue_crypto_onetimeauth :: Ptr Word8 -> Ptr CChar -> CULLong -> 
-                             Ptr CChar -> IO Int
+  c_crypto_onetimeauth :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                          Ptr CChar -> IO Int
 
 foreign import ccall unsafe "glue_crypto_onetimeauth_verify"
-  glue_crypto_onetimeauth_verify :: Ptr CChar -> Ptr CChar -> CULLong -> 
-                                    Ptr CChar -> IO Int
+  c_crypto_onetimeauth_verify :: Ptr CChar -> Ptr CChar -> CULLong -> 
+                                 Ptr CChar -> IO Int

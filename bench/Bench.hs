@@ -39,7 +39,7 @@ main = do
                 , bench "verify 512" $ nf (signBench s1) $ pack [1..512]
                 ]
               , bgroup "Stream"
-                [ bench "pure streamgen 64/1000" $ nf (cryptoStreamBench streamk1  64) 1000
+                [ bench "pure streamgen 64/1000" $ nf (streamGenBench streamk1  64) 1000
                 , bench "enum encrypt 512mb /dev/null" $ nfIO $ streamEncBench streamk1 512
                   --  This takes 45 minutes on my core i5.
 --              , bench "enum encrypt 10gb /dev/null" $ nfIO $ streamEncBench streamk1 (1024*10)
@@ -84,11 +84,11 @@ main = do
                 v  = Sign.verify pk sm
             in maybe False (== xs) v
 
-        cryptoStreamBench :: Stream.SecretKey -> Int -> Int -> ByteString
-        cryptoStreamBench sk sz i 
+        streamGenBench :: Stream.SecretKey -> Int -> Int -> ByteString
+        streamGenBench sk sz i 
           = go (createZeroNonce Stream.nonceLength) empty i
           where go !_ !bs 0  = bs
-                go !n !_ !x = go (incNonce n) (Stream.cryptoStream n sz sk) (x-1)
+                go !n !_ !x = go (incNonce n) (Stream.streamGen n sz sk) (x-1)
 
         streamEncBench :: Stream.SecretKey -> Int64 -> IO Int
         streamEncBench sk mb = do
@@ -96,7 +96,7 @@ main = do
               goI :: Int -> Int64 -> Nonce -> Iteratee ByteString IO Int
               goI !x !t !n = do
                 v <- EL.head_
-                let !_ = Stream.encryptXor n v sk
+                let !_ = Stream.encrypt n v sk
                 let l = fromIntegral $ S.length v
                 if (t+l) > total then
                   return x

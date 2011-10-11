@@ -29,11 +29,11 @@ import Data.ByteString.Internal as SI
 randomBytes :: Int -> IO ByteString
 randomBytes n 
   | n < 0     = error "Crypto.NaCl.Random.randomBytes: length must be greater than 0"
-  | otherwise = SI.create n $ \out -> void $ randombytes out (fromIntegral n)
+  | otherwise = SI.create n $ \out -> void $ c_randombytes out (fromIntegral n)
 
 --
 -- FFI
 -- 
 
 foreign import ccall unsafe "randombytes"
-  randombytes :: Ptr Word8 -> CULLong -> IO Int
+  c_randombytes :: Ptr Word8 -> CULLong -> IO Int

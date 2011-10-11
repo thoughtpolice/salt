@@ -57,7 +57,7 @@ encrypt n msg k = unsafePerformIO $ do
     SU.unsafeUseAsCString m $ \pm ->
       SU.unsafeUseAsCString (toBS n) $ \pn -> 
         SU.unsafeUseAsCString k $ \pk ->
-          glue_crypto_secretbox pc pm (fromIntegral mlen) pn pk
+          c_crypto_secretbox pc pm (fromIntegral mlen) pn pk
   
   let r = SI.fromForeignPtr c 0 mlen
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
@@ -83,7 +83,7 @@ decrypt n cipher k = unsafePerformIO $ do
     SU.unsafeUseAsCString c $ \pc ->
       SU.unsafeUseAsCString (toBS n) $ \pn -> 
         SU.unsafeUseAsCString k $ \pk ->
-          glue_crypto_secretbox_open pm pc (fromIntegral clen) pn pk
+          c_crypto_secretbox_open pm pc (fromIntegral clen) pn pk
   
   return $ if r /= 0 then Nothing
             else
@@ -110,9 +110,9 @@ msg_BOXZEROBYTES = #{const crypto_secretbox_BOXZEROBYTES}
 
 
 foreign import ccall unsafe "glue_crypto_secretbox"
-  glue_crypto_secretbox :: Ptr Word8 -> Ptr CChar -> CULLong -> 
-                           Ptr CChar -> Ptr CChar -> IO Int
+  c_crypto_secretbox :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                        Ptr CChar -> Ptr CChar -> IO Int
 
 foreign import ccall unsafe "glue_crypto_secretbox_open"
-  glue_crypto_secretbox_open :: Ptr Word8 -> Ptr CChar -> CULLong -> 
-                                Ptr CChar -> Ptr CChar -> IO Int
+  c_crypto_secretbox_open :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                             Ptr CChar -> Ptr CChar -> IO Int

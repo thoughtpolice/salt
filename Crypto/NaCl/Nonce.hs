@@ -106,7 +106,7 @@ incNonce (Nonce nonce) =
   Nonce $ SI.unsafeCreate l $ \out -> do
     SU.unsafeUseAsCStringLen nonce $ \(b,blen) ->
       SI.memcpy out (castPtr b) (fromIntegral blen)
-    glue_incnonce out (fromIntegral l)
+    c_incnonce out (fromIntegral l)
   where
     l = S.length nonce
 {-# INLINEABLE incNonce #-}
@@ -119,4 +119,4 @@ nonceLen (Nonce n) = S.length n
 -- FFI
 -- 
 foreign import ccall unsafe "glue_incnonce"
-  glue_incnonce :: Ptr Word8 -> CSize -> IO ()
+  c_incnonce :: Ptr Word8 -> CSize -> IO ()

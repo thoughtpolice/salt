@@ -50,7 +50,7 @@ createKeypair = do
 
   void $ withForeignPtr pk $ \ppk ->
     void $ withForeignPtr sk $ \psk ->
-      glue_crypto_sign_keypair ppk psk
+      c_crypto_sign_keypair ppk psk
       
   return (SI.fromForeignPtr pk 0 signPublicKeyLength,
           SI.fromForeignPtr sk 0 signSecretKeyLength)
@@ -66,7 +66,7 @@ sign sk xs =
   unsafePerformIO $ SU.unsafeUseAsCStringLen xs $ \(mstr,mlen) ->
     SU.unsafeUseAsCString sk $ \psk ->
       SI.createAndTrim (mlen+sign_BYTES) $ \out ->
-       fromIntegral `liftM` glue_crypto_sign out mstr (fromIntegral mlen) psk
+       fromIntegral `liftM` c_crypto_sign out mstr (fromIntegral mlen) psk
 {-# INLINEABLE sign #-}
 
 -- | Verifies a signed message. Returns @Nothing@ if verification
@@ -85,7 +85,7 @@ verify pk xs =
         out <- SI.mallocByteString smlen
         
         r <- withForeignPtr out $ \pout -> 
-               glue_crypto_sign_open pout pmlen smstr (fromIntegral smlen) ppk
+               c_crypto_sign_open pout pmlen smstr (fromIntegral smlen) ppk
         
         if r /= 0 then return Nothing
           else do
@@ -109,12 +109,12 @@ sign_BYTES :: Int
 sign_BYTES = #{const crypto_sign_BYTES}
 
 foreign import ccall unsafe "glue_crypto_sign_keypair"
-  glue_crypto_sign_keypair :: Ptr Word8 -> Ptr Word8 -> IO Int
+  c_crypto_sign_keypair :: Ptr Word8 -> Ptr Word8 -> IO Int
 
 foreign import ccall unsafe "glue_crypto_sign"
-  glue_crypto_sign :: Ptr Word8 -> Ptr CChar ->  
-                      CULLong -> Ptr CChar -> IO CULLong
+  c_crypto_sign :: Ptr Word8 -> Ptr CChar ->  
+                   CULLong -> Ptr CChar -> IO CULLong
 
 foreign import ccall unsafe "glue_crypto_sign_open"
-  glue_crypto_sign_open :: Ptr Word8 -> Ptr CULLong -> 
-                           Ptr CChar -> CULLong -> Ptr CChar -> IO Int
+  c_crypto_sign_open :: Ptr Word8 -> Ptr CULLong -> 
+                        Ptr CChar -> CULLong -> Ptr CChar -> IO Int

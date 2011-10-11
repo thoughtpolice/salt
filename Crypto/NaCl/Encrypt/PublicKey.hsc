@@ -53,7 +53,7 @@ createKeypair = do
 
   void $ withForeignPtr pk $ \ppk ->
     void $ withForeignPtr sk $ \psk ->
-      glue_crypto_box_keypair ppk psk
+      c_crypto_box_keypair ppk psk
       
   return (SI.fromForeignPtr pk 0 publicKeyLength, 
           SI.fromForeignPtr sk 0 secretKeyLength)
@@ -81,7 +81,7 @@ encrypt n msg pk sk = unsafePerformIO $ do
       SU.unsafeUseAsCString (toBS n) $ \pn -> 
         SU.unsafeUseAsCString pk $ \ppk ->
           SU.unsafeUseAsCString sk $ \psk ->
-            glue_crypto_box pc pm (fromIntegral mlen) pn ppk psk
+            c_crypto_box pc pm (fromIntegral mlen) pn ppk psk
   
   let r = SI.fromForeignPtr c 0 mlen
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
@@ -109,7 +109,7 @@ decrypt n cipher pk sk = unsafePerformIO $ do
       SU.unsafeUseAsCString (toBS n) $ \pn -> 
         SU.unsafeUseAsCString pk $ \ppk ->
           SU.unsafeUseAsCString sk $ \psk ->
-            glue_crypto_box_open pm pc (fromIntegral clen) pn ppk psk
+            c_crypto_box_open pm pc (fromIntegral clen) pn ppk psk
   
   return $ if r /= 0 then Nothing
             else
@@ -140,12 +140,12 @@ msg_BOXZEROBYTES = #{const crypto_box_BOXZEROBYTES}
 
 
 foreign import ccall unsafe "glue_crypto_box_keypair"
-  glue_crypto_box_keypair :: Ptr Word8 -> Ptr Word8 -> IO Int
+  c_crypto_box_keypair :: Ptr Word8 -> Ptr Word8 -> IO Int
 
 foreign import ccall unsafe "glue_crypto_box"
-  glue_crypto_box :: Ptr Word8 -> Ptr CChar -> CULLong -> 
-                     Ptr CChar -> Ptr CChar -> Ptr CChar -> IO Int
+  c_crypto_box :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                  Ptr CChar -> Ptr CChar -> Ptr CChar -> IO Int
 
 foreign import ccall unsafe "glue_crypto_box_open"
-  glue_crypto_box_open :: Ptr Word8 -> Ptr CChar -> CULLong -> 
-                          Ptr CChar -> Ptr CChar -> Ptr CChar -> IO Int
+  c_crypto_box_open :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                       Ptr CChar -> Ptr CChar -> Ptr CChar -> IO Int

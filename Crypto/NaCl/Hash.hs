@@ -33,7 +33,7 @@ cryptoHash xs =
   -- The default primitive of SHA512 has 64 bytes of output.      
   unsafePerformIO . SI.create 64 $ \out ->
     SU.unsafeUseAsCStringLen xs $ \(cstr,clen) ->
-      void $ glue_crypto_hash_sha512 out cstr (fromIntegral clen)
+      void $ c_crypto_hash_sha512 out cstr (fromIntegral clen)
 {-# INLINEABLE cryptoHash #-}
 
 -- | Alternative cryptographic hash function, providing only
@@ -43,7 +43,7 @@ cryptoHash_SHA256 xs =
   -- SHA256 has 32 bytes of output
   unsafePerformIO . SI.create 32 $ \out ->
     SU.unsafeUseAsCStringLen xs $ \(cstr,clen) ->
-      void $ glue_crypto_hash_sha256 out cstr (fromIntegral clen)
+      void $ c_crypto_hash_sha256 out cstr (fromIntegral clen)
 {-# INLINEABLE cryptoHash_SHA256 #-}
 
 --
@@ -53,7 +53,7 @@ cryptoHash_SHA256 xs =
 type HashFunc = Ptr Word8 -> Ptr CChar -> CULLong -> IO CInt
 
 foreign import ccall unsafe "glue_crypto_hash_sha512"
-  glue_crypto_hash_sha512 :: HashFunc
+  c_crypto_hash_sha512 :: HashFunc
 
 foreign import ccall unsafe "glue_crypto_hash_sha256"
-  glue_crypto_hash_sha256 :: HashFunc
+  c_crypto_hash_sha256 :: HashFunc

@@ -190,19 +190,19 @@ prop_onetimeauth_works (OneTimeAuthKey k) msg
 
 prop_stream_enc_pure :: Nonce -> StreamKey -> ByteString -> Bool
 prop_stream_enc_pure n (StreamKey sk) p
-  = let enc = Stream.encryptXor n p sk
-        dec = Stream.decryptXor n enc sk
+  = let enc = Stream.encrypt n p sk
+        dec = Stream.decrypt n enc sk
     in dec == p
 
 prop_stream_stream_pure :: Nonce -> StreamKey -> Property
 prop_stream_stream_pure n (StreamKey sk)
   -- Don't generate massive streams
-  = forAll (choose (0, 256)) $ \i -> Stream.cryptoStream n i sk == Stream.cryptoStream n i sk
+  = forAll (choose (0, 256)) $ \i -> Stream.streamGen n i sk == Stream.streamGen n i sk
 
 prop_stream_xor :: Nonce -> StreamKey -> SmallBS -> Bool
 prop_stream_xor n (StreamKey sk) (SBS p)
-  = let enc = Stream.encryptXor n p sk
-        str = Stream.cryptoStream n (S.length p) sk
+  = let enc = Stream.encrypt n p sk
+        str = Stream.streamGen n (S.length p) sk
     in enc == (p `xorBS` str)
 
 -- Utilities
