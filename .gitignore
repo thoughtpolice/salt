@@ -11,3 +11,4 @@
 /bench/Bench
 /bench/*.html
 /examples/encfile
+bench/testdata
