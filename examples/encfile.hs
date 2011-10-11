@@ -1,7 +1,7 @@
 module Main
        ( main -- :: IO ()
        ) where
-import Control.Monad (when, liftM)
+import Control.Monad (when)
 import System.Environment (getArgs)
 import System.Exit
 import Data.ByteString.Char8 as S hiding (putStrLn)
@@ -16,39 +16,32 @@ import Data.Enumerator.Binary
 import qualified Data.Enumerator.List as EL
 
 main :: IO ()
-main = putStrLn ("Key length is " ++ show keyLength) >> getArgs >>= go
+main = putStrLn ("Key length is " ++ (show $ keyLength Nothing)) >> 
+       getArgs >>= go
   where go []         = error "Try --help"
         go ["--help"] =
-          putStrLn "USAGE ./encfile [encrypt|decrypt <nonce>] <key> <infile>"
+          putStrLn "USAGE ./encfile [encrypt|decrypt] <key> <file>"
         go ("encrypt":key:file:[]) = do
           checkKey key
-          -- create nonce and write it
-          n <- clearBytes 8 `liftM` createRandomNonce nonceLength
-          S.writeFile (file <.> "nonce") (toBS n)
-          h <- openFile (file <.> "enc") WriteMode
-          run_ $ pipeline file key n h
-          hClose h
-        go ("decrypt":nonce:key:file:[]) = do
+          let n = createZeroNonce (nonceLength Nothing)
+          body n key file (file <.> "enc")
+        go ("decrypt":key:file:[]) = do
           checkKey key
-          n  <- fromBS `liftM` (S.readFile nonce)
-          checkNonce n
-          h <- openFile (dropExtension file <.> "dec") WriteMode
-          run_ $ pipeline file key n h
-          hClose h
+          let n = createZeroNonce (nonceLength Nothing)
+          body n key file (dropExtension file <.> "dec")
         go _ = error "Try --help"
+        body n k fin fout = do
+          h <- openFile fout WriteMode
+          run $ pipeline fin k n h
+          hClose h
 
 pipeline :: FilePath -> String -> Nonce -> Handle -> Iteratee ByteString IO ()
-pipeline file k n h = (enumFile file $= encrypt (pack k) n) $$ iterHandle h
+pipeline file k n h = (enumFile file $= encryptE (pack k) n) $$ iterHandle h
 
-encrypt :: Monad m => SecretKey -> Nonce -> Enumeratee ByteString ByteString m b
-encrypt k = EL.mapAccum $ \n bs -> (incNonce n, encryptXor n bs k)
+encryptE :: Monad m => SecretKey -> Nonce -> Enumeratee ByteString ByteString m b
+encryptE k = EL.mapAccum $ \n bs -> (incNonce n, encrypt Nothing n bs k)
 
 checkKey :: String -> IO ()
 checkKey k = 
-  when (Prelude.length k /= keyLength) $
+  when (Prelude.length k /= keyLength Nothing) $
     putStrLn "Invalid key length" >> exitWith (ExitFailure 1)
-
-checkNonce :: Nonce -> IO ()
-checkNonce k = 
-  when (nonceLen k /= nonceLength) $
-    putStrLn "Invalid nonce length" >> exitWith (ExitFailure 1)
