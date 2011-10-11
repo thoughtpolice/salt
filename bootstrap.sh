@@ -32,7 +32,7 @@ if [ ! -f "$TARBALL" ]; then
     say "Downloading $VERSION.tar.bz2..."
     $CURL $URL -o $TARBALL
 else
-    say "Tarball already downloaded."
+    say "NaCl source tarball already downloaded."
 fi
 
 # extract
