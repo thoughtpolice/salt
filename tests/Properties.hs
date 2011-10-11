@@ -19,11 +19,6 @@ import Crypto.NaCl.Encrypt.PublicKey as PubKey
 import Crypto.NaCl.Encrypt.SecretKey as SecretKey
 
 import Crypto.NaCl.Encrypt.Stream as Stream
-import qualified Crypto.NaCl.Encrypt.Stream.AES128CTR as AES128CTR
-import qualified Crypto.NaCl.Encrypt.Stream.Salsa20 as Salsa20
-import qualified Crypto.NaCl.Encrypt.Stream.Salsa2012 as Salsa2012
-import qualified Crypto.NaCl.Encrypt.Stream.Salsa208 as Salsa208
-import qualified Crypto.NaCl.Encrypt.Stream.XSalsa20 as XSalsa20
 
 import Crypto.NaCl.Sign as Sign
 import Crypto.NaCl.Nonce
@@ -140,23 +135,23 @@ instance Arbitrary DefStreamKey where
 
 newtype AES128StreamKey = AES128SK ByteString deriving (Eq, Show)
 instance Arbitrary AES128StreamKey where
-  arbitrary = (AES128SK . pack) `liftM` (vectorOf AES128CTR.keyLength arbitrary)
+  arbitrary = (AES128SK . pack) `liftM` (vectorOf (Stream.keyLength $ Just AES128CTR) arbitrary)
 
 newtype Salsa20StreamKey = Salsa20SK ByteString deriving (Eq, Show)
 instance Arbitrary Salsa20StreamKey where
-  arbitrary = (Salsa20SK . pack) `liftM` (vectorOf Salsa20.keyLength arbitrary)
+  arbitrary = (Salsa20SK . pack) `liftM` (vectorOf (Stream.keyLength $ Just Salsa20) arbitrary)
 
 newtype Salsa2012StreamKey = Salsa2012SK ByteString deriving (Eq, Show)
 instance Arbitrary Salsa2012StreamKey where
-  arbitrary = (Salsa2012SK . pack) `liftM` (vectorOf Salsa2012.keyLength arbitrary)
+  arbitrary = (Salsa2012SK . pack) `liftM` (vectorOf (Stream.keyLength $ Just Salsa2012) arbitrary)
 
 newtype Salsa208StreamKey = Salsa208SK ByteString deriving (Eq, Show)
 instance Arbitrary Salsa208StreamKey where
-  arbitrary = (Salsa208SK . pack) `liftM` (vectorOf Salsa208.keyLength arbitrary)
+  arbitrary = (Salsa208SK . pack) `liftM` (vectorOf (Stream.keyLength $ Just Salsa208) arbitrary)
 
 newtype XSalsa20StreamKey = XSalsa20SK ByteString deriving (Eq, Show)
 instance Arbitrary XSalsa20StreamKey where
-  arbitrary = (XSalsa20SK . pack) `liftM` (vectorOf XSalsa20.keyLength arbitrary)
+  arbitrary = (XSalsa20SK . pack) `liftM` (vectorOf (Stream.keyLength $ Just XSalsa20) arbitrary)
 
 
 
@@ -254,8 +249,8 @@ prop_onetimeauth_works (OneTimeAuthKey k) msg
 -- high level API
 prop_stream_def_enc_xsalsa20 :: Nonce -> DefStreamKey -> ByteString -> Bool
 prop_stream_def_enc_xsalsa20 n (DefSK sk) p
-  = let enc1 = XSalsa20.encrypt n p sk
-        dec1 = XSalsa20.decrypt n enc1 sk
+  = let enc1 = Stream.encrypt (Just XSalsa20) n p sk
+        dec1 = Stream.decrypt (Just XSalsa20) n enc1 sk
         enc2 = Stream.encrypt Nothing n p sk
         dec2 = Stream.decrypt Nothing n enc2 sk
     in dec1 == p && dec2 == dec1
@@ -263,12 +258,12 @@ prop_stream_def_enc_xsalsa20 n (DefSK sk) p
 prop_stream_def_stream_xsalsa20 :: Nonce -> XSalsa20StreamKey -> Property
 prop_stream_def_stream_xsalsa20 n (XSalsa20SK sk)
   -- Don't generate massive streams
-  = forAll (choose (0, 256)) $ \i -> XSalsa20.streamGen n i sk == Stream.streamGen Nothing n i sk
+  = forAll (choose (0, 256)) $ \i -> streamGen (Just XSalsa20) n i sk == Stream.streamGen Nothing n i sk
 
 prop_stream_def_xor_xsalsa20 :: Nonce -> DefStreamKey -> SmallBS -> Bool
 prop_stream_def_xor_xsalsa20 n (DefSK sk) (SBS p)
-  = let enc1 = XSalsa20.encrypt n p sk
-        str1 = XSalsa20.streamGen n (S.length p) sk
+  = let enc1 = Stream.encrypt (Just XSalsa20) n p sk
+        str1 = Stream.streamGen (Just XSalsa20) n (S.length p) sk
         enc2 = Stream.encrypt Nothing n p sk
         str2 = Stream.streamGen Nothing n (S.length p) sk
     in enc1 == (p `xorBS` str1) && enc1 == enc2 && str1 == str2
@@ -276,92 +271,92 @@ prop_stream_def_xor_xsalsa20 n (DefSK sk) (SBS p)
 -- aes128ctr
 prop_stream_enc_pure_aes128ctr :: Nonce -> AES128StreamKey -> ByteString -> Bool
 prop_stream_enc_pure_aes128ctr n (AES128SK sk) p
-  = let enc = AES128CTR.encrypt n p sk
-        dec = AES128CTR.decrypt n enc sk
+  = let enc = Stream.encrypt (Just AES128CTR) n p sk
+        dec = Stream.decrypt (Just AES128CTR) n enc sk
     in dec == p
 
 prop_stream_stream_pure_aes128ctr :: Nonce -> AES128StreamKey -> Property
 prop_stream_stream_pure_aes128ctr n (AES128SK sk)
   -- Don't generate massive streams
-  = forAll (choose (0, 256)) $ \i -> AES128CTR.streamGen n i sk == AES128CTR.streamGen n i sk
+  = forAll (choose (0, 256)) $ \i -> streamGen (Just AES128CTR) n i sk == streamGen (Just AES128CTR) n i sk
 
 prop_stream_xor_aes128ctr :: Nonce -> AES128StreamKey -> SmallBS -> Bool
 prop_stream_xor_aes128ctr n (AES128SK sk) (SBS p)
-  = let enc = AES128CTR.encrypt n p sk
-        str = AES128CTR.streamGen n (S.length p) sk
+  = let enc = Stream.encrypt (Just AES128CTR) n p sk
+        str = streamGen (Just AES128CTR) n (S.length p) sk
     in enc == (p `xorBS` str)
 
 -- salsa20
 prop_stream_enc_pure_salsa20 :: Nonce -> Salsa20StreamKey -> ByteString -> Bool
 prop_stream_enc_pure_salsa20 n (Salsa20SK sk) p
-  = let enc = Salsa20.encrypt n p sk
-        dec = Salsa20.decrypt n enc sk
+  = let enc = Stream.encrypt (Just Salsa20) n p sk
+        dec = Stream.decrypt (Just Salsa20) n enc sk
     in dec == p
 
 prop_stream_stream_pure_salsa20 :: Nonce -> Salsa20StreamKey -> Property
 prop_stream_stream_pure_salsa20 n (Salsa20SK sk)
   -- Don't generate massive streams
-  = forAll (choose (0, 256)) $ \i -> Salsa20.streamGen n i sk == Salsa20.streamGen n i sk
+  = forAll (choose (0, 256)) $ \i -> streamGen (Just Salsa20) n i sk == streamGen (Just Salsa20) n i sk
 
 prop_stream_xor_salsa20 :: Nonce -> Salsa20StreamKey -> SmallBS -> Bool
 prop_stream_xor_salsa20 n (Salsa20SK sk) (SBS p)
-  = let enc = Salsa20.encrypt n p sk
-        str = Salsa20.streamGen n (S.length p) sk
+  = let enc = Stream.encrypt (Just Salsa20) n p sk
+        str = streamGen (Just Salsa20) n (S.length p) sk
     in enc == (p `xorBS` str)
 
 -- salsa2012
 prop_stream_enc_pure_salsa2012 :: Nonce -> Salsa2012StreamKey -> ByteString -> Bool
 prop_stream_enc_pure_salsa2012 n (Salsa2012SK sk) p
-  = let enc = Salsa2012.encrypt n p sk
-        dec = Salsa2012.decrypt n enc sk
+  = let enc = Stream.encrypt (Just Salsa2012) n p sk
+        dec = Stream.decrypt (Just Salsa2012) n enc sk
     in dec == p
 
 prop_stream_stream_pure_salsa2012 :: Nonce -> Salsa2012StreamKey -> Property
 prop_stream_stream_pure_salsa2012 n (Salsa2012SK sk)
   -- Don't generate massive streams
-  = forAll (choose (0, 256)) $ \i -> Salsa2012.streamGen n i sk == Salsa2012.streamGen n i sk
+  = forAll (choose (0, 256)) $ \i -> streamGen (Just Salsa2012) n i sk == streamGen (Just Salsa2012) n i sk
 
 prop_stream_xor_salsa2012 :: Nonce -> Salsa2012StreamKey -> SmallBS -> Bool
 prop_stream_xor_salsa2012 n (Salsa2012SK sk) (SBS p)
-  = let enc = Salsa2012.encrypt n p sk
-        str = Salsa2012.streamGen n (S.length p) sk
+  = let enc = Stream.encrypt (Just Salsa2012) n p sk
+        str = streamGen (Just Salsa2012) n (S.length p) sk
     in enc == (p `xorBS` str)
 
 
 -- salsa208
 prop_stream_enc_pure_salsa208 :: Nonce -> Salsa208StreamKey -> ByteString -> Bool
 prop_stream_enc_pure_salsa208 n (Salsa208SK sk) p
-  = let enc = Salsa208.encrypt n p sk
-        dec = Salsa208.decrypt n enc sk
+  = let enc = Stream.encrypt (Just Salsa208) n p sk
+        dec = Stream.decrypt (Just Salsa208) n enc sk
     in dec == p
 
 prop_stream_stream_pure_salsa208 :: Nonce -> Salsa208StreamKey -> Property
 prop_stream_stream_pure_salsa208 n (Salsa208SK sk)
   -- Don't generate massive streams
-  = forAll (choose (0, 256)) $ \i -> Salsa208.streamGen n i sk == Salsa208.streamGen n i sk
+  = forAll (choose (0, 256)) $ \i -> streamGen (Just Salsa208) n i sk == streamGen (Just Salsa208) n i sk
 
 prop_stream_xor_salsa208 :: Nonce -> Salsa208StreamKey -> SmallBS -> Bool
 prop_stream_xor_salsa208 n (Salsa208SK sk) (SBS p)
-  = let enc = Salsa208.encrypt n p sk
-        str = Salsa208.streamGen n (S.length p) sk
+  = let enc = Stream.encrypt (Just Salsa208) n p sk
+        str = streamGen (Just Salsa208) n (S.length p) sk
     in enc == (p `xorBS` str)
 
 -- xsalsa20
 prop_stream_enc_pure_xsalsa20 :: Nonce -> XSalsa20StreamKey -> ByteString -> Bool
 prop_stream_enc_pure_xsalsa20 n (XSalsa20SK sk) p
-  = let enc = XSalsa20.encrypt n p sk
-        dec = XSalsa20.decrypt n enc sk
+  = let enc = Stream.encrypt (Just XSalsa20) n p sk
+        dec = Stream.decrypt (Just XSalsa20) n enc sk
     in dec == p
 
 prop_stream_stream_pure_xsalsa20 :: Nonce -> XSalsa20StreamKey -> Property
 prop_stream_stream_pure_xsalsa20 n (XSalsa20SK sk)
   -- Don't generate massive streams
-  = forAll (choose (0, 256)) $ \i -> XSalsa20.streamGen n i sk == XSalsa20.streamGen n i sk
+  = forAll (choose (0, 256)) $ \i -> streamGen (Just XSalsa20) n i sk == streamGen (Just XSalsa20) n i sk
 
 prop_stream_xor_xsalsa20 :: Nonce -> XSalsa20StreamKey -> SmallBS -> Bool
 prop_stream_xor_xsalsa20 n (XSalsa20SK sk) (SBS p)
-  = let enc = XSalsa20.encrypt n p sk
-        str = XSalsa20.streamGen n (S.length p) sk
+  = let enc = Stream.encrypt (Just XSalsa20) n p sk
+        str = streamGen (Just XSalsa20) n (S.length p) sk
     in enc == (p `xorBS` str)
 
 
