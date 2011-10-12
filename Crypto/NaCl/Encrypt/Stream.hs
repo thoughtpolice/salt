@@ -10,12 +10,7 @@
 -- 
 -- Simple, high level API for streaming encryption with a secret
 -- key. Allows selection of the underlying primitive; always defaults
--- to 'Crypto.NaCl.Encrypt.Stream.XSalsa20'.
--- 
--- You can either use this module or import the individual encryption
--- modules themselves directly; this is just a convenient high-level
--- interface for picking a particular streaming encryption method at
--- runtime.
+-- to 'XSalsa20', like the regular NaCl implementation.
 -- 
 module Crypto.NaCl.Encrypt.Stream
        ( -- * Types
