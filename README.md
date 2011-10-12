@@ -17,7 +17,7 @@ File bugs in the GitHub [issue tracker][].
 
 Master [git repository][gh]:
 
-* `git clone https://thoughtpolice@github.com/thoughtpolice/hs-nacl.git`
+* `git clone https://github.com/thoughtpolice/hs-nacl.git`
 
 There's also a [BitBucket mirror][bb]:
 
