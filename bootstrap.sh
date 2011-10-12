@@ -98,7 +98,7 @@ $CABAL $C $@
 # test
 if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
     say "Testing..."
-    ./dist/build/properties/properties -a500 +RTS -N
+    ./dist/build/properties/properties -a200 +RTS -N
 fi
 
 say "Completed"
