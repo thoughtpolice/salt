@@ -1,30 +1,38 @@
-# Fast cryptography for Haskell
+# Fast cryptographic networking for Haskell
 
-[NaCl](http://nacl.cace-project.eu) (pronounced "salt") is a fast
-cryptography library. These are the awesome Haskell bindings.
+[NaCl][] (pronounced "salt") is a fast library for cryptographic
+networking. Think of it like OpenSSL, but faster, easier, and more
+secure.
+
+These are the awesome Haskell bindings.
 
 # Installation
 
-See the [main page](http://thoughtpolice.github.com/hs-nacl) for
-installation instructions, dependencies, documentation, and examples.
+See the [main page][] for installation instructions, dependencies,
+documentation, and examples.
 
 # Join in
 
-File bugs in the GitHub [issue
-tracker](http://github.com/thoughtpolice/hs-nacl/issues).
+File bugs in the GitHub [issue tracker][].
 
-Master [git repository](http://github.com/thoughtpolice/hs-nacl):
+Master [git repository][gh]:
 
 * `git clone https://thoughtpolice@github.com/thoughtpolice/hs-nacl.git`
 
-There's also a [BitBucket mirror](http://bitbucket.org/thoughtpolice/hs-nacl):
+There's also a [BitBucket mirror][bb]:
 
 * `git clone https://bitbucket.org/thoughtpolice/hs-nacl.git`
 
 # Authors
 
-NaCl was initiated by [CACE](http://cace-project.eu) and is lead by
-[djb](http://cr.yp.to) and Tanja Lange, and released into the Public Domain.
+See `AUTHORS.txt`.
 
-These bindings were written by Austin Seipp (<as@hacks.yi.org>) and
-released under the BSD3 license.
+# License
+
+BSD3. See `LICENSE.txt` for terms of copyright and redistribution.
+
+[NaCl]: http://nacl.cace-project.eu
+[main page]: http://thoughtpolice.github.com/hs-nacl
+[issue tracker]: http://github.com/thoughtpolice/hs-nacl/issues
+[gh]: http://github.com/thoughtpolice/hs-nacl
+[bb]: http://bitbucket.org/thoughtpolice/hs-nacl

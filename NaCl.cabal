@@ -35,7 +35,7 @@ description:
 homepage:            http://thoughtpolice.github.com/hs-nacl
 bug-reports:         http://github.com/thoughtpolice/hs-nacl/issues
 license:             BSD3
-license-file:        LICENSE
+license-file:        LICENSE.txt
 author:              Austin Seipp <as@hacks.yi.org>
 maintainer:          Austin Seipp <as@hacks.yi.org>
 category:            Cryptography
@@ -44,12 +44,14 @@ cabal-version:       >=1.10
 tested-with:         GHC==7.0.4, GHC==7.2.1
 
 extra-source-files:
+  AUTHORS.txt
+  bench/Bench.hs bench/makefile bench/mkhtml.hs
   bootstrap.sh
   cbits/*.c
+  examples/*.hs
   README.md
   tests/*.hs
-  bench/Bench.hs bench/makefile bench/mkhtml.hs
-  examples/*.hs
+  TODO
 
 source-repository head
   type: git
@@ -77,9 +79,11 @@ library
     Crypto.NaCl.Encrypt.Stream.Salsa2012
     Crypto.NaCl.Encrypt.Stream.Salsa208
     Crypto.NaCl.Encrypt.Stream.AES128CTR
+
   build-depends:
     base       >= 4,
     bytestring >= 0.9
+
   c-sources:        
     cbits/glue.c
     cbits/glue_stream.c
