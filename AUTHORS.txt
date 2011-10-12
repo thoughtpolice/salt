@@ -1,7 +1,3 @@
-NaCl was initiated by [CACE](http://cace-project.eu) and is lead by
-[djb](http://cr.yp.to) and Tanja Lange, is and released into the
-Public Domain.
-
 These Haskell bindings were written initially by:
 
       Austin Seipp <as@hacks.yi.org>
