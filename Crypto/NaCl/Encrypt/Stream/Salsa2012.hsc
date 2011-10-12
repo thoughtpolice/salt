@@ -1,7 +1,7 @@
 -- |
 -- Module      : Crypto.NaCl.Encrypt.Stream.Salsa2012
 -- Copyright   : (c) Austin Seipp 2011
--- License     : BSD3
+-- License     : MIT
 -- 
 -- Maintainer  : as@hacks.yi.org
 -- Stability   : experimental

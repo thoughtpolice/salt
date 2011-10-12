@@ -8,7 +8,7 @@ import Control.Monad (forM, forM_, liftM)
 import System.Environment (getArgs)
 import System.FilePath
 
-import Data.ByteString.Char8 as S (append, concat, ByteString, unpack)
+import Data.ByteString.Char8 as S (concat, ByteString, unpack)
 import Data.ByteString.Lazy.Char8 as L(putStrLn, readFile, toChunks)
 import Data.ByteString.Base64 (encode)
 
@@ -62,6 +62,5 @@ page sha1 date machine cpu lnks = html $ do
           img ! alt "Image data" ! 
             (src $ toValue $ "data:Image/png;base64,"++(unpack image))
   where
-    ghcommit = ("https://github.com/thoughtpolice/hs-nacl/commit/"++sha1)
-    str :: String -> Html
-    str = toHtml
+    ghcommit = ("https://github.com/thoughtpolice/salt/commit/"++sha1)
+    str = toHtml :: String -> Html

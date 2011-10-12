@@ -1,12 +1,11 @@
-name:                NaCl
+name:                salt
 version:             0.0
-synopsis:            Haskell binding to the NaCl cryptography library
+synopsis:            Cryptographic networking for Haskell
 description:
   NaCl (pronounced \"salt\") is a safe, high-speed, easy to use
   cryptography library. This package intends to provide a high-level
-  Haskell binding to NaCl, allowing you to easily write code utilizing
-  cryptographic primitives for public-key and private-key encryption,
-  authentication, and signatures.
+  binding to NaCl, and more generally, it intends to eventually
+  provide a complete library for secure cryptographic networking.
   .
   The NaCl project (<http://nacl.cace-project.eu/>) was initiated
   by CACE (Computer Aided Cryptography Engineering,) and is currently
@@ -21,24 +20,19 @@ description:
   @bootstrap.sh@ script in order to make installation easy. Please
   follow the 'Install' section on the home page of this package:
   .
-  <http://thoughtpolice.github.com/hs-nacl>
+  <http://thoughtpolice.github.com/salt>
+  .
+  Hopefully sometime in the future this won't be necessary.
   .
   The homepage also contains documentation, benchmarks, code coverage
   results, and examples.
-  .
-  Point of note: NaCl is, like much DJB software, released in the
-  public domain (which isn't recognized by all jurisdictions.) These
-  bindings however, are BSD3 licensed - and as of current,
-  redistribute a small amount of the NaCl source (the @randombytes@
-  function based on @\/dev\/urandom@.)
-
-homepage:            http://thoughtpolice.github.com/hs-nacl
-bug-reports:         http://github.com/thoughtpolice/hs-nacl/issues
-license:             BSD3
+homepage:            http://thoughtpolice.github.com/salt
+bug-reports:         http://github.com/thoughtpolice/salt/issues
+license:             MIT
 license-file:        LICENSE.txt
 author:              Austin Seipp <as@hacks.yi.org>
 maintainer:          Austin Seipp <as@hacks.yi.org>
-category:            Cryptography
+category:            Cryptography, Networking
 build-type:          Simple
 cabal-version:       >=1.10
 tested-with:         GHC==7.0.4, GHC==7.2.1
@@ -55,7 +49,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/thoughtpolice/hs-nacl.git
+  location: https://github.com/thoughtpolice/salt.git
 
 flag hpc
   default: False
@@ -111,7 +105,7 @@ test-suite properties
     test-framework == 0.4.*,
     test-framework-quickcheck2 == 0.2.*,
     test-framework-hunit == 0.2.*,
-    NaCl
+    salt
 
   ghc-options:      -Wall -fno-cse -fno-warn-orphans
                     -threaded -rtsopts

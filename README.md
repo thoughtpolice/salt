@@ -17,11 +17,11 @@ File bugs in the GitHub [issue tracker][].
 
 Master [git repository][gh]:
 
-* `git clone https://github.com/thoughtpolice/hs-nacl.git`
+* `git clone https://github.com/thoughtpolice/salt.git`
 
 There's also a [BitBucket mirror][bb]:
 
-* `git clone https://bitbucket.org/thoughtpolice/hs-nacl.git`
+* `git clone https://bitbucket.org/thoughtpolice/salt.git`
 
 # Authors
 
@@ -29,10 +29,10 @@ See `AUTHORS.txt`.
 
 # License
 
-BSD3. See `LICENSE.txt` for terms of copyright and redistribution.
+MIT. See `LICENSE.txt` for terms of copyright and redistribution.
 
 [NaCl]: http://nacl.cace-project.eu
-[main page]: http://thoughtpolice.github.com/hs-nacl
-[issue tracker]: http://github.com/thoughtpolice/hs-nacl/issues
-[gh]: http://github.com/thoughtpolice/hs-nacl
-[bb]: http://bitbucket.org/thoughtpolice/hs-nacl
+[main page]: http://thoughtpolice.github.com/salt
+[issue tracker]: http://github.com/thoughtpolice/salt/issues
+[gh]: http://github.com/thoughtpolice/salt
+[bb]: http://bitbucket.org/thoughtpolice/salt
