@@ -1,0 +1,4 @@
+Provide copies of NaCl reference crypto functions (lots of work)
+CurveCP protocol (lots of work)
+Socket-style interface for easily doing network programming
+Enumeratees etc (already in bench, should make them into their own module)
