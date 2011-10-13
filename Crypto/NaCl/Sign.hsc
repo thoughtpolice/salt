@@ -1,14 +1,14 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Crypto.NaCl.Sign
 -- Copyright   : (c) Austin Seipp 2011
 -- License     : MIT
--- 
+--
 -- Maintainer  : as@hacks.yi.org
 -- Stability   : experimental
 -- Portability : portable
--- 
+--
 -- TODO FIXME
--- 
 module Crypto.NaCl.Sign
        ( -- * Types
          PublicKey, SecretKey, KeyPair -- :: *
@@ -39,7 +39,7 @@ type SecretKey = ByteString
 
 type KeyPair = (PublicKey, SecretKey)
 
-#include "crypto_sign.h"
+#include <crypto_sign.h>
 
 -- | Randomly generate a public and private key for doing
 -- authenticated signing and verification.

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Crypto.NaCl.Encrypt.Stream.Salsa208
 -- Copyright   : (c) Austin Seipp 2011
@@ -25,7 +26,7 @@ import Data.ByteString as S
 import Crypto.NaCl.Encrypt.Stream.Internal as Internal
 import Crypto.NaCl.Nonce
 
-#include "crypto_stream_salsa208.h"
+#include <crypto_stream_salsa208.h>
 
 type SecretKey = ByteString
 

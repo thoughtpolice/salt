@@ -90,7 +90,8 @@ library
   if flag(hpc)
     ghc-options:    -fhpc
 
-  default-language: Haskell2010
+  default-extensions: CPP
+  default-language:   Haskell2010
 
 test-suite properties
   hs-source-dirs: tests

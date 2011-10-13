@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Crypto.NaCl.Encrypt.Stream
 -- Copyright   : (c) Austin Seipp 2011

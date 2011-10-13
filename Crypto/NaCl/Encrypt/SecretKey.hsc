@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Crypto.NaCl.Encrypt.SecretKey
 -- Copyright   : (c) Austin Seipp 2011
@@ -7,7 +8,7 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
--- Test
+-- Authenticated, secret-key encryption.
 -- 
 module Crypto.NaCl.Encrypt.SecretKey
        ( -- * Types
@@ -33,7 +34,7 @@ import Data.ByteString.Unsafe as SU
 
 import Crypto.NaCl.Nonce
 
-#include "crypto_secretbox.h"
+#include <crypto_secretbox.h>
 
 type SecretKey = ByteString
 

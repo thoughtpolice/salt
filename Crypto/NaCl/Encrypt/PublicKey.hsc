@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Crypto.NaCl.Encrypt.PublicKey
 -- Copyright   : (c) Austin Seipp 2011
@@ -42,7 +43,7 @@ type SecretKey = ByteString
 
 type KeyPair = (PublicKey, SecretKey)
 
-#include "crypto_box.h"
+#include <crypto_box.h>
 
 -- | Randomly generate a public and private key
 -- for doing authenticated encryption.

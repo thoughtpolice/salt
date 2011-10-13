@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Crypto.NaCl.Auth.OneTimeAuth
 -- Copyright   : (c) Austin Seipp 2011
@@ -25,7 +26,7 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
-#include "crypto_onetimeauth.h"
+#include <crypto_onetimeauth.h>
 
 authenticateOnce :: ByteString
                  -- ^ Message
