@@ -3,7 +3,9 @@ module Main
        ( main -- :: IO ()
        ) where
 import Control.Monad (liftM)
-import Data.ByteString as S (pack, length, ByteString, zipWith)
+import Data.ByteString as S (append, pack, 
+                             length, ByteString, 
+                             zipWith, splitAt, replicate)
 import Data.Maybe
 import Data.Bits
 
@@ -83,10 +85,11 @@ main = do
                 ]
               , testGroup "Nonce"
                 [ testCase "randomNonce" case_nonce_random
-                , testProperty "incNonce/pure"    prop_nonce_pure
+                , testProperty "incNonce/pure" prop_nonce_pure
                 , testProperty "length"  prop_nonce_length
                 , testProperty "clearBytes invariant" prop_nonce_clear_inv
                 , testProperty "clearBytes/pure" prop_nonce_clear_pure
+                , testProperty "clearBytes/works" prop_nonce_clear_works
                 ]
               , testGroup "Hashing" 
                 [ testProperty "sha256/pure"   prop_sha256_pure
@@ -228,6 +231,13 @@ prop_nonce_clear_inv n
 prop_nonce_clear_pure :: Nonce -> NonNegative Int -> Property
 prop_nonce_clear_pure n (NonNegative i)
   = i <= nonceLen n ==> clearBytes i n == clearBytes i n
+
+prop_nonce_clear_works :: Nonce -> NonNegative Int -> Property
+prop_nonce_clear_works n (NonNegative i)
+  = i < nonceLen n ==>
+    let n2    = clearBytes i n
+        (p,_) = S.splitAt (nonceLen n - i) $ toBS n
+    in n2 == (fromBS $ S.append p $ S.replicate i 0x0)
 
 case_nonce_random :: Assertion
 case_nonce_random = doit 20 $ \i -> do

@@ -90,12 +90,11 @@ clearBytes n x@(Nonce nonce)
   | n > l  = error "Crypto.NaCl.Nonce.clearBytes: n > length of nonce"
   | n < 0  = error "Crypto.NaCl.Nonce.clearBytes: n < 0"  
   | n == 0 = x
-  | n == l = Nonce $ S.replicate l 0x0
   | otherwise =
     Nonce $ SI.unsafeCreate l $ \out -> do
       SU.unsafeUseAsCString nonce $ \b -> do
         void $ SI.memset out 0x0 (fromIntegral l)
-        void $ SI.memcpy out (castPtr b) (fromIntegral n)
+        void $ SI.memcpy out (castPtr b) (fromIntegral $ l - n)
   where
     l = S.length nonce
 {-# INLINEABLE clearBytes #-}
