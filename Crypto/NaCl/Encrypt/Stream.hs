@@ -97,7 +97,7 @@ encrypt (Just XSalsa20)  = XSalsa20.encrypt
 -- Defaults to 'XSalsa20'.
 decrypt :: Maybe CryptoMode
         -- ^ Cryptographic mode to use.
-        -- Defaults to 'Crypto.NaCl.Decrypt.Stream.XSalsa20'  
+        -- Defaults to 'XSalsa20'  
         -> Nonce
         -- ^ Nonce
         -> ByteString
