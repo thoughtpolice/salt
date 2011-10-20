@@ -67,12 +67,6 @@ library
   other-modules:
     Crypto.NaCl.Auth.Auth
     Crypto.NaCl.Auth.OneTimeAuth
-    Crypto.NaCl.Encrypt.Stream.Internal
-    Crypto.NaCl.Encrypt.Stream.XSalsa20
-    Crypto.NaCl.Encrypt.Stream.Salsa20
-    Crypto.NaCl.Encrypt.Stream.Salsa2012
-    Crypto.NaCl.Encrypt.Stream.Salsa208
-    Crypto.NaCl.Encrypt.Stream.AES128CTR
 
   build-depends:
     base       >= 4,
@@ -80,7 +74,6 @@ library
 
   c-sources:        
     cbits/glue.c
-    cbits/glue_stream.c
     cbits/devurandom.c
   include-dirs:     cbits
   extra-libraries:  nacl

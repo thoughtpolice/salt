@@ -13,6 +13,7 @@
 module Crypto.NaCl.Encrypt.PublicKey
        (
          PublicKey, SecretKey, KeyPair -- :: *
+       , PKNonce                       -- :: *
        -- ** Keypair creation
        , createKeypair                 -- :: IO KeyPair
        -- ** Encryption, Decryption
@@ -29,7 +30,7 @@ module Crypto.NaCl.Encrypt.PublicKey
        -- ** Miscellaneous
        , publicKeyLength               -- :: Int
        , secretKeyLength               -- :: Int
-       , nonceLength                   -- :: Int
+       , nonceLength                   -- :: NonceLength PKNonce
        , nmLength                      -- :: Int
        ) where
 import Foreign.Ptr
@@ -51,6 +52,8 @@ type SecretKey = ByteString
 
 type KeyPair = (PublicKey, SecretKey)
 
+data PKNonce
+
 #include <crypto_box.h>
 
 -- TODO:
@@ -70,7 +73,7 @@ createKeypair = do
   return (SI.fromForeignPtr pk 0 publicKeyLength, 
           SI.fromForeignPtr sk 0 secretKeyLength)
 
-encrypt :: Nonce
+encrypt :: Nonce PKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Message
@@ -99,7 +102,7 @@ encrypt n msg pk sk = unsafePerformIO $ do
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
 {-# INLINEABLE encrypt #-}
   
-decrypt :: Nonce
+decrypt :: Nonce PKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input ciphertext
@@ -177,7 +180,7 @@ createNM (pk, sk) = unsafePerformIO $ do
 
 -- | Encrypt data from a specific sender to a specific receiver with
 -- some precomputed 'NM' data.
-encryptNM :: NM -> Nonce -> ByteString -> ByteString
+encryptNM :: NM -> Nonce PKNonce -> ByteString -> ByteString
 encryptNM (NM nm) n msg = unsafePerformIO $ do
   let mlen = S.length msg + msg_ZEROBYTES
   c <- SI.mallocByteString mlen
@@ -198,7 +201,7 @@ encryptNM (NM nm) n msg = unsafePerformIO $ do
 
 -- | Decrypt data from a specific sender for a specific receiver with
 -- some precomputed 'NM' data.
-decryptNM :: NM -> Nonce -> ByteString -> Maybe ByteString
+decryptNM :: NM -> Nonce PKNonce -> ByteString -> Maybe ByteString
 decryptNM (NM nm) n cipher = unsafePerformIO $ do
   let clen = S.length cipher + msg_BOXZEROBYTES
   m <- SI.mallocByteString clen
@@ -225,8 +228,8 @@ decryptNM (NM nm) n cipher = unsafePerformIO $ do
 -- 
   
 -- | Length of a 'Nonce' needed for encryption/decryption
-nonceLength :: Int
-nonceLength      = #{const crypto_box_NONCEBYTES}
+nonceLength :: NonceLength PKNonce
+nonceLength      = NonceLength #{const crypto_box_NONCEBYTES}
 
 -- | Length of a 'PublicKey' in bytes.
 publicKeyLength :: Int

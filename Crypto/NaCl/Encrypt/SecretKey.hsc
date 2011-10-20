@@ -12,7 +12,8 @@
 -- 
 module Crypto.NaCl.Encrypt.SecretKey
        ( -- * Types
-         SecretKey  
+         SecretKey          -- :: *
+       , SKNonce            -- :: *
          -- * Encryption/decryption
        , encrypt
        , decrypt
@@ -34,11 +35,14 @@ import Data.ByteString.Unsafe as SU
 
 import Crypto.NaCl.Nonce
 
-#include <crypto_secretbox.h>
-
 type SecretKey = ByteString
 
-encrypt :: Nonce
+data SKNonce
+
+#include <crypto_secretbox.h>
+
+
+encrypt :: Nonce SKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input
@@ -64,7 +68,7 @@ encrypt n msg k = unsafePerformIO $ do
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
 {-# INLINEABLE encrypt #-}
 
-decrypt :: Nonce
+decrypt :: Nonce SKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input
@@ -97,8 +101,8 @@ decrypt n cipher k = unsafePerformIO $ do
 -- 
   
 -- | Length of a 'Nonce' needed for encryption/decryption
-nonceLength :: Int
-nonceLength      = #{const crypto_secretbox_NONCEBYTES}
+nonceLength :: NonceLength SKNonce
+nonceLength      = NonceLength #{const crypto_secretbox_NONCEBYTES}
 
 -- | Length of a 'SecretKey' needed for encryption/decryption.
 keyLength :: Int

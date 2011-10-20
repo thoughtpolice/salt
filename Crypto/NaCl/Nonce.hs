@@ -12,7 +12,8 @@
 -- 
 module Crypto.NaCl.Nonce
        ( -- * Types
-         Nonce              -- :: *
+         Nonce              -- :: * -> *
+       , NonceLength(..)    -- :: * -> *
          -- * Creation
        , createZeroNonce    -- :: Int -> Nonce
        , createRandomNonce  -- :: Int -> IO Nonce
@@ -23,7 +24,9 @@ module Crypto.NaCl.Nonce
          -- * Incrementing a nonce
        , incNonce           -- :: Nonce -> Nonce
          -- * Nonce size
-       , nonceLen           -- :: Nonce -> Int
+       , nonceLen           -- :: Nonce k -> Int
+       , nonceLengthToInt   -- :: NonceLength k -> Int
+       , nonceToNonceLength -- :: Nonce k -> NonceLength k
        ) where
 import Foreign.C.Types
 import Foreign.Ptr
@@ -37,16 +40,27 @@ import Data.ByteString.Unsafe as SU
 import Crypto.NaCl.Random (randomBytes)
 
 -- | A cryptographic nonce used for client-server communication.
-data Nonce = Nonce !ByteString
+-- 
+-- The type @k@ indicates the *kind* of Nonce you're dealing with, to ensure
+-- for example you won't confuse a nonce for Secret key encryption with one
+-- you use for public key encryption, etc.
+newtype Nonce k = Nonce ByteString
               deriving Eq
 
-instance Show Nonce where
+instance Show (Nonce k) where
   show (Nonce bs) = "nonce["++show (S.length bs)++"]" ++ show (S.unpack bs)
 
+-- | A data type representing the length of a particular type of 'Nonce'
+newtype NonceLength k = NonceLength Int
+       deriving Eq
+
+instance Show (NonceLength a) where
+  show (NonceLength x) = show x
+ 
 -- | Create an empty 'Nonce' of length @n@ where
 -- all the bytes are zero.
-createZeroNonce :: Int -> Nonce
-createZeroNonce n 
+createZeroNonce :: NonceLength k -> Nonce k
+createZeroNonce (NonceLength n)
   | n < 0 = error "Crypto.NaCl.Nonce.createZeroNonce: n < 0"
   | otherwise = do
       Nonce $ SI.unsafeCreate n $ \out ->
@@ -54,20 +68,20 @@ createZeroNonce n
 {-# INLINEABLE createZeroNonce #-}
 
 -- | Create a random 'Nonce' of length @n@.
-createRandomNonce :: Int -> IO Nonce
-createRandomNonce n
+createRandomNonce :: NonceLength k -> IO (Nonce k)
+createRandomNonce (NonceLength n)
   | n < 0 = error "Crypto.NaCl.Nonce.createRandomNonce: n < 0"
   | otherwise = do
       b <- randomBytes n
       return $! Nonce b
 
 -- | Create a 'Nonce' from a 'ByteString'.
-fromBS :: ByteString -> Nonce
+fromBS :: ByteString -> Nonce k
 fromBS = Nonce
 {-# INLINEABLE fromBS #-}
 
 -- | Get the underlying 'ByteString' from a 'Nonce'.
-toBS :: Nonce -> ByteString
+toBS :: Nonce k -> ByteString
 toBS (Nonce b) = b
 {-# INLINEABLE toBS #-}
 
@@ -85,7 +99,7 @@ toBS (Nonce b) = b
 -- 
 -- > clearBytes (nonceLen nonce) nonce == createZeroNonce (nonceLen nonce)
 -- 
-clearBytes :: Int -> Nonce -> Nonce
+clearBytes :: Int -> Nonce k -> Nonce k
 clearBytes n x@(Nonce nonce) 
   | n > l  = error "Crypto.NaCl.Nonce.clearBytes: n > length of nonce"
   | n < 0  = error "Crypto.NaCl.Nonce.clearBytes: n < 0"  
@@ -100,7 +114,7 @@ clearBytes n x@(Nonce nonce)
 {-# INLINEABLE clearBytes #-}
 
 -- | Increment a 'Nonce' by 1.
-incNonce :: Nonce -> Nonce
+incNonce :: Nonce k -> Nonce k
 incNonce (Nonce nonce) =
   Nonce $ SI.unsafeCreate l $ \out -> do
     SU.unsafeUseAsCStringLen nonce $ \(b,blen) ->
@@ -110,9 +124,15 @@ incNonce (Nonce nonce) =
     l = S.length nonce
 {-# INLINEABLE incNonce #-}
 
--- | Get the length of a 'Nonce'.
-nonceLen :: Nonce -> Int
+-- | Get the size of a 'Nonce'.
+nonceLen :: Nonce k -> Int
 nonceLen (Nonce n) = S.length n
+
+nonceLengthToInt :: NonceLength k -> Int
+nonceLengthToInt (NonceLength i) = i
+
+nonceToNonceLength :: Nonce k -> NonceLength k
+nonceToNonceLength = NonceLength . nonceLen
 
 -- 
 -- FFI

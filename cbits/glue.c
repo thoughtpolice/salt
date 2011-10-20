@@ -13,7 +13,7 @@
 #include "crypto_sign.h"
 #include "crypto_auth.h"
 #include "crypto_onetimeauth.h"
-#include "crypto_stream.h"
+#include "crypto_stream_xsalsa20.h"
 
 /*
  * Hashing
@@ -182,6 +182,29 @@ int glue_crypto_onetimeauth_verify(const unsigned char* a, const unsigned char* 
 {
   return crypto_onetimeauth_verify(a, m, mlen, k);
 }
+
+/*
+ * Streaming encryption with XSalsa/20
+ */
+int
+glue_crypto_stream_xsalsa20(unsigned char* c, unsigned long long clen,
+			    const unsigned char* n, const unsigned char *k)
+{
+  int r = crypto_stream_xsalsa20(c, clen, n, k);
+  assert(r == 0);
+  return r;
+}
+
+int
+glue_crypto_stream_xsalsa20_xor(unsigned char* c, unsigned char* m, 
+				unsigned long long mlen,
+				const unsigned char* n, const unsigned char* k)
+{
+  int r = crypto_stream_xsalsa20_xor(c, m, mlen, n, k);
+  assert(r == 0);
+  return r;
+}
+
 
 /*
  * Nonces
