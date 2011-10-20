@@ -66,6 +66,36 @@ glue_crypto_box_open(unsigned char *m, const unsigned char *c,
   return crypto_box_open(m, c, clen, n, pk, sk);
 }
 
+int
+glue_crypto_box_beforenm(unsigned char *k,
+			 const unsigned char *pk,
+			 const unsigned char *sk)
+{
+  int r = crypto_box_beforenm(k, pk, sk);
+  assert(r == 0);
+  return r;
+}
+
+int
+glue_crypto_box_afternm(unsigned char *c,
+			const unsigned char *m, unsigned long long mlen,
+			const unsigned char *n,
+			const unsigned char *k)
+{
+  int r = crypto_box_afternm(c, m, mlen, n, k);
+  assert(r == 0);
+  return r;
+}
+
+// NOTE: return value must be checked for ciphertext verification!
+int
+glue_crypto_box_open_afternm(unsigned char *m,
+			     const unsigned char *c, unsigned long long clen,
+			     const unsigned char *n,
+			     const unsigned char *k)
+{
+  return crypto_box_open_afternm(m, c, clen, n, k);
+}
 
 /*
  * Public key signatures

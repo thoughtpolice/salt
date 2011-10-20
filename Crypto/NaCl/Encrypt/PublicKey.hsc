@@ -12,17 +12,25 @@
 -- 
 module Crypto.NaCl.Encrypt.PublicKey
        (
-       -- ** Types
          PublicKey, SecretKey, KeyPair -- :: *
        -- ** Keypair creation
-       , createKeypair                 -- :: IO (ByteString, ByteString)
-       -- ** Encryption, Decryption                   
-       , encrypt                       -- :: ByteString -> ByteString -> PublicKey -> SecretKey -> ByteString -- ^ Ciphertext
-       , decrypt                       -- :: ByteString -> ByteString -> PublicKey -> SecretKey -> ByteString -- ^ Ciphertext
+       , createKeypair                 -- :: IO KeyPair
+       -- ** Encryption, Decryption
+       , encrypt                       -- :: Nonce -> ByteString -> PublicKey -> SecretKey -> ByteString
+       , decrypt                       -- :: Nonce -> ByteString -> PublicKey -> SecretKey -> Maybe ByteString
+
+       -- ** Precomputation interface
+       -- $precomp
+       , NM                            -- :: *
+       , createNM                      -- :: KeyPair -> NM
+       , encryptNM                     -- :: NM -> Nonce -> ByteString -> ByteString
+       , decryptNM                     -- :: NM -> Nonce -> ByteString -> Maybe ByteString
+         
        -- ** Miscellaneous
        , publicKeyLength               -- :: Int
        , secretKeyLength               -- :: Int
        , nonceLength                   -- :: Int
+       , nmLength                      -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
@@ -44,6 +52,9 @@ type SecretKey = ByteString
 type KeyPair = (PublicKey, SecretKey)
 
 #include <crypto_box.h>
+
+-- TODO:
+--  * internal refactors (try to reduce boilerplate)
 
 -- | Randomly generate a public and private key
 -- for doing authenticated encryption.
@@ -111,12 +122,103 @@ decrypt n cipher pk sk = unsafePerformIO $ do
         SU.unsafeUseAsCString pk $ \ppk ->
           SU.unsafeUseAsCString sk $ \psk ->
             c_crypto_box_open pm pc (fromIntegral clen) pn ppk psk
-  
+
   return $ if r /= 0 then Nothing
             else
              let bs = SI.fromForeignPtr m 0 clen
              in Just $ SU.unsafeDrop msg_ZEROBYTES bs
 {-# INLINEABLE decrypt #-}
+
+
+-- 
+-- Precomputation interface
+-- 
+
+{- $precomp
+
+If you send many messages to the same receiver, or receive many
+messages from the same sender, you can gain speed increases by instead
+using the following precomputation interface, which splits the
+encryption and decryption steps into two parts.
+
+For encryption, you first create an 'NM' by using 'createNM', using
+the senders secret key, and receivers public key. You can then use
+'encryptNM' to encrypt data.
+
+For decryption, you first create an 'NM' by using 'createNM', using
+the recievers secret key, and the senders publickey. You can then use
+'decryptNM' to decrypt data.
+
+-}
+
+-- | An 'NM' is intermediate data computed by 'createNM' given a
+-- public and private key which can be used to encrypt/decrypt
+-- information via 'encryptNM' or 'decryptNM'.
+-- 
+-- An 'NM' can be re-used between two communicators for any number of
+-- messages.
+-- 
+-- Its name is not particularly enlightening as to its purpose, it is merely the same
+-- identifier used in the NaCl source code for this interface.
+newtype NM = NM ByteString deriving (Eq, Show)
+
+-- | Creates an intermediate piece of 'NM' data for sending/receiving
+-- messages to/from the same person. The resulting 'NM' can be used for
+-- any number of messages between client/server.
+createNM :: KeyPair -> NM
+createNM (pk, sk) = unsafePerformIO $ do
+  nm <- SI.mallocByteString nmLength
+  void $ withForeignPtr nm $ \pnm ->
+    SU.unsafeUseAsCString pk $ \ppk ->
+      SU.unsafeUseAsCString sk $ \psk ->
+        c_crypto_box_beforenm pnm ppk psk
+  return $ NM $ SI.fromForeignPtr nm 0 nmLength
+{-# INLINEABLE createNM #-}
+
+-- | Encrypt data from a specific sender to a specific receiver with
+-- some precomputed 'NM' data.
+encryptNM :: NM -> Nonce -> ByteString -> ByteString
+encryptNM (NM nm) n msg = unsafePerformIO $ do
+  let mlen = S.length msg + msg_ZEROBYTES
+  c <- SI.mallocByteString mlen
+  
+  -- inputs to crypto_box_afternm must be padded
+  let m = (S.replicate msg_ZEROBYTES 0x0) `S.append` msg
+  
+  -- as you can tell, this is unsafe
+  void $ withForeignPtr c $ \pc ->
+    SU.unsafeUseAsCString m $ \pm ->
+      SU.unsafeUseAsCString (toBS n) $ \pn -> 
+        SU.unsafeUseAsCString nm $ \pnm ->
+          c_crypto_box_afternm pc pm (fromIntegral mlen) pn pnm
+  
+  let r = SI.fromForeignPtr c 0 mlen
+  return $ SU.unsafeDrop msg_BOXZEROBYTES r
+{-# INLINEABLE encryptNM #-}
+
+-- | Decrypt data from a specific sender for a specific receiver with
+-- some precomputed 'NM' data.
+decryptNM :: NM -> Nonce -> ByteString -> Maybe ByteString
+decryptNM (NM nm) n cipher = unsafePerformIO $ do
+  let clen = S.length cipher + msg_BOXZEROBYTES
+  m <- SI.mallocByteString clen
+  
+  -- inputs to crypto_box must be padded
+  let c = (S.replicate msg_BOXZEROBYTES 0x0) `S.append` cipher
+  
+  -- as you can tell, this is unsafe
+  r <- withForeignPtr m $ \pm ->
+    SU.unsafeUseAsCString c $ \pc ->
+      SU.unsafeUseAsCString (toBS n) $ \pn -> 
+        SU.unsafeUseAsCString nm $ \pnm ->
+          c_crypto_box_open_afternm pm pc (fromIntegral clen) pn pnm
+
+  return $ if r /= 0 then Nothing
+            else
+             let bs = SI.fromForeignPtr m 0 clen
+             in Just $ SU.unsafeDrop msg_ZEROBYTES bs
+{-# INLINEABLE decryptNM #-}
+
 
 --
 -- FFI
@@ -132,8 +234,12 @@ publicKeyLength  = #{const crypto_box_PUBLICKEYBYTES}
 
 -- | Length of a 'SecretKey' in bytes.
 secretKeyLength :: Int
-secretKeyLength = #{const crypto_box_SECRETKEYBYTES}
-  
+secretKeyLength  = #{const crypto_box_SECRETKEYBYTES}
+
+-- | Length of the intermediate 'NM' data used by the precomputation
+-- interface.
+nmLength :: Int
+nmLength         = #{const crypto_box_BEFORENMBYTES}
 
 msg_ZEROBYTES,msg_BOXZEROBYTES :: Int
 msg_ZEROBYTES    = #{const crypto_box_ZEROBYTES}
@@ -150,3 +256,14 @@ foreign import ccall unsafe "glue_crypto_box"
 foreign import ccall unsafe "glue_crypto_box_open"
   c_crypto_box_open :: Ptr Word8 -> Ptr CChar -> CULLong -> 
                        Ptr CChar -> Ptr CChar -> Ptr CChar -> IO Int
+
+foreign import ccall unsafe "glue_crypto_box_beforenm"
+  c_crypto_box_beforenm :: Ptr Word8 -> Ptr CChar -> Ptr CChar -> IO Int
+
+foreign import ccall unsafe "glue_crypto_box_afternm"
+  c_crypto_box_afternm :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                          Ptr CChar -> Ptr CChar -> IO Int
+
+foreign import ccall unsafe "glue_crypto_box_open_afternm"
+  c_crypto_box_open_afternm :: Ptr Word8 -> Ptr CChar -> CULLong -> 
+                               Ptr CChar -> Ptr CChar -> IO Int

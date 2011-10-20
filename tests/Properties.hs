@@ -101,6 +101,8 @@ main = do
                 [ testCase "generated key length (encryption)" case_pubkey_len
                 , testCase "generated key length (signatures)" case_signkey_len
                 , testProperty "encrypt/decrypt" (prop_pubkey_pure k1 k2 n)
+                , testProperty "createNM purity" (prop_createnm_pure k1)
+                , testProperty "encryptNM/decryptNM" (prop_pubkey_precomp_pure k1 k2 n)
                 , testProperty "sign/verify" (prop_sign_verify s1)
                 ]
                 -- Misc
@@ -196,6 +198,17 @@ prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
   = let enc = PubKey.encrypt n xs pk2 sk1
         dec = PubKey.decrypt n enc pk1 sk2
     in maybe False (== xs) dec
+       
+prop_pubkey_precomp_pure :: PubKey.KeyPair -> PubKey.KeyPair -> Nonce -> ByteString -> Bool
+prop_pubkey_precomp_pure (pk1,sk1) (pk2,sk2) n xs
+  = let nm1 = PubKey.createNM (pk2,sk1)
+        nm2 = PubKey.createNM (pk1,sk2)
+        enc = PubKey.encryptNM nm1 n xs
+        dec = PubKey.decryptNM nm2 n enc
+    in maybe False (== xs) dec
+
+prop_createnm_pure :: PubKey.KeyPair -> Bool
+prop_createnm_pure kp = createNM kp == createNM kp
 
 -- Signatures
 
