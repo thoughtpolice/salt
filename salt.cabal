@@ -62,9 +62,12 @@ library
     Crypto.NaCl.Encrypt.Stream
     Crypto.NaCl.Hash
     Crypto.NaCl.Nonce
+    Crypto.NaCl.Nonce.Internal
     Crypto.NaCl.Random
     Crypto.NaCl.Sign
   other-modules:
+    -- we don't export these since they're
+    -- easy enough to consolidate
     Crypto.NaCl.Auth.Auth
     Crypto.NaCl.Auth.OneTimeAuth
 

@@ -33,7 +33,7 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
-import Crypto.NaCl.Nonce
+import Crypto.NaCl.Nonce.Internal
 
 type SecretKey = ByteString
 
