@@ -44,7 +44,7 @@ cryptoHashSHA256 xs =
   unsafePerformIO . SI.create 32 $ \out ->
     SU.unsafeUseAsCStringLen xs $ \(cstr,clen) ->
       void $ c_crypto_hash_sha256 out cstr (fromIntegral clen)
-{-# INLINEABLE cryptoHash_SHA256 #-}
+{-# INLINEABLE cryptoHashSHA256 #-}
 
 --
 -- FFI
