@@ -57,6 +57,8 @@ flag hpc
 library
   exposed-modules:
     Crypto.NaCl.Auth
+    Crypto.NaCl.Auth.Auth
+    Crypto.NaCl.Auth.OneTimeAuth
     Crypto.NaCl.Encrypt.PublicKey
     Crypto.NaCl.Encrypt.SecretKey
     Crypto.NaCl.Encrypt.Stream
@@ -65,11 +67,6 @@ library
     Crypto.NaCl.Nonce.Internal
     Crypto.NaCl.Random
     Crypto.NaCl.Sign
-  other-modules:
-    -- we don't export these since they're
-    -- easy enough to consolidate
-    Crypto.NaCl.Auth.Auth
-    Crypto.NaCl.Auth.OneTimeAuth
 
   build-depends:
     base       >= 4,
