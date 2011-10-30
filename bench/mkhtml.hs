@@ -17,7 +17,7 @@ import Text.Blaze.Html4.Strict.Attributes hiding (title)
 
 import Text.Blaze.Renderer.Utf8 (renderHtml)
 
-import Data.List (intersperse)
+import Data.List (intercalate)
 import Data.List.Split (splitOn)
 
 exttype :: String
@@ -31,13 +31,12 @@ main = do
   let files = flip map pngs $ \f -> 
         (init . splitOn "-" . dropExtension $ f, f)
   files' <- forM files $ \(x,f) -> do
-    bs <- (encode . S.concat . L.toChunks) `liftM` (L.readFile f)
+    bs <- (encode . S.concat . L.toChunks) `liftM` L.readFile f
     return (x,bs)
   
-  let values = map (\(x,f) -> (gather " " x, gather "-" x, f)) files'
+  let values = map (\(x,f) -> (unwords x, intercalate "-" x, f)) files'
   L.putStrLn $ renderHtml $ page gitsha1 date machine cpu values
- where gather s x = Prelude.concat $ intersperse s x
-       
+
 page :: String -> String -> String -> String -> [(String, String, S.ByteString)] -> Html
 page sha1 date machine cpu lnks = html $ do
   head $ title "hs-NaCl benchmark results"
@@ -52,15 +51,14 @@ page sha1 date machine cpu lnks = html $ do
       br
       b (str "Results:") >> br
       ul $ forM_ lnks $ \(n,anc,_) -> 
-        li $ a ! href (toValue $ '#':anc) $ (toHtml n)
+        li $ a ! href (toValue $ '#':anc) $ toHtml n
       br
       b (str "Graphs:") >> br
       p $ ul $ forM_ lnks $ \(n,anc,image) -> 
         li $ do
           a ! name (toValue anc) $ p (toHtml n)
           br
-          img ! alt "Image data" ! 
-            (src $ toValue $ "data:Image/png;base64,"++(unpack image))
+          img ! alt "Image data" ! src (toValue $ "data:Image/png;base64,"++unpack image)
   where
-    ghcommit = ("https://github.com/thoughtpolice/salt/commit/"++sha1)
+    ghcommit = "https://github.com/thoughtpolice/salt/commit/"++sha1
     str = toHtml :: String -> Html

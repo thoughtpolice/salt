@@ -54,7 +54,7 @@ verify auth msg k =
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk -> do
         b <- c_crypto_auth_verify pauth cstr (fromIntegral clen) pk
-        return $ if b == 0 then True else False
+        return (b == 0)
 {-# INLINEABLE verify #-}
 
 --

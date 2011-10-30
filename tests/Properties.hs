@@ -16,7 +16,7 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit
 import Test.Framework.Providers.HUnit (testCase)
 
-import Crypto.NaCl.Hash (cryptoHash, cryptoHash_SHA256)
+import Crypto.NaCl.Hash (cryptoHash, cryptoHashSHA256)
 import Crypto.NaCl.Random (randomBytes)
 import Crypto.NaCl.Encrypt.PublicKey as PubKey
 import Crypto.NaCl.Encrypt.SecretKey as SecretKey
@@ -38,7 +38,7 @@ main = do
   key <- randomBytes SecretKey.keyLength
   n2  <- createRandomNonce SecretKey.nonceLength
   
-  n3_xsalsa20 <- createRandomNonce $ Stream.nonceLength
+  n3_xsalsa20 <- createRandomNonce Stream.nonceLength
   defaultMain [ testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 , testGroup "Stream"
@@ -82,41 +82,41 @@ instance Arbitrary ByteString where
 instance Arbitrary (Nonce PKNonce) where
   arbitrary = do
     let n = nonceLengthToInt PubKey.nonceLength
-    (fromBS . pack) `liftM` (vectorOf n arbitrary)
+    (fromBS . pack) `liftM` vectorOf n arbitrary
 instance Arbitrary (Nonce SKNonce) where
   arbitrary = do
     let n = nonceLengthToInt SecretKey.nonceLength
-    (fromBS . pack) `liftM` (vectorOf n arbitrary)
+    (fromBS . pack) `liftM` vectorOf n arbitrary
 instance Arbitrary (Nonce StreamNonce) where
   arbitrary = do
     let n = nonceLengthToInt Stream.nonceLength
-    (fromBS . pack) `liftM` (vectorOf n arbitrary)
+    (fromBS . pack) `liftM` vectorOf n arbitrary
 
 newtype SmallBS = SBS ByteString deriving (Eq, Show)
 instance Arbitrary SmallBS where
   arbitrary = do
     n <- choose (0, 256) :: Gen Int
-    (SBS . pack) `liftM` (vectorOf n arbitrary)
+    (SBS . pack) `liftM` vectorOf n arbitrary
 
 newtype AuthKey = AuthKey ByteString deriving (Eq, Show)
 instance Arbitrary AuthKey where
-  arbitrary = (AuthKey . pack) `liftM` (vectorOf authKeyLength arbitrary)
+  arbitrary = (AuthKey . pack) `liftM` vectorOf authKeyLength arbitrary
 
 newtype OneTimeAuthKey = OneTimeAuthKey ByteString deriving (Eq, Show)
 instance Arbitrary OneTimeAuthKey where
-  arbitrary = (OneTimeAuthKey . pack) `liftM` (vectorOf oneTimeAuthKeyLength arbitrary)
+  arbitrary = (OneTimeAuthKey . pack) `liftM` vectorOf oneTimeAuthKeyLength arbitrary
     
 newtype XSalsa20StreamKey = XSalsa20SK ByteString deriving (Eq, Show)
 instance Arbitrary XSalsa20StreamKey where
-  arbitrary = (XSalsa20SK . pack) `liftM` (vectorOf Stream.keyLength arbitrary)
+  arbitrary = (XSalsa20SK . pack) `liftM` vectorOf Stream.keyLength arbitrary
 
 
 -- Hashing properties
 prop_sha256_pure :: ByteString -> Bool
-prop_sha256_pure xs = cryptoHash_SHA256 xs == cryptoHash_SHA256 xs
+prop_sha256_pure xs = cryptoHashSHA256 xs == cryptoHashSHA256 xs
   
 prop_sha256_length :: ByteString -> Bool
-prop_sha256_length xs = S.length (cryptoHash_SHA256 xs) == 32
+prop_sha256_length xs = S.length (cryptoHashSHA256 xs) == 32
 
 prop_sha512_pure :: ByteString -> Bool
 prop_sha512_pure xs = cryptoHash xs == cryptoHash xs
@@ -195,7 +195,7 @@ prop_nonce_clear_works n (NonNegative i)
   = i < nonceLen n ==>
     let n2    = clearBytes i n
         (p,_) = S.splitAt (nonceLen n - i) $ toBS n
-    in n2 == (fromBS $ S.append p $ S.replicate i 0x0)
+    in n2 == fromBS (S.append p $ S.replicate i 0x0)
 
 -- Authentication
 
@@ -235,4 +235,4 @@ xorBS :: ByteString -> ByteString -> ByteString
 xorBS x1 x2 = S.pack $ S.zipWith xor x1 x2
 
 doit :: Int -> (Int -> IO a) -> IO ()
-doit n f = sequence_ $ map f [1..n]
+doit n f = mapM_ f [1..n]

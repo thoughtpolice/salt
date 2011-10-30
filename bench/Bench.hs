@@ -29,7 +29,7 @@ instance NFData ByteString where
 main :: IO ()
 main = do
   s1 <- Sign.createKeypair
-  streamk1 <- randomBytes $ Stream.keyLength 
+  streamk1 <- randomBytes Stream.keyLength 
   
   defaultMain [ bgroup "Signing"
                 [ bench "createKeypair" $ nfIO Sign.createKeypair
@@ -95,7 +95,7 @@ main = do
                 case v of
                   Nothing -> return S.empty
                   Just _v -> goI (Stream.encrypt n _v sk) (incNonce n)
-          run_ (enumFile "./testdata" $$ (goI S.empty nonce))
+          run_ (enumFile "./testdata" $$ goI S.empty nonce)
 
         streamEncBench2 :: Stream.SecretKey -> IO ()
         streamEncBench2 sk = do 

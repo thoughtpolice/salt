@@ -35,7 +35,7 @@ module Crypto.NaCl.Encrypt.PublicKey
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
-import Foreign.ForeignPtr (withForeignPtr)
+import Foreign.ForeignPtr (withForeignPtr, ForeignPtr)
 import Data.Word
 import Control.Monad (void)
 
@@ -84,11 +84,8 @@ encrypt :: Nonce PKNonce
         -> ByteString 
         -- ^ Ciphertext
 encrypt n msg pk sk = unsafePerformIO $ do
-  let mlen = S.length msg + msg_ZEROBYTES
-  c <- SI.mallocByteString mlen
-  
-  -- inputs to crypto_box must be padded
-  let m = (S.replicate msg_ZEROBYTES 0x0) `S.append` msg
+  (c, m) <- prepEnc msg
+  let mlen = S.length m
   
   -- as you can tell, this is unsafe
   void $ withForeignPtr c $ \pc ->
@@ -112,11 +109,8 @@ decrypt :: Nonce PKNonce
         -- ^ Recievers secret key
         -> Maybe ByteString -- ^ Ciphertext
 decrypt n cipher pk sk = unsafePerformIO $ do
-  let clen = S.length cipher + msg_BOXZEROBYTES
-  m <- SI.mallocByteString clen
-  
-  -- inputs to crypto_box must be padded
-  let c = (S.replicate msg_BOXZEROBYTES 0x0) `S.append` cipher
+  (m, c) <- prepDec cipher
+  let clen = S.length c
   
   -- as you can tell, this is unsafe
   r <- withForeignPtr m $ \pm ->
@@ -182,12 +176,9 @@ createNM (pk, sk) = unsafePerformIO $ do
 -- some precomputed 'NM' data.
 encryptNM :: NM -> Nonce PKNonce -> ByteString -> ByteString
 encryptNM (NM nm) n msg = unsafePerformIO $ do
-  let mlen = S.length msg + msg_ZEROBYTES
-  c <- SI.mallocByteString mlen
-  
-  -- inputs to crypto_box_afternm must be padded
-  let m = (S.replicate msg_ZEROBYTES 0x0) `S.append` msg
-  
+  (c, m) <- prepEnc msg
+  let mlen = S.length m
+
   -- as you can tell, this is unsafe
   void $ withForeignPtr c $ \pc ->
     SU.unsafeUseAsCString m $ \pm ->
@@ -203,11 +194,8 @@ encryptNM (NM nm) n msg = unsafePerformIO $ do
 -- some precomputed 'NM' data.
 decryptNM :: NM -> Nonce PKNonce -> ByteString -> Maybe ByteString
 decryptNM (NM nm) n cipher = unsafePerformIO $ do
-  let clen = S.length cipher + msg_BOXZEROBYTES
-  m <- SI.mallocByteString clen
-  
-  -- inputs to crypto_box must be padded
-  let c = (S.replicate msg_BOXZEROBYTES 0x0) `S.append` cipher
+  (m, c) <- prepDec cipher
+  let clen = S.length c
   
   -- as you can tell, this is unsafe
   r <- withForeignPtr m $ \pm ->
@@ -221,6 +209,20 @@ decryptNM (NM nm) n cipher = unsafePerformIO $ do
              let bs = SI.fromForeignPtr m 0 clen
              in Just $ SU.unsafeDrop msg_ZEROBYTES bs
 {-# INLINEABLE decryptNM #-}
+
+-- 
+-- Inputs to encrypt/decrypt must be padded
+-- 
+
+prepEnc :: ByteString -> IO (ForeignPtr Word8, ByteString)
+prepEnc bs = do
+  c <- SI.mallocByteString (S.length bs + msg_ZEROBYTES)
+  return $! (c, S.replicate msg_ZEROBYTES 0x0 `S.append` bs)
+  
+prepDec :: ByteString -> IO (ForeignPtr Word8, ByteString)
+prepDec bs = do
+  c <- SI.mallocByteString (S.length bs + msg_BOXZEROBYTES)
+  return $! (c, S.replicate msg_BOXZEROBYTES 0x0 `S.append` bs)
 
 
 --

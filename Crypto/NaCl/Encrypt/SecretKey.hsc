@@ -55,7 +55,7 @@ encrypt n msg k = unsafePerformIO $ do
   c <- SI.mallocByteString mlen
   
   -- inputs to crypto_box must be padded
-  let m = (S.replicate msg_ZEROBYTES 0x0) `S.append` msg
+  let m = S.replicate msg_ZEROBYTES 0x0 `S.append` msg
   
   -- as you can tell, this is unsafe
   void $ withForeignPtr c $ \pc ->
@@ -81,7 +81,7 @@ decrypt n cipher k = unsafePerformIO $ do
   m <- SI.mallocByteString clen
   
   -- inputs to crypto_box must be padded
-  let c = (S.replicate msg_BOXZEROBYTES 0x0) `S.append` cipher
+  let c = S.replicate msg_BOXZEROBYTES 0x0 `S.append` cipher
   
   -- as you can tell, this is unsafe
   r <- withForeignPtr m $ \pm ->

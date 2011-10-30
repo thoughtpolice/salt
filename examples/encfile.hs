@@ -16,7 +16,7 @@ import Data.Enumerator.Binary
 import qualified Data.Enumerator.List as EL
 
 main :: IO ()
-main = putStrLn ("Key length is " ++ (show keyLength)) >> 
+main = putStrLn ("Key length is " ++ show keyLength) >> 
        getArgs >>= go
   where go []         = error "Try --help"
         go ["--help"] =
