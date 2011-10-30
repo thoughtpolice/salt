@@ -44,7 +44,7 @@ import Crypto.NaCl.Nonce.Internal
 createZeroNonce :: NonceLength k -> Nonce k
 createZeroNonce (NonceLength n)
   | n < 0 = error "Crypto.NaCl.Nonce.createZeroNonce: n < 0"
-  | otherwise = do
+  | otherwise =
       Nonce $ SI.unsafeCreate n $ \out ->
         void $ SI.memset out 0x0 (fromIntegral n)
 {-# INLINEABLE createZeroNonce #-}
@@ -77,7 +77,7 @@ clearBytes n x@(Nonce nonce)
   | n < 0  = error "Crypto.NaCl.Nonce.clearBytes: n < 0"  
   | n == 0 = x
   | otherwise =
-    Nonce $ SI.unsafeCreate l $ \out -> do
+    Nonce $ SI.unsafeCreate l $ \out ->
       SU.unsafeUseAsCString nonce $ \b -> do
         void $ SI.memset out 0x0 (fromIntegral l)
         void $ SI.memcpy out (castPtr b) (fromIntegral $ l - n)

@@ -14,7 +14,7 @@ module Crypto.NaCl.Hash
        ( -- * Selected primitive
          cryptoHash        -- :: ByteString -> ByteString
          -- * Alternate primitives
-       , cryptoHash_SHA256 -- :: ByteString -> ByteString
+       , cryptoHashSHA256 -- :: ByteString -> ByteString
        ) where
 import Foreign.C
 import Foreign.Ptr
@@ -38,8 +38,8 @@ cryptoHash xs =
 
 -- | Alternative cryptographic hash function, providing only
 -- SHA-256.
-cryptoHash_SHA256 :: ByteString -> ByteString
-cryptoHash_SHA256 xs =
+cryptoHashSHA256 :: ByteString -> ByteString
+cryptoHashSHA256 xs =
   -- SHA256 has 32 bytes of output
   unsafePerformIO . SI.create 32 $ \out ->
     SU.unsafeUseAsCStringLen xs $ \(cstr,clen) ->

@@ -10,7 +10,6 @@
 -- Fast, cryptographically strong authentication and one-time
 -- authentication.
 -- 
-
 module Crypto.NaCl.Auth
        ( -- * Secret-key authentication
          module Crypto.NaCl.Auth.Auth
