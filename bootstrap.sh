@@ -67,6 +67,13 @@ say "ARCH = $ARCH, HOST = $SHORTHOST"
 INCDIR=$HSNACLDIR/$VERSION/build/$SHORTHOST/include/$ARCH/
 LIBDIR=$HSNACLDIR/$VERSION/build/$SHORTHOST/lib/$ARCH/
 
+
+if [ "$HLINT" == "YES" ]; then
+    say "hlint'ing source"
+    hlint --cpp-include=$INCDIR .
+    exit 0
+fi
+
 if [ "$CLEAN" == "YES" ]; then
     say "Cleaning..."
     $CABAL clean -v0
