@@ -25,7 +25,7 @@ There's also a [BitBucket mirror][bb]:
 
 # Authors
 
-See `AUTHORS.txt`.
+See [AUTHORS.txt](https://raw.github.com/thoughtpolice/salt/master/AUTHORS.txt).
 
 # License
 
