@@ -1,1 +1,9 @@
-Austin Seipp <as@hacks.yi.org>
+Author, target of blame:
+
+Austin Seipp
+
+Friends who contributed discussion/ideas/patches in no particular
+order:
+
+Daniel Peebles
+Michael Stone
