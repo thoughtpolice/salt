@@ -53,10 +53,10 @@ main = do
                   , bench "512" $ nf cryptoHash (pack [1..512])
                   ]
                 , bgroup "sha256"
-                  [ bench "64"  $ nf cryptoHash_SHA256 (pack [1..64])
-                  , bench "128" $ nf cryptoHash_SHA256 (pack [1..128])
-                  , bench "256" $ nf cryptoHash_SHA256 (pack [1..256])
-                  , bench "512" $ nf cryptoHash_SHA256 (pack [1..512])
+                  [ bench "64"  $ nf cryptoHashSHA256 (pack [1..64])
+                  , bench "128" $ nf cryptoHashSHA256 (pack [1..128])
+                  , bench "256" $ nf cryptoHashSHA256 (pack [1..256])
+                  , bench "512" $ nf cryptoHashSHA256 (pack [1..512])
                   ]
                 ]
               , bgroup "Random bytes"
