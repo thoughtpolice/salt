@@ -72,10 +72,11 @@ library
     base       >= 4,
     bytestring >= 0.9
 
+  hs-source-dirs: src
   c-sources:        
-    cbits/glue.c
-    cbits/devurandom.c
-  include-dirs:     cbits
+    src/cbits/glue.c
+    src/cbits/devurandom.c
+  include-dirs:     src/cbits
   extra-libraries:  nacl
 
   cc-options:       -Wall
