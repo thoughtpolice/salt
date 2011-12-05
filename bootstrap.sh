@@ -70,7 +70,7 @@ LIBDIR=$HSNACLDIR/$VERSION/build/$SHORTHOST/lib/$ARCH/
 
 if [ "$HLINT" == "YES" ]; then
     say "hlint'ing source"
-    hlint --ignore="Use camelCase" --ignore="Eta reduce" --cpp-include=$INCDIR .
+    hlint -c --ignore="Use camelCase" --ignore="Eta reduce" --cpp-include=$INCDIR bench examples src tests
     exit 0
 fi
 
