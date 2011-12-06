@@ -31,6 +31,8 @@ main = do
   s1 <- Sign.createKeypair
   streamk1 <- randomBytes Stream.keyLength 
   
+  fourkb <- randomBytes 4096
+  let !znonce = createZeroNonce Stream.nonceLength
   defaultMain [ bgroup "Signing"
                 [ bench "createKeypair" $ nfIO Sign.createKeypair
                 , bench "verify 64"  $ nf (signBench s1) $ pack [1..64]
@@ -40,7 +42,8 @@ main = do
                 ]
               , bgroup "Stream"
                 [ bgroup "xsalsa20"
-                  [ bench "pure streamgen 4094/10000" $ nf (streamGenBench streamk1 4094) 10000
+                  [ bench "pure streamgen 4096/10000" $ nf (streamGenBench streamk1 4096) 10000
+                  , bench "pure encrypt 4kB random data" $ nf (pureEncBench znonce streamk1) fourkb
                   , bench "enum1 encrypt 1gb random data" $ nfIO $ streamEncBench1 streamk1
                   , bench "enum2 encrypt 1gb random data" $ nfIO $ streamEncBench2 streamk1
                   ]
@@ -85,6 +88,9 @@ main = do
           = go (createZeroNonce Stream.nonceLength) empty i
           where go !_ !bs 0  = bs
                 go !n !_ !x = go (incNonce n) (Stream.streamGen n sz sk) (x-1)
+
+        pureEncBench :: Nonce StreamNonce -> Stream.SecretKey -> ByteString -> ByteString
+        pureEncBench n k bs = Stream.encrypt n bs k
 
         streamEncBench1 :: Stream.SecretKey -> IO ByteString
         streamEncBench1 sk = do
