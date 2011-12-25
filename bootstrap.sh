@@ -16,7 +16,7 @@ say () {
 
 if [ "$DEV" == "YES" ]; then
     say "In development mode... "
-    if [ ! -n "$HSENV_NAME" ] || [ ! -n "$VIRTHUALENV_NAME" ]; then
+    if [ ! -z "$HSENV_NAME" ] || [ ! -z "$VIRTHUALENV_NAME" ]; then
         say "Detected hsenv virtual environment ($HSENV_NAME), using 'cabal'"
         CABAL=cabal
     else
