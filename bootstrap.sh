@@ -14,9 +14,15 @@ say () {
     return 0
 }
 
-if [ "$DEV" == "YES" ] ; then
-    say "In development mode"
-    CABAL=cabal-dev
+if [ "$DEV" == "YES" ]; then
+    say "In development mode... "
+    if [ ! -n "$HSENV_NAME" ] || [ ! -n "$VIRTHUALENV_NAME" ]; then
+        say "Detected hsenv virtual environment ($HSENV_NAME), using 'cabal'"
+        CABAL=cabal
+    else
+        say "Using 'cabal-dev'"
+        CABAL=cabal-dev
+    fi
 else
     say "Using release tarball"
     CABAL=cabal
