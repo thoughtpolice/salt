@@ -7,7 +7,6 @@ import Control.Monad (liftM)
 import Data.ByteString as S (append, pack, 
                              length, ByteString, 
                              zipWith, splitAt, replicate)
-import Data.Maybe
 import Data.Bits
 
 import Test.Framework (defaultMain, testGroup)
