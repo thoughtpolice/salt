@@ -23,7 +23,8 @@ import Crypto.NaCl.Encrypt.SecretKey as SecretKey
 import Crypto.NaCl.Encrypt.Stream as Stream
 
 import Crypto.NaCl.Sign as Sign
-import Crypto.NaCl.Nonce
+import Crypto.NaCl.Nonce as N
+import Crypto.NaCl.Nonce.Internal as NI
 import Crypto.NaCl.Auth as Auth
 
 main :: IO ()
@@ -51,7 +52,8 @@ main = do
                 , testProperty "onetimeauth works" prop_onetimeauth_works
                 ]
               , testGroup "Nonce"
-                [ testProperty "incNonce/pure" prop_nonce_pure
+                [ testProperty "zero nonce" prop_zero_nonce
+                , testProperty "incNonce/pure" prop_nonce_pure
                 , testProperty "clearBytes invariant" prop_nonce_clear_inv
                 , testProperty "clearBytes/pure" prop_nonce_clear_pure
                 , testProperty "clearBytes/works" prop_nonce_clear_works
@@ -177,6 +179,11 @@ prop_secretkey_pure k n xs
     in maybe False (== xs) dec
 
 -- Nonces
+
+prop_zero_nonce :: Property
+prop_zero_nonce
+  = forAll (choose (0, 256)) $ \i ->
+    S.replicate i 0x0 == NI.toBS (createZeroNonce $ NI.NonceLength i)
 
 prop_nonce_pure :: Nonce StreamNonce -> Bool
 prop_nonce_pure n = incNonce n == incNonce n

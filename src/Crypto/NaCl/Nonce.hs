@@ -29,7 +29,7 @@ module Crypto.NaCl.Nonce
        , nonceToNonceLength -- :: Nonce k -> NonceLength k
        ) where
 import Foreign.Ptr
-import Control.Monad (void)
+import Control.Monad (liftM)
 
 import Data.ByteString as S
 import Data.ByteString.Internal as SI
@@ -43,19 +43,15 @@ import Crypto.NaCl.Nonce.Internal
 -- all the bytes are zero.
 createZeroNonce :: NonceLength k -> Nonce k
 createZeroNonce (NonceLength n)
-  | n < 0 = error "Crypto.NaCl.Nonce.createZeroNonce: n < 0"
-  | otherwise =
-      Nonce $ SI.unsafeCreate n $ \out ->
-        void $ SI.memset out 0x0 (fromIntegral n)
+  | n < 0     = error "Crypto.NaCl.Nonce.createZeroNonce: n < 0"
+  | otherwise = Nonce $! S.replicate n 0x0
 {-# INLINEABLE createZeroNonce #-}
 
 -- | Create a random 'Nonce' of length @n@.
 createRandomNonce :: NonceLength k -> IO (Nonce k)
 createRandomNonce (NonceLength n)
   | n < 0 = error "Crypto.NaCl.Nonce.createRandomNonce: n < 0"
-  | otherwise = do
-      b <- randomBytes n
-      return $! Nonce b
+  | otherwise = Nonce `liftM` randomBytes n
 
 -- | @clearBytes n nonce@ clears the last @n@ bytes of the 'Nonce' and
 -- makes them all 0. This is useful for the pattern of generating a
@@ -76,13 +72,8 @@ clearBytes n x@(Nonce nonce)
   | n > l  = error "Crypto.NaCl.Nonce.clearBytes: n > length of nonce"
   | n < 0  = error "Crypto.NaCl.Nonce.clearBytes: n < 0"  
   | n == 0 = x
-  | otherwise =
-    Nonce $ SI.unsafeCreate l $ \out ->
-      SU.unsafeUseAsCString nonce $ \b -> do
-        void $ SI.memset out 0x0 (fromIntegral l)
-        void $ SI.memcpy out (castPtr b) (fromIntegral $ l - n)
-  where
-    l = S.length nonce
+  | otherwise = Nonce $! S.take (l - n) nonce `S.append` S.replicate n 0x0
+  where l = S.length nonce
 {-# INLINEABLE clearBytes #-}
 
 -- | Increment a 'Nonce' by 1.
