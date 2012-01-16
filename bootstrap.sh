@@ -9,10 +9,8 @@ CURL="curl -f#L"
 HSNACLDIR=$HOME/.hs-nacl
 TARBALL=$HSNACLDIR/$VERSION.tar.bz2
 
-say () {
-    echo "==> " $1
-    return 0
-}
+say () { echo "==> " $1; return 0; }
+onoes () { echo "!!> " $1; exit -1; }
 
 if [ "$DEV" == "YES" ]; then
     say "In development mode... "
@@ -99,6 +97,8 @@ say "Building with $CABAL..."
 C="install --extra-include-dirs=$INCDIR --extra-lib-dirs=$LIBDIR"
 if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
     C="$C --enable-tests"
+    # kill old test file
+    rm -f ./dist/build/properties/properties
 fi
 
 if [ "$HADDOCK" == "YES" ]; then
@@ -110,8 +110,12 @@ $CABAL $C $@
 
 # test
 if [ "$DEV" == "YES" ] || [ "$NACLTEST" == "YES" ]; then
-    say "Testing..."
-    ./dist/build/properties/properties -a200 +RTS -N
+    if [ ! -f ./dist/build/properties/properties ]; then
+        onoes "Failure to build tests"
+    else
+        say "Testing..."
+        ./dist/build/properties/properties -a200 +RTS -N
+    fi
 fi
 
 say "Completed"
