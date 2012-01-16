@@ -64,6 +64,7 @@ library
     Crypto.NaCl.Encrypt.SecretKey
     Crypto.NaCl.Encrypt.Stream
     Crypto.NaCl.Hash
+    Crypto.NaCl.Key
     Crypto.NaCl.Nonce
     Crypto.NaCl.Nonce.Internal
     Crypto.NaCl.Random
