@@ -83,6 +83,7 @@ library
 
   cc-options:       -Wall
   ghc-options:      -Wall -O2 -funbox-strict-fields
+                    -fwarn-tabs -Werror
   if flag(hpc)
     ghc-options:    -fhpc
 
