@@ -33,14 +33,14 @@ import Data.ByteString as S
 -- for example you won't confuse a nonce for Secret key encryption with one
 -- you use for public key encryption, etc.
 newtype Nonce k = Nonce ByteString
-              deriving Eq
+        deriving Eq
 
 instance Show (Nonce k) where
   show (Nonce bs) = "nonce["++show (S.length bs)++"]" ++ show (S.unpack bs)
 
 -- | A data type representing the length of a particular type of 'Nonce'
 newtype NonceLength k = NonceLength Int
-       deriving Eq
+        deriving Eq
 
 instance Show (NonceLength a) where
   show (NonceLength x) = show x
