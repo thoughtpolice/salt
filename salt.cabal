@@ -31,8 +31,8 @@ bug-reports:         http://github.com/thoughtpolice/salt/issues
 license:             MIT
 license-file:        LICENSE.txt
 copyright:           Copyright (c) Austin Seipp 2011
-author:              Austin Seipp <as@hacks.yi.org>
-maintainer:          Austin Seipp <as@hacks.yi.org>
+author:              Austin Seipp <mad.one@gmail.com>
+maintainer:          Austin Seipp <mad.one@gmail.com>
 category:            Cryptography, Networking
 build-type:          Simple
 cabal-version:       >=1.10
