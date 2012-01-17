@@ -3,11 +3,10 @@ HOST=`uname -n -s -r -m`
 CPU=`cat /proc/cpuinfo | grep "model name" | head -1 | awk '{$$1="";$$2="";$$3=""; print $$0}'`
 
 all: testdata Bench
-	./mkhtml.hs "$(GITSHA1)" "`date`" "$(HOST)" "$(CPU)" `ls -v *.png` > results.html
 testdata:
 	dd if=/dev/urandom of=testdata bs=1M count=1024
 Bench: Bench.hs
 	ghc -O2 Bench
-	./Bench -k png:640x480 $(BENCH)
+	./Bench -o results.html $(BENCH)
 clean:
 	rm -f *.o *.hi Bench *.png *.html *~
