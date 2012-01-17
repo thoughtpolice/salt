@@ -10,6 +10,8 @@
 -- Fast, cryptographically strong authentication and one-time
 -- authentication.
 -- 
+-- This module exports both 'Crypto.NaCl.Auth.Auth' and
+-- 'Crypto.NaCl.Auth.OneTimeAuth' for convenience.
 module Crypto.NaCl.Auth
        ( -- * Secret-key authentication
          module Crypto.NaCl.Auth.Auth

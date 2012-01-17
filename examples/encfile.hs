@@ -7,6 +7,7 @@ import System.Exit
 import Data.ByteString.Char8 as S hiding (putStrLn)
 import Crypto.NaCl.Encrypt.Stream
 import Crypto.NaCl.Nonce
+import Crypto.NaCl.Key
 
 import System.IO
 import System.FilePath
@@ -38,8 +39,9 @@ main = putStrLn ("Key length is " ++ show keyLength) >>
 pipeline :: FilePath -> String -> Nonce StreamNonce -> Handle -> Iteratee ByteString IO ()
 pipeline file k n h = (enumFile file $= encryptE (pack k) n) $$ iterHandle h
 
-encryptE :: Monad m => SecretKey -> Nonce StreamNonce -> Enumeratee ByteString ByteString m b
-encryptE k = EL.mapAccum $ \n bs -> (incNonce n, encrypt n bs k)
+encryptE :: Monad m => ByteString -> Nonce StreamNonce -> Enumeratee ByteString ByteString m b
+encryptE k = EL.mapAccum $ \n bs -> (incNonce n, encrypt n bs sk)
+  where sk = SecretKey k
 
 checkKey :: String -> IO ()
 checkKey k = 

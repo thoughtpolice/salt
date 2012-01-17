@@ -12,8 +12,7 @@
 -- 
 module Crypto.NaCl.Encrypt.SecretKey
        ( -- * Types
-         SecretKey          -- :: *
-       , SKNonce            -- :: *
+        SKNonce            -- :: *
          -- * Encryption/decryption
        , encrypt
        , decrypt
@@ -35,7 +34,7 @@ import Data.ByteString.Unsafe as SU
 
 import Crypto.NaCl.Nonce.Internal
 
-type SecretKey = ByteString
+import Crypto.NaCl.Key
 
 data SKNonce
 
@@ -50,7 +49,7 @@ encrypt :: Nonce SKNonce
         -- ^ Secret key
         -> ByteString
         -- ^ Ciphertext
-encrypt n msg k = unsafePerformIO $ do
+encrypt n msg (SecretKey k) = unsafePerformIO $ do
   let mlen = S.length msg + msg_ZEROBYTES
   c <- SI.mallocByteString mlen
   
@@ -76,7 +75,7 @@ decrypt :: Nonce SKNonce
         -- ^ Secret key
         -> Maybe ByteString 
         -- ^ Ciphertext
-decrypt n cipher k = unsafePerformIO $ do
+decrypt n cipher (SecretKey k) = unsafePerformIO $ do
   let clen = S.length cipher + msg_BOXZEROBYTES
   m <- SI.mallocByteString clen
   

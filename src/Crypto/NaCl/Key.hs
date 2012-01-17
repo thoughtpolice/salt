@@ -12,13 +12,17 @@
 -- so you never confuse your keys or accidentally give them 'ByteString's
 -- when you shouldn't have.
 module Crypto.NaCl.Key
-       ( PublicKey(..)
+       ( -- * Types
+         PublicKey(..)
        , SecretKey(..)
+       , KeyPair
        ) where
 import Data.ByteString
 
 newtype PublicKey = PublicKey { unPublicKey :: ByteString }
-        deriving Eq
+        deriving (Eq, Show)
 
 newtype SecretKey = SecretKey { unSecretKey :: ByteString }
-        deriving Eq
+        deriving (Eq, Show)
+
+type KeyPair = (PublicKey, SecretKey)

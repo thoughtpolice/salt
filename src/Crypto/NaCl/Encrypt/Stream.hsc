@@ -12,8 +12,7 @@
 -- 
 module Crypto.NaCl.Encrypt.Stream
        ( -- * Types
-         SecretKey       -- :: *
-       , StreamNonce     -- :: * -> *
+         StreamNonce     -- :: * -> *
          -- * Stream generation
        , streamGen       -- :: Nonce -> SecretKey -> ByteString
          -- * Encryption and decryption
@@ -35,7 +34,8 @@ import Data.ByteString.Unsafe as SU
 
 import Crypto.NaCl.Nonce.Internal
 
-type SecretKey = ByteString
+import Crypto.NaCl.Key
+
 data StreamNonce
 
 #include <crypto_stream_xsalsa20.h>
@@ -50,7 +50,7 @@ streamGen :: Nonce StreamNonce
           -- ^ Input
           -> ByteString
           -- ^ Resulting crypto stream
-streamGen n sz sk
+streamGen n sz (SecretKey sk)
   | nonceLen n /= nonceLengthToInt nonceLength
   = error "Crypto.NaCl.Encrypt.Stream.XSalsa20.streamGen: bad nonce length"
   | S.length sk /= keyLength
@@ -75,7 +75,7 @@ encrypt :: Nonce StreamNonce
         -- ^ Secret key
         -> ByteString
         -- ^ Ciphertext
-encrypt n msg sk
+encrypt n msg (SecretKey sk)
   | nonceLen n /= nonceLengthToInt nonceLength
   = error "Crypto.NaCl.Encrypt.Stream.XSalsa20.encrypt: bad nonce length"
   | S.length sk /= keyLength

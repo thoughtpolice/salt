@@ -10,10 +10,8 @@
 --
 -- TODO FIXME
 module Crypto.NaCl.Sign
-       ( -- * Types
-         PublicKey, SecretKey, KeyPair -- :: *
-         -- * Keypair creation
-       , createKeypair                 -- :: IO KeyPair
+       ( -- * Keypair creation
+         createKeypair                 -- :: IO KeyPair
          -- * Signing and verifying messages
        , sign                          -- :: SecretKey -> ByteString -> ByteString
        , verify                        -- :: PublicKey -> ByteString -> Maybe ByteString
@@ -34,10 +32,7 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
-type PublicKey = ByteString
-type SecretKey = ByteString
-
-type KeyPair = (PublicKey, SecretKey)
+import Crypto.NaCl.Key
 
 #include <crypto_sign.h>
 
@@ -52,25 +47,25 @@ createKeypair = do
     void $ withForeignPtr sk $ \psk ->
       c_crypto_sign_keypair ppk psk
       
-  return (SI.fromForeignPtr pk 0 signPublicKeyLength,
-          SI.fromForeignPtr sk 0 signSecretKeyLength)
+  return (PublicKey $ SI.fromForeignPtr pk 0 signPublicKeyLength,
+          SecretKey $ SI.fromForeignPtr sk 0 signSecretKeyLength)
 
--- | Sign a message with a particular secret key.
+-- | Sign a message with a particular 'SecretKey'.
 sign :: SecretKey 
      -- ^ Signers secret key
      -> ByteString 
      -- ^ Input message
      -> ByteString
      -- ^ Resulting signed message
-sign sk xs = 
+sign (SecretKey sk) xs =
   unsafePerformIO $ SU.unsafeUseAsCStringLen xs $ \(mstr,mlen) ->
     SU.unsafeUseAsCString sk $ \psk ->
       SI.createAndTrim (mlen+sign_BYTES) $ \out ->
        fromIntegral `liftM` c_crypto_sign out mstr (fromIntegral mlen) psk
 {-# INLINEABLE sign #-}
 
--- | Verifies a signed message. Returns @Nothing@ if verification
--- fails, or @Just xs@ where @xs@ is the original message if it
+-- | Verifies a signed message with a 'PublicKey'. Returns @Nothing@ if
+-- verification fails, or @Just xs@ where @xs@ is the original message if it
 -- succeeds.
 verify :: PublicKey
        -- ^ Signers public key
@@ -78,7 +73,7 @@ verify :: PublicKey
        -- ^ Signed message
        -> Maybe ByteString
        -- ^ Verification check
-verify pk xs =
+verify (PublicKey pk) xs =
   unsafePerformIO $ SU.unsafeUseAsCStringLen xs $ \(smstr,smlen) ->
     SU.unsafeUseAsCString pk $ \ppk ->
       alloca $ \pmlen -> do

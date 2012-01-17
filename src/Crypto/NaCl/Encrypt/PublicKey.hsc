@@ -11,23 +11,22 @@
 -- Public-key encryption.
 -- 
 module Crypto.NaCl.Encrypt.PublicKey
-       (
-         PublicKey, SecretKey, KeyPair -- :: *
-       , PKNonce                       -- :: *
-       -- ** Keypair creation
+       ( -- * Types
+         PKNonce                       -- :: *
+       -- * Keypair creation
        , createKeypair                 -- :: IO KeyPair
-       -- ** Encryption, Decryption
+       -- * Encryption, Decryption
        , encrypt                       -- :: Nonce -> ByteString -> PublicKey -> SecretKey -> ByteString
        , decrypt                       -- :: Nonce -> ByteString -> PublicKey -> SecretKey -> Maybe ByteString
 
-       -- ** Precomputation interface
+       -- * Precomputation interface
        -- $precomp
        , NM                            -- :: *
        , createNM                      -- :: KeyPair -> NM
        , encryptNM                     -- :: NM -> Nonce -> ByteString -> ByteString
        , decryptNM                     -- :: NM -> Nonce -> ByteString -> Maybe ByteString
          
-       -- ** Miscellaneous
+       -- * Miscellaneous
        , publicKeyLength               -- :: Int
        , secretKeyLength               -- :: Int
        , nonceLength                   -- :: NonceLength PKNonce
@@ -47,10 +46,8 @@ import Data.ByteString.Unsafe as SU
 
 import Crypto.NaCl.Nonce.Internal
 
-type PublicKey = ByteString
-type SecretKey = ByteString
+import Crypto.NaCl.Key
 
-type KeyPair = (PublicKey, SecretKey)
 
 data PKNonce
 
@@ -70,8 +67,8 @@ createKeypair = do
     void $ withForeignPtr sk $ \psk ->
       c_crypto_box_keypair ppk psk
       
-  return (SI.fromForeignPtr pk 0 publicKeyLength, 
-          SI.fromForeignPtr sk 0 secretKeyLength)
+  return (PublicKey $ SI.fromForeignPtr pk 0 publicKeyLength, 
+          SecretKey $ SI.fromForeignPtr sk 0 secretKeyLength)
 
 encrypt :: Nonce PKNonce
         -- ^ Nonce
@@ -83,7 +80,7 @@ encrypt :: Nonce PKNonce
         -- ^ Senders secret key
         -> ByteString 
         -- ^ Ciphertext
-encrypt n msg pk sk = unsafePerformIO $ do
+encrypt n msg (PublicKey pk) (SecretKey sk) = unsafePerformIO $ do
   (c, m) <- prepEnc msg
   let mlen = S.length m
   
@@ -108,7 +105,7 @@ decrypt :: Nonce PKNonce
         -> SecretKey
         -- ^ Recievers secret key
         -> Maybe ByteString -- ^ Ciphertext
-decrypt n cipher pk sk = unsafePerformIO $ do
+decrypt n cipher (PublicKey pk) (SecretKey sk) = unsafePerformIO $ do
   (m, c) <- prepDec cipher
   let clen = S.length c
   
@@ -163,7 +160,7 @@ newtype NM = NM ByteString deriving (Eq, Show)
 -- messages to/from the same person. The resulting 'NM' can be used for
 -- any number of messages between client/server.
 createNM :: KeyPair -> NM
-createNM (pk, sk) = unsafePerformIO $ do
+createNM (PublicKey pk, SecretKey sk) = unsafePerformIO $ do
   nm <- SI.mallocByteString nmLength
   void $ withForeignPtr nm $ \pnm ->
     SU.unsafeUseAsCString pk $ \ppk ->

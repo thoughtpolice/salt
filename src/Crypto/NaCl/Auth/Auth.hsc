@@ -26,30 +26,32 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
+import Crypto.NaCl.Key
+
 #include <crypto_auth.h>
 
-authenticate :: ByteString
-             -- ^ Message
-             -> ByteString 
+authenticate :: SecretKey
              -- ^ Secret key
              -> ByteString
+             -- ^ Message 
+             -> ByteString
              -- ^ Authenticator
-authenticate msg k = 
+authenticate (SecretKey k) msg = 
   unsafePerformIO . SI.create auth_BYTES $ \out ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk ->
         void $ c_crypto_auth out cstr (fromIntegral clen) pk
 {-# INLINEABLE authenticate #-}
 
-verify :: ByteString 
-       -- ^ Authenticator
+verify :: SecretKey
+       -- ^ Key
+       -> ByteString 
+       -- ^ Authenticator returned via 'authenticate'
        -> ByteString 
        -- ^ Message
-       -> ByteString 
-       -- ^ Key
        -> Bool
        -- ^ Result: @True@ if properly verified, @False@ otherwise
-verify auth msg k =
+verify (SecretKey k) auth msg =
   unsafePerformIO $ SU.unsafeUseAsCString auth $ \pauth ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk -> do

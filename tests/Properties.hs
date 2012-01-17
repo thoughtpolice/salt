@@ -17,15 +17,16 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Crypto.NaCl.Hash (cryptoHash, cryptoHashSHA256)
 import Crypto.NaCl.Random (randomBytes)
+
 import Crypto.NaCl.Encrypt.PublicKey as PubKey
 import Crypto.NaCl.Encrypt.SecretKey as SecretKey
-
 import Crypto.NaCl.Encrypt.Stream as Stream
 
 import Crypto.NaCl.Sign as Sign
 import Crypto.NaCl.Nonce as N
 import Crypto.NaCl.Nonce.Internal as NI
 import Crypto.NaCl.Auth as Auth
+import Crypto.NaCl.Key as K
 
 main :: IO ()
 main = do
@@ -35,13 +36,13 @@ main = do
   
   s1 <- Sign.createKeypair
   
-  key <- randomBytes SecretKey.keyLength
+  key <- SecretKey `liftM` randomBytes SecretKey.keyLength
   n2  <- createRandomNonce SecretKey.nonceLength
   
   n3_xsalsa20 <- createRandomNonce Stream.nonceLength
   defaultMain [ testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
-                , testGroup "Stream"
+                , testGroup "Stream encryption"
                   [ testProperty "stream/pure" (prop_stream_stream_pure_xsalsa20 n3_xsalsa20)
                   , testProperty "stream/xor" (prop_stream_xor_xsalsa20 n3_xsalsa20)
                   , testProperty "encrypt/decrypt" (prop_stream_enc_pure_xsalsa20 n3_xsalsa20)
@@ -80,6 +81,12 @@ main = do
 instance Arbitrary ByteString where
   arbitrary = pack `liftM` arbitrary
 
+instance Arbitrary K.PublicKey where
+  arbitrary = PublicKey `liftM` arbitrary
+
+instance Arbitrary K.SecretKey where
+  arbitrary = SecretKey `liftM` arbitrary
+
 instance Arbitrary (Nonce PKNonce) where
   arbitrary = do
     let n = nonceLengthToInt PubKey.nonceLength
@@ -99,17 +106,17 @@ instance Arbitrary SmallBS where
     n <- choose (0, 256) :: Gen Int
     (SBS . pack) `liftM` vectorOf n arbitrary
 
-newtype AuthKey = AuthKey ByteString deriving (Eq, Show)
+newtype AuthKey = AuthKey K.SecretKey deriving (Eq, Show)
 instance Arbitrary AuthKey where
-  arbitrary = (AuthKey . pack) `liftM` vectorOf authKeyLength arbitrary
+  arbitrary = (AuthKey . SecretKey . pack) `liftM` vectorOf authKeyLength arbitrary
 
-newtype OneTimeAuthKey = OneTimeAuthKey ByteString deriving (Eq, Show)
+newtype OneTimeAuthKey = OneTimeAuthKey K.SecretKey deriving (Eq, Show)
 instance Arbitrary OneTimeAuthKey where
-  arbitrary = (OneTimeAuthKey . pack) `liftM` vectorOf oneTimeAuthKeyLength arbitrary
+  arbitrary = (OneTimeAuthKey . SecretKey . pack) `liftM` vectorOf oneTimeAuthKeyLength arbitrary
     
-newtype XSalsa20StreamKey = XSalsa20SK ByteString deriving (Eq, Show)
+newtype XSalsa20StreamKey = XSalsa20SK K.SecretKey deriving (Eq, Show)
 instance Arbitrary XSalsa20StreamKey where
-  arbitrary = (XSalsa20SK . pack) `liftM` vectorOf Stream.keyLength arbitrary
+  arbitrary = (XSalsa20SK . SecretKey . pack) `liftM` vectorOf Stream.keyLength arbitrary
 
 
 -- Hashing properties
@@ -136,22 +143,22 @@ case_random = doit 20 $ \i -> do
 case_pubkey_len :: Assertion
 case_pubkey_len = doit 20 $ \_ -> do
   (pk,sk) <- PubKey.createKeypair
-  S.length pk @?= publicKeyLength
-  S.length sk @?= secretKeyLength
+  S.length (unPublicKey pk) @?= publicKeyLength
+  S.length (unSecretKey sk) @?= secretKeyLength
 
 case_signkey_len :: Assertion
 case_signkey_len = doit 20 $ \_ -> do
   (pk,sk) <- Sign.createKeypair
-  S.length pk @?= signPublicKeyLength
-  S.length sk @?= signSecretKeyLength
+  S.length (unPublicKey pk) @?= signPublicKeyLength
+  S.length (unSecretKey sk) @?= signSecretKeyLength
 
-prop_pubkey_pure :: PubKey.KeyPair -> PubKey.KeyPair -> Nonce PKNonce -> ByteString -> Bool
+prop_pubkey_pure :: KeyPair -> KeyPair -> Nonce PKNonce -> ByteString -> Bool
 prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
   = let enc = PubKey.encrypt n xs pk2 sk1
         dec = PubKey.decrypt n enc pk1 sk2
     in maybe False (== xs) dec
        
-prop_pubkey_precomp_pure :: PubKey.KeyPair -> PubKey.KeyPair -> Nonce PKNonce -> ByteString -> Bool
+prop_pubkey_precomp_pure :: KeyPair -> KeyPair -> Nonce PKNonce -> ByteString -> Bool
 prop_pubkey_precomp_pure (pk1,sk1) (pk2,sk2) n xs
   = let nm1 = PubKey.createNM (pk2,sk1)
         nm2 = PubKey.createNM (pk1,sk2)
@@ -159,12 +166,12 @@ prop_pubkey_precomp_pure (pk1,sk1) (pk2,sk2) n xs
         dec = PubKey.decryptNM nm2 n enc
     in maybe False (== xs) dec
 
-prop_createnm_pure :: PubKey.KeyPair -> Bool
+prop_createnm_pure :: KeyPair -> Bool
 prop_createnm_pure kp = createNM kp == createNM kp
 
 -- Signatures
 
-prop_sign_verify :: Sign.KeyPair -> ByteString -> Bool
+prop_sign_verify :: KeyPair -> ByteString -> Bool
 prop_sign_verify (pk,sk) xs
   = let s = Sign.sign sk xs
         d = Sign.verify pk s
@@ -172,7 +179,7 @@ prop_sign_verify (pk,sk) xs
 
 -- Secret-key authenticated encryption
 
-prop_secretkey_pure :: SecretKey.SecretKey -> Nonce SKNonce -> ByteString -> Bool
+prop_secretkey_pure :: SecretKey -> Nonce SKNonce -> ByteString -> Bool
 prop_secretkey_pure k n xs
   = let enc = SecretKey.encrypt n xs k
         dec = SecretKey.decrypt n enc k
@@ -207,11 +214,11 @@ prop_nonce_clear_works n (NonNegative i)
 
 prop_auth_works :: AuthKey -> ByteString -> Bool
 prop_auth_works (AuthKey k) msg
-  = Auth.verify (Auth.authenticate msg k) msg k
+  = Auth.verify k (Auth.authenticate k msg) msg
 
 prop_onetimeauth_works :: OneTimeAuthKey -> ByteString -> Bool
 prop_onetimeauth_works (OneTimeAuthKey k) msg
-  = Auth.verifyOnce (Auth.authenticateOnce msg k) msg k
+  = Auth.verifyOnce k (Auth.authenticateOnce k msg) msg
 
 -- Streaming encryption
 

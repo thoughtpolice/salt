@@ -26,30 +26,32 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
+import Crypto.NaCl.Key
+
 #include <crypto_onetimeauth.h>
 
-authenticateOnce :: ByteString
-                 -- ^ Message
-                 -> ByteString 
+authenticateOnce :: SecretKey
                  -- ^ Secret key
+                 -> ByteString 
+                 -- ^ Message
                  -> ByteString
                  -- ^ Authenticator
-authenticateOnce msg k = 
+authenticateOnce (SecretKey k) msg = 
   unsafePerformIO . SI.create auth_BYTES $ \out ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk ->
         void $ c_crypto_onetimeauth out cstr (fromIntegral clen) pk
 {-# INLINEABLE authenticateOnce #-}
 
-verifyOnce :: ByteString 
-           -- ^ Authenticator
+verifyOnce :: SecretKey
+           -- ^ Secret key 
+           -> ByteString 
+           -- ^ Authenticator returned via 'authenticateOnce'
            -> ByteString 
            -- ^ Message
-           -> ByteString 
-           -- ^ Key
            -> Bool
            -- ^ Result: @True@ if verified, @False@ otherwise
-verifyOnce auth msg k =
+verifyOnce (SecretKey k) auth msg =
   unsafePerformIO $ SU.unsafeUseAsCString auth $ \pauth ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk -> do
