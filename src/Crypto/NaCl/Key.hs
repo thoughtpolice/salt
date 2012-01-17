@@ -1,5 +1,5 @@
 -- |
--- Module      : Crypto.NaCl.Sign
+-- Module      : Crypto.NaCl.Key
 -- Copyright   : (c) Austin Seipp 2011
 -- License     : MIT
 --
