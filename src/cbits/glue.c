@@ -1,6 +1,6 @@
 /* Haskell <-> NaCl FFI glue.
 
-   Copyright (C) 2011 Austin Seipp. See LICENSE for details.
+   Copyright (C) 2011-2012 Austin Seipp. See LICENSE for details.
  */
 #include <string.h>
 #include <assert.h>

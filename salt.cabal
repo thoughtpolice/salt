@@ -30,7 +30,7 @@ homepage:            http://thoughtpolice.github.com/salt
 bug-reports:         http://github.com/thoughtpolice/salt/issues
 license:             MIT
 license-file:        LICENSE.txt
-copyright:           Copyright (c) Austin Seipp 2011
+copyright:           Copyright (c) Austin Seipp 2011-2012
 author:              Austin Seipp <mad.one@gmail.com>
 maintainer:          Austin Seipp <mad.one@gmail.com>
 category:            Cryptography, Networking
