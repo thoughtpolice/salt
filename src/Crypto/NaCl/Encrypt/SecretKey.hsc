@@ -4,7 +4,7 @@
 -- Copyright   : (c) Austin Seipp 2011-2012
 -- License     : MIT
 -- 
--- Maintainer  : as@hacks.yi.org
+-- Maintainer  : mad.one@gmail.com
 -- Stability   : experimental
 -- Portability : portable
 -- 
