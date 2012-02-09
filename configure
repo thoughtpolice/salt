@@ -17,24 +17,28 @@ else
 fi
 echo $ARCH
 
+OUTDIR=$HOME/.haskell.salt/$ARCH-$NACLVERSION/$VERSION
+
 printf "checking if NaCl has been built... "
-if [ ! -d "$NACLSRCDIR/build" ]; then
-    echo "no"
-    printf "now building NaCl; grab some coffee... "
-    D=`pwd`
-    cd $NACLSRCDIR
-    ./do
-    if [ $? != 0 ]; then
-        echo "error (return code was $?)"
-        exit 1
+if [ ! -d "$OUTDIR" ]; then
+    if [ ! -d "$NACLSRCDIR/build" ]; then
+        echo "no"
+        printf "now building NaCl; grab some coffee... "
+        D=`pwd`
+        cd $NACLSRCDIR
+        ./do
+        if [ $? != 0 ]; then
+            echo "error (return code was $?)"
+            exit 1
+        fi
+        cd $D
+        echo "ok, done"
+    else
+        echo "yes"
     fi
-    cd $D
-    echo "ok, done"
 else
     echo "yes"
 fi
-
-OUTDIR=$HOME/.haskell.salt/$ARCH-$NACLVERSION/$VERSION
 
 echo "copying includes/libraries to $OUTDIR"
 
