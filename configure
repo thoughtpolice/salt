@@ -4,25 +4,6 @@ VERSION=0.0
 NACLVERSION=20110221
 NACLSRCDIR=`pwd`/src/cbits/nacl-$NACLVERSION
 
-# build!
-printf "checking if NaCl has been built... "
-
-if [ ! -d "$NACLSRCDIR/build" ]; then
-    echo "no"
-    echo -n "Now building NaCl. This is going to take a while, grab some coffee... "
-    D=`pwd`
-    cd $NACLSRCDIR
-    ./do
-    if [ $? != 0 ]; then
-        echo "Error building NaCl (return code was $?)"
-        exit 1
-    fi
-    cd $D
-    echo "done"
-else
-    echo "yes"
-fi
-
 printf "shortname is... "
 SHORTHOST=`hostname | sed 's/\..*//' | tr -cd '[a-z][A-Z][0-9]'`
 echo $SHORTHOST
@@ -36,8 +17,25 @@ else
 fi
 echo $ARCH
 
+printf "checking if NaCl has been built... "
+if [ ! -d "$NACLSRCDIR/build" ]; then
+    echo "no"
+    printf "now building NaCl; grab some coffee... "
+    D=`pwd`
+    cd $NACLSRCDIR
+    ./do
+    if [ $? != 0 ]; then
+        echo "error (return code was $?)"
+        exit 1
+    fi
+    cd $D
+    echo "ok, done"
+else
+    echo "yes"
+fi
 
 OUTDIR=$HOME/.haskell.salt/$ARCH-$NACLVERSION/$VERSION
+
 echo "copying includes/libraries to $OUTDIR"
 
 mkdir -p $OUTDIR/include
