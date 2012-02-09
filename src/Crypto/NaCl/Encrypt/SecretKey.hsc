@@ -17,12 +17,12 @@ module Crypto.NaCl.Encrypt.SecretKey
        , encrypt
        , decrypt
          -- * Misc
-       , nonceLength
        , keyLength
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.ForeignPtr (withForeignPtr)
+import Data.Tagged
 import Data.Word
 import Control.Monad (void)
 
@@ -32,16 +32,23 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
-import Crypto.NaCl.Nonce.Internal
+import Crypto.NaCl.Nonce
 
 import Crypto.NaCl.Key
 
-data SKNonce
-
 #include <crypto_secretbox.h>
 
+data SKNonce = SKNonce ByteString deriving (Show, Eq)
+instance Nonce SKNonce where
+  {-# SPECIALIZE instance Nonce SKNonce #-}
+  size = Tagged nonceLength
+  toBS (SKNonce b)   = b
+  fromBS x
+    | S.length x == nonceLength = Just (SKNonce x)
+    | otherwise                 = Nothing
 
-encrypt :: Nonce SKNonce
+
+encrypt :: SKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input
@@ -49,7 +56,7 @@ encrypt :: Nonce SKNonce
         -- ^ Secret key
         -> ByteString
         -- ^ Ciphertext
-encrypt n msg (SecretKey k) = unsafePerformIO $ do
+encrypt (SKNonce n) msg (SecretKey k) = unsafePerformIO $ do
   let mlen = S.length msg + msg_ZEROBYTES
   c <- SI.mallocByteString mlen
   
@@ -59,7 +66,7 @@ encrypt n msg (SecretKey k) = unsafePerformIO $ do
   -- as you can tell, this is unsafe
   void $ withForeignPtr c $ \pc ->
     SU.unsafeUseAsCString m $ \pm ->
-      SU.unsafeUseAsCString (toBS n) $ \pn -> 
+      SU.unsafeUseAsCString n $ \pn -> 
         SU.unsafeUseAsCString k $ \pk ->
           c_crypto_secretbox pc pm (fromIntegral mlen) pn pk
   
@@ -67,7 +74,7 @@ encrypt n msg (SecretKey k) = unsafePerformIO $ do
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
 {-# INLINEABLE encrypt #-}
 
-decrypt :: Nonce SKNonce
+decrypt :: SKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input
@@ -75,7 +82,7 @@ decrypt :: Nonce SKNonce
         -- ^ Secret key
         -> Maybe ByteString 
         -- ^ Ciphertext
-decrypt n cipher (SecretKey k) = unsafePerformIO $ do
+decrypt (SKNonce n) cipher (SecretKey k) = unsafePerformIO $ do
   let clen = S.length cipher + msg_BOXZEROBYTES
   m <- SI.mallocByteString clen
   
@@ -85,7 +92,7 @@ decrypt n cipher (SecretKey k) = unsafePerformIO $ do
   -- as you can tell, this is unsafe
   r <- withForeignPtr m $ \pm ->
     SU.unsafeUseAsCString c $ \pc ->
-      SU.unsafeUseAsCString (toBS n) $ \pn -> 
+      SU.unsafeUseAsCString n $ \pn -> 
         SU.unsafeUseAsCString k $ \pk ->
           c_crypto_secretbox_open pm pc (fromIntegral clen) pn pk
   
@@ -100,8 +107,8 @@ decrypt n cipher (SecretKey k) = unsafePerformIO $ do
 -- 
   
 -- | Length of a 'Nonce' needed for encryption/decryption
-nonceLength :: NonceLength SKNonce
-nonceLength      = NonceLength #{const crypto_secretbox_NONCEBYTES}
+nonceLength :: Int
+nonceLength = #{const crypto_secretbox_NONCEBYTES}
 
 -- | Length of a 'SecretKey' needed for encryption/decryption.
 keyLength :: Int

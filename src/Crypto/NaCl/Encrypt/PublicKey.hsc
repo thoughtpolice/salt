@@ -29,13 +29,13 @@ module Crypto.NaCl.Encrypt.PublicKey
        -- * Miscellaneous
        , publicKeyLength               -- :: Int
        , secretKeyLength               -- :: Int
-       , nonceLength                   -- :: NonceLength PKNonce
        , nmLength                      -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.ForeignPtr (withForeignPtr, ForeignPtr)
 import Data.Word
+import Data.Tagged
 import Control.Monad (void)
 
 import System.IO.Unsafe (unsafePerformIO)
@@ -44,14 +44,21 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
-import Crypto.NaCl.Nonce.Internal
+import Crypto.NaCl.Nonce
 
 import Crypto.NaCl.Key
 
-
-data PKNonce
-
 #include <crypto_box.h>
+
+newtype PKNonce = PKNonce ByteString deriving (Show, Eq)
+instance Nonce PKNonce where
+  {-# SPECIALIZE instance Nonce PKNonce #-}
+  size = Tagged nonceLength
+  toBS (PKNonce b)   = b
+  fromBS x
+    | S.length x == nonceLength = Just (PKNonce x)
+    | otherwise                 = Nothing
+
 
 -- TODO:
 --  * internal refactors (try to reduce boilerplate)
@@ -70,7 +77,7 @@ createKeypair = do
   return (PublicKey $ SI.fromForeignPtr pk 0 publicKeyLength, 
           SecretKey $ SI.fromForeignPtr sk 0 secretKeyLength)
 
-encrypt :: Nonce PKNonce
+encrypt :: PKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Message
@@ -80,14 +87,14 @@ encrypt :: Nonce PKNonce
         -- ^ Senders secret key
         -> ByteString 
         -- ^ Ciphertext
-encrypt n msg (PublicKey pk) (SecretKey sk) = unsafePerformIO $ do
+encrypt (PKNonce n) msg (PublicKey pk) (SecretKey sk) = unsafePerformIO $ do
   (c, m) <- prepEnc msg
   let mlen = S.length m
   
   -- as you can tell, this is unsafe
   void $ withForeignPtr c $ \pc ->
     SU.unsafeUseAsCString m $ \pm ->
-      SU.unsafeUseAsCString (toBS n) $ \pn -> 
+      SU.unsafeUseAsCString n $ \pn -> 
         SU.unsafeUseAsCString pk $ \ppk ->
           SU.unsafeUseAsCString sk $ \psk ->
             c_crypto_box pc pm (fromIntegral mlen) pn ppk psk
@@ -96,7 +103,7 @@ encrypt n msg (PublicKey pk) (SecretKey sk) = unsafePerformIO $ do
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
 {-# INLINEABLE encrypt #-}
   
-decrypt :: Nonce PKNonce
+decrypt :: PKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input ciphertext
@@ -105,14 +112,14 @@ decrypt :: Nonce PKNonce
         -> SecretKey
         -- ^ Recievers secret key
         -> Maybe ByteString -- ^ Ciphertext
-decrypt n cipher (PublicKey pk) (SecretKey sk) = unsafePerformIO $ do
+decrypt (PKNonce n) cipher (PublicKey pk) (SecretKey sk) = unsafePerformIO $ do
   (m, c) <- prepDec cipher
   let clen = S.length c
   
   -- as you can tell, this is unsafe
   r <- withForeignPtr m $ \pm ->
     SU.unsafeUseAsCString c $ \pc ->
-      SU.unsafeUseAsCString (toBS n) $ \pn -> 
+      SU.unsafeUseAsCString n $ \pn -> 
         SU.unsafeUseAsCString pk $ \ppk ->
           SU.unsafeUseAsCString sk $ \psk ->
             c_crypto_box_open pm pc (fromIntegral clen) pn ppk psk
@@ -171,15 +178,15 @@ createNM (PublicKey pk, SecretKey sk) = unsafePerformIO $ do
 
 -- | Encrypt data from a specific sender to a specific receiver with
 -- some precomputed 'NM' data.
-encryptNM :: NM -> Nonce PKNonce -> ByteString -> ByteString
-encryptNM (NM nm) n msg = unsafePerformIO $ do
+encryptNM :: NM -> PKNonce -> ByteString -> ByteString
+encryptNM (NM nm) (PKNonce n) msg = unsafePerformIO $ do
   (c, m) <- prepEnc msg
   let mlen = S.length m
 
   -- as you can tell, this is unsafe
   void $ withForeignPtr c $ \pc ->
     SU.unsafeUseAsCString m $ \pm ->
-      SU.unsafeUseAsCString (toBS n) $ \pn -> 
+      SU.unsafeUseAsCString n $ \pn -> 
         SU.unsafeUseAsCString nm $ \pnm ->
           c_crypto_box_afternm pc pm (fromIntegral mlen) pn pnm
   
@@ -189,7 +196,7 @@ encryptNM (NM nm) n msg = unsafePerformIO $ do
 
 -- | Decrypt data from a specific sender for a specific receiver with
 -- some precomputed 'NM' data.
-decryptNM :: NM -> Nonce PKNonce -> ByteString -> Maybe ByteString
+decryptNM :: NM -> PKNonce -> ByteString -> Maybe ByteString
 decryptNM (NM nm) n cipher = unsafePerformIO $ do
   (m, c) <- prepDec cipher
   let clen = S.length c
@@ -225,10 +232,10 @@ prepDec bs = do
 --
 -- FFI
 -- 
-  
--- | Length of a 'Nonce' needed for encryption/decryption
-nonceLength :: NonceLength PKNonce
-nonceLength      = NonceLength #{const crypto_box_NONCEBYTES}
+
+-- | Length of a Nonce
+nonceLength :: Int
+nonceLength = #{const crypto_box_NONCEBYTES}
 
 -- | Length of a 'PublicKey' in bytes.
 publicKeyLength :: Int

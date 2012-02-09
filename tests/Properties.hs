@@ -8,6 +8,8 @@ import Data.ByteString as S (append, pack,
                              length, ByteString, 
                              zipWith, splitAt, replicate)
 import Data.Bits
+import Data.Maybe
+import Data.Tagged
 
 import Test.Framework (defaultMain, testGroup)
 import Test.QuickCheck
@@ -24,7 +26,6 @@ import Crypto.NaCl.Encrypt.Stream as Stream
 
 import Crypto.NaCl.Sign as Sign
 import Crypto.NaCl.Nonce as N
-import Crypto.NaCl.Nonce.Internal as NI
 import Crypto.NaCl.Auth as Auth
 import Crypto.NaCl.Key as K
 
@@ -32,14 +33,14 @@ main :: IO ()
 main = do
   k1 <- PubKey.createKeypair
   k2 <- PubKey.createKeypair
-  n  <- createRandomNonce PubKey.nonceLength
+  n  <- createRandomNonce
   
   s1 <- Sign.createKeypair
   
   key <- SecretKey `liftM` randomBytes SecretKey.keyLength
-  n2  <- createRandomNonce SecretKey.nonceLength
+  n2  <- createRandomNonce
   
-  n3_xsalsa20 <- createRandomNonce Stream.nonceLength
+  n3_xsalsa20 <- createRandomNonce
   defaultMain [ testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 , testGroup "Stream encryption"
@@ -53,8 +54,7 @@ main = do
                 , testProperty "onetimeauth works" prop_onetimeauth_works
                 ]
               , testGroup "Nonce"
-                [ testProperty "zero nonce" prop_zero_nonce
-                , testProperty "incNonce/pure" prop_nonce_pure
+                [ testProperty "incNonce/pure" prop_nonce_pure
                 , testProperty "clearBytes invariant" prop_nonce_clear_inv
                 , testProperty "clearBytes/pure" prop_nonce_clear_pure
                 , testProperty "clearBytes/works" prop_nonce_clear_works
@@ -87,18 +87,18 @@ instance Arbitrary K.PublicKey where
 instance Arbitrary K.SecretKey where
   arbitrary = SecretKey `liftM` arbitrary
 
-instance Arbitrary (Nonce PKNonce) where
+instance Arbitrary PKNonce where
   arbitrary = do
-    let n = nonceLengthToInt PubKey.nonceLength
-    (fromBS . pack) `liftM` vectorOf n arbitrary
-instance Arbitrary (Nonce SKNonce) where
+    let n = unTagged (size :: Tagged PKNonce Int)
+    (fromJust . fromBS . pack) `liftM` vectorOf n arbitrary
+instance Arbitrary SKNonce where
   arbitrary = do
-    let n = nonceLengthToInt SecretKey.nonceLength
-    (fromBS . pack) `liftM` vectorOf n arbitrary
-instance Arbitrary (Nonce StreamNonce) where
+    let n = unTagged (size :: Tagged SKNonce Int)
+    (fromJust . fromBS . pack) `liftM` vectorOf n arbitrary
+instance Arbitrary StreamNonce where
   arbitrary = do
-    let n = nonceLengthToInt Stream.nonceLength
-    (fromBS . pack) `liftM` vectorOf n arbitrary
+    let n = unTagged (size :: Tagged StreamNonce Int)
+    (fromJust . fromBS . pack) `liftM` vectorOf n arbitrary
 
 newtype SmallBS = SBS ByteString deriving (Eq, Show)
 instance Arbitrary SmallBS where
@@ -152,13 +152,13 @@ case_signkey_len = doit 20 $ \_ -> do
   S.length (unPublicKey pk) @?= signPublicKeyLength
   S.length (unSecretKey sk) @?= signSecretKeyLength
 
-prop_pubkey_pure :: KeyPair -> KeyPair -> Nonce PKNonce -> ByteString -> Bool
+prop_pubkey_pure :: KeyPair -> KeyPair -> PKNonce -> ByteString -> Bool
 prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
   = let enc = PubKey.encrypt n xs pk2 sk1
         dec = PubKey.decrypt n enc pk1 sk2
     in maybe False (== xs) dec
        
-prop_pubkey_precomp_pure :: KeyPair -> KeyPair -> Nonce PKNonce -> ByteString -> Bool
+prop_pubkey_precomp_pure :: KeyPair -> KeyPair -> PKNonce -> ByteString -> Bool
 prop_pubkey_precomp_pure (pk1,sk1) (pk2,sk2) n xs
   = let nm1 = PubKey.createNM (pk2,sk1)
         nm2 = PubKey.createNM (pk1,sk2)
@@ -179,7 +179,7 @@ prop_sign_verify (pk,sk) xs
 
 -- Secret-key authenticated encryption
 
-prop_secretkey_pure :: SecretKey -> Nonce SKNonce -> ByteString -> Bool
+prop_secretkey_pure :: SecretKey -> SKNonce -> ByteString -> Bool
 prop_secretkey_pure k n xs
   = let enc = SecretKey.encrypt n xs k
         dec = SecretKey.decrypt n enc k
@@ -187,28 +187,26 @@ prop_secretkey_pure k n xs
 
 -- Nonces
 
-prop_zero_nonce :: Property
-prop_zero_nonce
-  = forAll (choose (0, 256)) $ \i ->
-    S.replicate i 0x0 == NI.toBS (createZeroNonce $ NI.NonceLength i)
-
-prop_nonce_pure :: Nonce StreamNonce -> Bool
+prop_nonce_pure :: StreamNonce -> Bool
 prop_nonce_pure n = incNonce n == incNonce n
 
-prop_nonce_clear_inv :: Nonce StreamNonce -> Bool
+prop_nonce_clear_inv :: StreamNonce -> Bool
 prop_nonce_clear_inv n
-  = clearBytes (nonceLen n) n == createZeroNonce (nonceToNonceLength n)
+  = clearBytes sz n == (createZeroNonce :: StreamNonce)
+  where sz = unTagged (size :: Tagged StreamNonce Int)
 
-prop_nonce_clear_pure :: Nonce StreamNonce -> NonNegative Int -> Property
+prop_nonce_clear_pure :: StreamNonce -> NonNegative Int -> Property
 prop_nonce_clear_pure n (NonNegative i)
-  = i <= nonceLen n ==> clearBytes i n == clearBytes i n
+  = i <= sz ==> clearBytes i n == clearBytes i n
+  where sz = unTagged (size :: Tagged StreamNonce Int)
 
-prop_nonce_clear_works :: Nonce StreamNonce -> NonNegative Int -> Property
+prop_nonce_clear_works :: StreamNonce -> NonNegative Int -> Property
 prop_nonce_clear_works n (NonNegative i)
-  = i < nonceLen n ==>
+  = i < sz ==>
     let n2    = clearBytes i n
-        (p,_) = S.splitAt (nonceLen n - i) $ toBS n
-    in n2 == fromBS (S.append p $ S.replicate i 0x0)
+        (p,_) = S.splitAt (sz - i) (toBS n)
+    in n2 == (fromJust . fromBS $ (S.append p $ S.replicate i 0x0))
+  where sz = unTagged (size :: Tagged StreamNonce Int)
 
 -- Authentication
 
@@ -223,18 +221,18 @@ prop_onetimeauth_works (OneTimeAuthKey k) msg
 -- Streaming encryption
 
 -- xsalsa20
-prop_stream_enc_pure_xsalsa20 :: Nonce StreamNonce -> XSalsa20StreamKey -> ByteString -> Bool
+prop_stream_enc_pure_xsalsa20 :: StreamNonce -> XSalsa20StreamKey -> ByteString -> Bool
 prop_stream_enc_pure_xsalsa20 n (XSalsa20SK sk) p
   = let enc = Stream.encrypt n p sk
         dec = Stream.decrypt n enc sk
     in dec == p
 
-prop_stream_stream_pure_xsalsa20 :: Nonce StreamNonce -> XSalsa20StreamKey -> Property
+prop_stream_stream_pure_xsalsa20 :: StreamNonce -> XSalsa20StreamKey -> Property
 prop_stream_stream_pure_xsalsa20 n (XSalsa20SK sk)
   -- Don't generate massive streams
   = forAll (choose (0, 256)) $ \i -> streamGen n i sk == streamGen n i sk
 
-prop_stream_xor_xsalsa20 :: Nonce StreamNonce -> XSalsa20StreamKey -> SmallBS -> Bool
+prop_stream_xor_xsalsa20 :: StreamNonce -> XSalsa20StreamKey -> SmallBS -> Bool
 prop_stream_xor_xsalsa20 n (XSalsa20SK sk) (SBS p)
   = let enc = Stream.encrypt n p sk
         str = Stream.streamGen n (S.length p) sk

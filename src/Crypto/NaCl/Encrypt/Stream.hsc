@@ -18,12 +18,13 @@ module Crypto.NaCl.Encrypt.Stream
          -- * Encryption and decryption
        , encrypt         -- :: Nonce -> ByteString -> SecretKey -> ByteString
        , decrypt         -- :: Nonce -> ByteString -> SecretKey -> ByteString
+         -- * Misc
        , keyLength       -- :: Int
-       , nonceLength     -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
 import Data.Word
+import Data.Tagged
 import Control.Monad (void)
 
 import System.IO.Unsafe (unsafePerformIO)
@@ -32,17 +33,24 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
-import Crypto.NaCl.Nonce.Internal
+import Crypto.NaCl.Nonce
 
 import Crypto.NaCl.Key
 
-data StreamNonce
-
 #include <crypto_stream_xsalsa20.h>
+
+data StreamNonce = StreamNonce ByteString deriving (Show, Eq)
+instance Nonce StreamNonce where
+  {-# SPECIALIZE instance Nonce StreamNonce #-}
+  size = Tagged nonceLength
+  toBS (StreamNonce b)   = b
+  fromBS x
+    | S.length x == nonceLength = Just (StreamNonce x)
+    | otherwise                 = Nothing
 
 -- | Given a 'Nonce' @n@, size @s@ and 'SecretKey' @sk@, @streamGen n
 -- s sk@ generates a cryptographic stream of length @s@.
-streamGen :: Nonce StreamNonce
+streamGen :: StreamNonce
           -- ^ Nonce
           -> Int
           -- ^ Size
@@ -50,14 +58,12 @@ streamGen :: Nonce StreamNonce
           -- ^ Input
           -> ByteString
           -- ^ Resulting crypto stream
-streamGen n sz (SecretKey sk)
-  | nonceLen n /= nonceLengthToInt nonceLength
-  = error "Crypto.NaCl.Encrypt.Stream.XSalsa20.streamGen: bad nonce length"
+streamGen (StreamNonce n) sz (SecretKey sk)
   | S.length sk /= keyLength
   = error "Crypto.NaCl.Encrypt.Stream.XSalsa20.streamGen: bad key length"
   | otherwise
   = unsafePerformIO . SI.create sz $ \out ->
-    SU.unsafeUseAsCString (toBS n) $ \pn ->
+    SU.unsafeUseAsCString n $ \pn ->
       SU.unsafeUseAsCString sk $ \psk ->
         void $ c_crypto_stream_xsalsa20 out (fromIntegral sz) pn psk
 {-# INLINEABLE streamGen #-}
@@ -67,7 +73,7 @@ streamGen n sz (SecretKey sk)
 -- 'encrypt' guarantees the resulting ciphertext is the plaintext
 -- bitwise XOR'd with the result of 'streamGen'. As a result,
 -- 'encrypt' can also be used to decrypt messages.
-encrypt :: Nonce StreamNonce
+encrypt :: StreamNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input plaintext
@@ -75,22 +81,20 @@ encrypt :: Nonce StreamNonce
         -- ^ Secret key
         -> ByteString
         -- ^ Ciphertext
-encrypt n msg (SecretKey sk)
-  | nonceLen n /= nonceLengthToInt nonceLength
-  = error "Crypto.NaCl.Encrypt.Stream.XSalsa20.encrypt: bad nonce length"
+encrypt (StreamNonce n) msg (SecretKey sk)
   | S.length sk /= keyLength
   = error "Crypto.NaCl.Encrypt.Stream.XSalsa20.encrypt: bad key length"
   | otherwise
   = let l = S.length msg
     in unsafePerformIO . SI.create l $ \out ->
       SU.unsafeUseAsCString msg $ \cstr -> 
-        SU.unsafeUseAsCString (toBS n) $ \pn ->
+        SU.unsafeUseAsCString n $ \pn ->
           SU.unsafeUseAsCString sk $ \psk ->
             void $ c_crypto_stream_xsalsa20_xor out cstr (fromIntegral l) pn psk
 {-# INLINEABLE encrypt #-}
 
 -- | Simple alias for 'encrypt'.
-decrypt :: Nonce StreamNonce
+decrypt :: StreamNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input ciphertext
@@ -111,8 +115,8 @@ keyLength :: Int
 keyLength = #{const crypto_stream_xsalsa20_KEYBYTES}
 
 -- | Length of a 'Nonce' needed for encryption/decryption.
-nonceLength :: NonceLength StreamNonce
-nonceLength = NonceLength #{const crypto_stream_xsalsa20_NONCEBYTES}
+nonceLength :: Int
+nonceLength = #{const crypto_stream_xsalsa20_NONCEBYTES}
 
 foreign import ccall unsafe "glue_crypto_stream_xsalsa20"
   c_crypto_stream_xsalsa20 :: Ptr Word8 -> CULLong -> Ptr CChar -> 
