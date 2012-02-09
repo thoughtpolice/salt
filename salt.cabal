@@ -34,7 +34,7 @@ copyright:           Copyright (c) Austin Seipp 2011-2012
 author:              Austin Seipp <mad.one@gmail.com>
 maintainer:          Austin Seipp <mad.one@gmail.com>
 category:            Cryptography, Networking
-build-type:          Simple
+build-type:          Configure
 cabal-version:       >=1.10
 tested-with:         GHC==7.0.4,
                      GHC==7.2.1, GHC==7.2.2,
@@ -81,7 +81,6 @@ library
   c-sources:        
     src/cbits/glue.c
     src/cbits/devurandom.c
-  include-dirs:     src/cbits
   extra-libraries:  nacl
 
   cc-options:       -Wall

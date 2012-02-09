@@ -12,3 +12,5 @@
 /bench/*.html
 /examples/encfile
 bench/testdata
+salt.buildinfo
+src/cbits/nacl-20110221/build
