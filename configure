@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-VERSION=0.0
 NACLVERSION=20110221
 NACLSRCDIR=`pwd`/src/cbits/nacl-$NACLVERSION
 
@@ -17,7 +16,7 @@ else
 fi
 echo $ARCH
 
-OUTDIR=$HOME/.haskell.salt/$ARCH-$NACLVERSION/$VERSION
+OUTDIR=$HOME/.haskell.salt/$ARCH-$NACLVERSION
 
 printf "checking if NaCl has been built... "
 if [ ! -d "$OUTDIR" ]; then
@@ -36,17 +35,17 @@ if [ ! -d "$OUTDIR" ]; then
     else
         echo "yes"
     fi
+    echo "copying includes/libraries to $OUTDIR"
+
+    mkdir -p $OUTDIR/include
+    mkdir -p $OUTDIR/lib
+
+    cp -r $NACLSRCDIR/build/$SHORTHOST/include/$ARCH/ $OUTDIR/include
+    cp -r $NACLSRCDIR/build/$SHORTHOST/lib/$ARCH/ $OUTDIR/lib
+
 else
     echo "yes"
 fi
-
-echo "copying includes/libraries to $OUTDIR"
-
-mkdir -p $OUTDIR/include
-mkdir -p $OUTDIR/lib
-
-cp -r $NACLSRCDIR/build/$SHORTHOST/include/$ARCH/ $OUTDIR/include
-cp -r $NACLSRCDIR/build/$SHORTHOST/lib/$ARCH/ $OUTDIR/lib
 
 echo "generating salt.buildinfo"
 
