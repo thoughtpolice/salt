@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
+
+unset CDPATH
 
 NACLVERSION=20110221
 NACLSRCDIR=`pwd`/src/cbits/nacl-$NACLVERSION
