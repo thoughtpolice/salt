@@ -3,29 +3,27 @@ version:             0.0
 synopsis:            Cryptographic networking for Haskell
 description:
   NaCl (pronounced \"salt\") is a safe, high-speed, easy to use
-  cryptography library. This package intends to provide a high-level
-  binding to NaCl, and more generally, it intends to eventually
-  provide a complete library for secure cryptographic networking.
-  .
-  The NaCl project (<http://nacl.cace-project.eu/>) was initiated
+  cryptography library - the project was initiated
   by CACE (Computer Aided Cryptography Engineering,) and is currently
   lead by Dan J. Bernstein and Tanja Lange. It's designed to be
-  considerably faster and easier to use (example: simple APIs, good
-  selection of default primitives) than alternatives like OpenSSL.
+  considerably faster and easier to use (e.g.: simple APIs, good
+  selection of default primitives) than alternative crypto libraries
+  like OpenSSL.
   .
-  Please check out their home page for more information about the
-  underlying features: <http://nacl.cace-project.eu/features.html>
+  This package provides a high level interface to NaCl and all its
+  basic APIs.
   .
-  NaCl itself has an odd build structure. There's an included
-  @bootstrap.sh@ script in order to make installation easy. Please
-  follow the 'Install' section on the home page of this package:
+  This package will take some time to build the first time you
+  install it. It will build nacl (which can't be done directly
+  by cabal) in the @./configure@ step, and put it in a known
+  location under your @$HOME@ so cabal can link to it correctly
+  later. You won't need to do this again unless the underlying
+  version of NaCl changes.
   .
-  <http://thoughtpolice.github.com/salt>
+  The current version of NaCl used in this package is @20110221@.
   .
-  Hopefully sometime in the future this won't be necessary.
-  .
-  The homepage also contains documentation, benchmarks, code coverage
-  results, and examples.
+  See more details including documentation, test coverage reports,
+  and benchmarks, here: <http://thoughtpolice.github.com/salt>
 homepage:            http://thoughtpolice.github.com/salt
 bug-reports:         http://github.com/thoughtpolice/salt/issues
 license:             MIT
@@ -51,6 +49,7 @@ extra-source-files:
   README.md
   tests/*.hs
   TODO
+  -- good god
   src/cbits/nacl-20110221/commandline/nacl-sha256.c
   src/cbits/nacl-20110221/commandline/nacl-sha512.c
   src/cbits/nacl-20110221/cpucycles/alpha.c

@@ -10,7 +10,14 @@
 -- 
 -- Simple API for cryptographic nonces.
 -- 
-module Crypto.NaCl.Nonce where
+module Crypto.NaCl.Nonce
+  ( -- * Nonce class
+    Nonce, size, toBS, fromBS
+  , createZeroNonce   -- :: Nonce k => k
+  , createRandomNonce -- :: Nonce k => IO k
+  , clearBytes        -- :: Nonce k => Int -> k -> k
+  , incNonce          -- :: Nonce k => k -> k
+  ) where
 import Foreign.Ptr
 import Foreign.C.Types
 import Control.Monad (liftM)

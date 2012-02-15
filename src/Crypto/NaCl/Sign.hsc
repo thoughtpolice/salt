@@ -8,7 +8,13 @@
 -- Stability   : experimental
 -- Portability : portable
 --
--- TODO FIXME
+-- This module gives you the ability to create signed
+-- messages and verify them against a signer's public key.
+--
+-- Please be cautious using this module. It will change significantly
+-- in the next release of NaCl, and will be based on @ed25519@ (see
+-- <http://ed25519.cr.yp.to>).
+--
 module Crypto.NaCl.Sign
        ( -- * Keypair creation
          createKeypair                 -- :: IO KeyPair

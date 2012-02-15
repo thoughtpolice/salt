@@ -7,14 +7,12 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
--- Fast, cryptographically strong hashing functions.
+-- Fast, cryptographically strong hashing functions. Currently
+-- only provides SHA-512 and SHA-256.
 -- 
-
 module Crypto.NaCl.Hash
-       ( -- * Selected primitive
-         cryptoHash        -- :: ByteString -> ByteString
-         -- * Alternate primitives
-       , cryptoHashSHA256 -- :: ByteString -> ByteString
+       ( sha512 -- :: ByteString -> ByteString
+       , sha256 -- :: ByteString -> ByteString
        ) where
 import Foreign.C
 import Foreign.Ptr
@@ -26,25 +24,21 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
--- | Strong cryptographic hash - currently an implementation
--- of SHA-512.
-cryptoHash :: ByteString -> ByteString
-cryptoHash xs =
+sha512 :: ByteString -> ByteString
+sha512 xs =
   -- The default primitive of SHA512 has 64 bytes of output.      
   unsafePerformIO . SI.create 64 $ \out ->
     SU.unsafeUseAsCStringLen xs $ \(cstr,clen) ->
       void $ c_crypto_hash_sha512 out cstr (fromIntegral clen)
-{-# INLINEABLE cryptoHash #-}
+{-# INLINEABLE sha512 #-}
 
--- | Alternative cryptographic hash function, providing only
--- SHA-256.
-cryptoHashSHA256 :: ByteString -> ByteString
-cryptoHashSHA256 xs =
+sha256 :: ByteString -> ByteString
+sha256 xs =
   -- SHA256 has 32 bytes of output
   unsafePerformIO . SI.create 32 $ \out ->
     SU.unsafeUseAsCStringLen xs $ \(cstr,clen) ->
       void $ c_crypto_hash_sha256 out cstr (fromIntegral clen)
-{-# INLINEABLE cryptoHashSHA256 #-}
+{-# INLINEABLE sha256 #-}
 
 --
 -- FFI
