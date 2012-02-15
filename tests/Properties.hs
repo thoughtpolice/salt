@@ -17,7 +17,7 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit
 import Test.Framework.Providers.HUnit (testCase)
 
-import Crypto.NaCl.Hash (cryptoHash, cryptoHashSHA256)
+import Crypto.NaCl.Hash (sha512, sha256)
 import Crypto.NaCl.Random (randomBytes)
 
 import Crypto.NaCl.Encrypt.PublicKey as PubKey
@@ -121,16 +121,16 @@ instance Arbitrary XSalsa20StreamKey where
 
 -- Hashing properties
 prop_sha256_pure :: ByteString -> Bool
-prop_sha256_pure xs = cryptoHashSHA256 xs == cryptoHashSHA256 xs
+prop_sha256_pure xs = sha256 xs == sha256 xs
   
 prop_sha256_length :: ByteString -> Bool
-prop_sha256_length xs = S.length (cryptoHashSHA256 xs) == 32
+prop_sha256_length xs = S.length (sha256 xs) == 32
 
 prop_sha512_pure :: ByteString -> Bool
-prop_sha512_pure xs = cryptoHash xs == cryptoHash xs
+prop_sha512_pure xs = sha512 xs == sha512 xs
 
 prop_sha512_length :: ByteString -> Bool
-prop_sha512_length xs = S.length (cryptoHash xs) == 64
+prop_sha512_length xs = S.length (sha512 xs) == 64
 
 -- Randomness
 case_random :: Assertion
