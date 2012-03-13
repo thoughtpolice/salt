@@ -42,17 +42,18 @@ if [ ! -d "$OUTDIR" ]; then
     mkdir -p $OUTDIR/include
     mkdir -p $OUTDIR/lib
 
-    cp -r $NACLSRCDIR/build/$SHORTHOST/include/$ARCH/ $OUTDIR/include
-    cp -r $NACLSRCDIR/build/$SHORTHOST/lib/$ARCH/ $OUTDIR/lib
+    cp -r $NACLSRCDIR/build/$SHORTHOST/include/$ARCH/* $OUTDIR/include
+    cp -r $NACLSRCDIR/build/$SHORTHOST/lib/$ARCH/* $OUTDIR/lib
 
 else
     echo "yes"
 fi
 
-echo "generating salt.buildinfo"
+echo "configure: generating salt.buildinfo"
 
 INCDIR=$OUTDIR/include
 LIBDIR=$OUTDIR/lib
 rm -f salt.buildinfo
 echo "include-dirs: $INCDIR" > salt.buildinfo
 echo "extra-lib-dirs: $LIBDIR" >> salt.buildinfo
+exit 0
