@@ -1,0 +1,6 @@
+language: haskell
+install:
+  - cabal update
+  - cabal install
+  - cabal install QuickCheck HUnit test-framework test-framework-quickcheck2 test-framework-hunit
+
