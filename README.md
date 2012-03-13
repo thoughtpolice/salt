@@ -6,6 +6,8 @@ secure.
 
 These are the awesome Haskell bindings.
 
+Continuous Integration results: [![Build Status](https://secure.travis-ci.org/thoughtpolice/salt.png?branch=master)](http://travis-ci.org/thoughtpolice/salt)
+
 # Installation
 
 See the [main page][] for installation instructions, dependencies,
