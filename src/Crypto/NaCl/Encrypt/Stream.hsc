@@ -8,7 +8,10 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
--- Fast stream encryption.
+-- Fast streaming encryption. The underlying primitive is
+-- @crypto_stream_xsalsa20@, a particular cipher specified in,
+-- \"Cryptography in NaCl\":
+-- <http://cr.yp.to/highspeed/naclcrypto-20090310.pdf>
 -- 
 module Crypto.NaCl.Encrypt.Stream
        ( -- * Types
@@ -68,7 +71,9 @@ streamGen (StreamNonce n) sz (SecretKey sk)
         void $ c_crypto_stream_xsalsa20 out (fromIntegral sz) pn psk
 {-# INLINEABLE streamGen #-}
 
--- | Given a 'Nonce' @n@, plaintext @p@ and 'SecretKey' @sk@, @encrypt n p sk@ encrypts the message @p@ using 'SecretKey' @sk@ and returns the result.
+-- | Given a 'Nonce' @n@, plaintext @p@ and 'SecretKey' @sk@, @encrypt
+-- n p sk@ encrypts the message @p@ using 'SecretKey' @sk@ and returns
+-- the result.
 -- 
 -- 'encrypt' guarantees the resulting ciphertext is the plaintext
 -- bitwise XOR'd with the result of 'streamGen'. As a result,

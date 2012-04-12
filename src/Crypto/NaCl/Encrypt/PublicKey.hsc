@@ -8,7 +8,11 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
--- Public-key encryption.
+-- Public-key encryption. The selected underlying primitive is is
+-- @curve25519xsalsa20poly1305@, a particular combination of
+-- Curve25519, Salsa20, and Poly1305. See the specification,
+-- \"Cryptography in NaCl\":
+-- <http://cr.yp.to/highspeed/naclcrypto-20090310.pdf>
 -- 
 module Crypto.NaCl.Encrypt.PublicKey
        ( -- * Types

@@ -20,11 +20,11 @@ description:
   later. You won't need to do this again unless the underlying
   version of NaCl changes.
   .
-  The current version of NaCl used in this package is @20110221@. It is patched
-  to include an optimized implementation of Ed25519 for the signature API and
-  use it as the default primitive. It is up to 200x faster than the old edwards
-  implementation, and will be the default signature primitive in the next version
-  of NaCl.
+  The current version of NaCl used in this package is @20110221@. It
+  is patched to include an optimized implementation of Ed25519 for the
+  signature API and use it as the default primitive. It is up to 200x
+  faster than the old edwards implementation, and will be the default
+  signature primitive in the next version of NaCl.
   .
   See more details including documentation, test coverage reports,
   and benchmarks, here: <http://thoughtpolice.github.com/salt>

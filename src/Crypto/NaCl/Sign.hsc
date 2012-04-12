@@ -3,18 +3,24 @@
 -- Module      : Crypto.NaCl.Sign
 -- Copyright   : (c) Austin Seipp 2011-2012
 -- License     : MIT
---
+-- 
 -- Maintainer  : mad.one@gmail.com
 -- Stability   : experimental
 -- Portability : portable
---
+-- 
 -- This module gives you the ability to create signed
 -- messages and verify them against a signer's public key.
---
--- Please be cautious using this module. It will change significantly
--- in the next release of NaCl, and will be based on @ed25519@ (see
--- <http://ed25519.cr.yp.to>).
---
+-- 
+-- This module uses an optimized implementation of Ed25519. It is over
+-- 200x faster than the reference edwards implementation that comes
+-- with nacl-20110221. It will be the default signature primitive in
+-- the next version of nacl. You must be aware of this if you
+-- interoperate with any services that use the unpatched version of
+-- nacl-20110221.
+-- 
+-- For more information (including how to get a copy of the software)
+-- visit <http://ed25519.cr.yp.to>.
+-- 
 module Crypto.NaCl.Sign
        ( -- * Keypair creation
          createKeypair                 -- :: IO KeyPair

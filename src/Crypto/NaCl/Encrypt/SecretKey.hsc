@@ -8,7 +8,11 @@
 -- Stability   : experimental
 -- Portability : portable
 -- 
--- Authenticated, secret-key encryption.
+-- Authenticated, secret-key encryption. The selected underlying
+-- primitive used is @crypto_secretbox_xsalsa20poly1305@, a particular
+-- combination of Salsa20 and Poly1305. See the specification,
+-- \"Cryptography in NaCl\":
+-- <http://cr.yp.to/highspeed/naclcrypto-20090310.pdf>
 -- 
 module Crypto.NaCl.Encrypt.SecretKey
        ( -- * Types
