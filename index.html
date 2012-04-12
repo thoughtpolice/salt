@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Salt by thoughtpolice</title>
-
+    <style type="text/css">.quote { margin-top: 10px; margin-bottom: 10px; margin-left: 50px; padding-left: 15px; border-left: 3px solid #ccc;}</style>
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <script src="javascripts/scale.fix.js"></script>
@@ -29,18 +29,100 @@
       <section>
         <h1>Fast cryptographic networking for Haskell</h1>
 
-<p><a href="http://nacl.cace-project.eu">NaCl</a> (pronounced "salt") is a fast library for cryptographic
-networking. Think of it like OpenSSL, but faster, easier, and more
-secure.</p>
+    <p><a title="Networking and Cryptography library" href="http://nacl.cace-project.eu/">NaCl</a> (pronounced "salt") is a safe, high-speed, easy to use cryptographic library by none other than <a href="http://cr.yp.to/">djb</a>; the project was initiated by <a title="Computer Aided Cryptography Engineering" href="http://cace-project.eu/">CACE</a>. From their own homepage:</p>
 
-<p>These are the awesome Haskell bindings.</p>
+      <blockquote class="quote">
+	<p>NaCl (pronounced "salt") is a new easy-to-use high-speed software 
+library for network communication, encryption, decryption, signatures, 
+etc. NaCl's goal is to provide all of the core operations needed to 
+build higher-level cryptographic tools.</p>
 
-<p><a href="http://travis-ci.org">travis-ci.org</a> results: <a href="http://travis-ci.org/thoughtpolice/salt"><img src="https://secure.travis-ci.org/thoughtpolice/salt.png?branch=master" alt="Build Status"></a></p>
+	<p>Of course, other libraries already exist for these core operations. 
+NaCl advances the state of the art by improving security, by improving 
+usability, and by improving speed.</p>
+      </blockquote>
 
-<h1>Installation</h1>
+<p>This package aims to provide a complete, type-safe, and efficient Haskell binding that's just as easy to use.</p>
 
-<p>See the <a href="http://thoughtpolice.github.com/salt">main page</a> for installation instructions, dependencies,
-documentation, and examples.</p>
+<p>Check out the <a href="http://nacl.cace-project.eu/features.html" title="NaCl features">features</a> page to learn more about the design.</p>
+
+<p>Want to learn how NaCl <em>really</em> stacks up to the crypto-competition? Check out the authors' paper, <a href="http://cr.yp.to/highspeed/coolnacl-20111201.pdf">"The security impact of a new cryptographic library"</a> (PDF.)</p>
+
+<p>In the future, there are plans to provide a complete <a href="http://curvecp.org/" title="CurveCP">CurveCP</a>
+ implementation as well, built on top of this basic work. It's also 
+eventually planned to include the NaCl reference source code with the 
+package itself, for easier distribution and testing, but at the moment 
+you must build the optimized library (see 'Install' below.)</p>
+
+<h2>Dependencies</h2>
+<p>Unix-ish OSs only (that's all NaCl supports.)</p>
+
+<p>Currently tested on:</p>
+
+<ul>
+  <li>GHC versions 7.0.4 to 7.4.1-RC1 and regular HEAD snapshots.</li>
+  <li>Linux and Mac OS X (Snow Leopard.)</li>
+</ul>
+
+<p>Almost all the code is Haskell-2010 compliant, and should be 
+relatively portable. There are no direct dependencies outside of the 
+libraries that ship with GHC.</p>
+
+<h2>Install</h2>
+<p>Download the source package from <a href="http://hackage.haskell.org/">Hackage</a> with cabal, and build it against a copy of NaCl using the included <code>./bootstrap.sh</code> script:
+</p><pre>    $ cabal update &amp;&amp; cabal unpack salt
+    $ cd salt-&lt;version&gt;/
+    $ ./bootstrap.sh
+    # you can also run tests by saying:
+    $ NACLTEST=YES ./bootstrap.sh
+    # and haddock:
+    $ HADDOCK=YES ./bootstrap.sh
+</pre>
+<b>Nota bene</b>: the <code>./bootstrap.sh</code> script will expect <code>curl</code> and <code>cabal</code> to be on your <code>$PATH</code>!<p></p>
+
+<p>This will download the source code for NaCl, build it in an appropriate place, and then install the Haskell bindings via <code>cabal</code>. <b>This is unavoidable at the moment</b>,
+ as the NaCl build system does not provide any means to install its 
+libraries/headers onto the system after build. Furthermore, the 
+compilation procedure selects code (much of it in raw assembly) that is 
+optimized on a per-CPU basis. This probably explains why you've never 
+heard of it, and why it's not in your package manager.</p>
+
+<p>Currently, you must build by linking against the optimized versions 
+of the various encryption routines. The slower, reference versions of 
+the encryption routines written in C are not available for usage at this
+ time. Future work will hopefully alleviate this issue, making the 
+library more portable for some, at the expense of a lot of speed.</p>
+
+<h2>Caveats</h2>
+<p>Dynamic linking (GHC's <code>-dynamic</code>) is currently 
+unsupported at the moment, as the CPU-optimized NaCl assembly code is 
+provided in a non-relocatable form, and thus totally unsuitable for 
+shared libraries. There is nothing I can do about this that will still 
+preserve the high-speed CPU-optimized versions, short of hacking on NaCl
+ itself. This will be possible to support using the slower, reference 
+implementations written in C, however.</p>
+
+<p>The NaCl compilation will take a while, since it must benchmark 
+multiple copies of itself to select the best primitive implementations. 
+The <code>bootstrap.sh</code> script will download and build NaCl under a local <code>~/.hs-nacl</code>
+ directory. Do not remove this directory! Otherwise, your applications 
+will later fail to link as cabal will complain that it can't find the 
+appropriate libraries.</p>
+
+<h2>Documentation, benchmarks, coverage & more</h2>
+<p>
+</p><ul>
+  <li><p><a href="http://travis-ci.org">travis-ci.org</a> results: <a href="http://travis-ci.org/thoughtpolice/salt"><img src="https://secure.travis-ci.org/thoughtpolice/salt.png?branch=master" alt="Build Status"></a></p></li>
+  <li><a href="https://github.com/thoughtpolice/salt/wiki">Wiki</a> (help and guidance!)</li>
+  <li><a href="http://thoughtpolice.github.com/salt/doc">Haddock documentation</a> (extensive and thorough!)</li>
+  <li><a href="http://thoughtpolice.github.com/salt/bench/results.html">Criterion benchmarks</a> (nearly 2.3Gbps on benchmarks!)</li>
+  <li><a href="http://thoughtpolice.github.com/salt/cov/hpc_index.html">Library coverage from test suite</a> (battle tested!)</li>
+</ul>
+<p></p>
+
+<h2>Examples</h2>
+<p>Be sure to check out the <code>examples</code> folder on GitHub:</p>
+<p><a href="https://github.com/thoughtpolice/salt/tree/master/examples">https://github.com/thoughtpolice/salt/tree/master/examples</a></p>
 
 <h1>Join in</h1>
 
@@ -54,13 +136,17 @@ documentation, and examples.</p>
 
 <ul>
 <li><code>git clone <a href="https://bitbucket.org/thoughtpolice/salt.git">https://bitbucket.org/thoughtpolice/salt.git</a></code></li>
-</ul><h1>Authors</h1>
 
-<p>See <a href="https://raw.github.com/thoughtpolice/salt/master/AUTHORS.txt">AUTHORS.txt</a>.</p>
+<h2>License</h2>
+<p>MIT. See <a href="https://raw.github.com/thoughtpolice/salt/master/LICENSE.txt">LICENSE.txt</a> for terms of copyright and redistribution.</p>
 
-<h1>License</h1>
+<h2>Authors</h2>
+<p><a href="https://raw.github.com/thoughtpolice/salt/master/AUTHORS.txt">AUTHORS.txt</a></p>
 
-<p>MIT. See <code>LICENSE.txt</code> for terms of copyright and redistribution.</p>
+<h2>Contact</h2>
+<p>You can submit an issue at the GitHub repository <a href="https://github.com/thoughtpolice/salt/issues">here</a>.</p>
+
+<p>Other inquiries can be sent to me via <a href="mailto:mad%20[dot]%20one%20[at]%20gmail%20[dot]%20com">email</a>.</p>
       </section>
     </div>
     <footer>
@@ -68,6 +154,19 @@ documentation, and examples.</p>
       <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
     </footer>
     <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
-    
+
+<script type="text/javascript">
+  var _gauges = _gauges || [];
+  (function() {
+    var t   = document.createElement('script');
+    t.type  = 'text/javascript';
+    t.async = true;
+    t.id    = 'gauges-tracker';
+    t.setAttribute('data-site-id', '4f8639c0f5a1f56f670000d7');
+    t.src = '//secure.gaug.es/track.js';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(t, s);
+  })();
+</script>    
   </body>
 </html>
