@@ -9,6 +9,8 @@ import Control.Monad (liftM)
 import Criterion.Main hiding (run)
 import Data.ByteString as S
 
+import Control.Monad.Trans
+
 import Crypto.NaCl.Hash as H
 import Crypto.NaCl.Nonce as N
 import Crypto.NaCl.Random as R
@@ -17,6 +19,8 @@ import Crypto.NaCl.Key
 import Crypto.NaCl.Sign as Sign
 
 import Crypto.NaCl.Encrypt.Stream as Stream
+
+import qualified OpenSSL.Cipher as OpenSSL (newAESCtx, aesCTR, Mode(Encrypt), AESCtx)
 
 import Control.DeepSeq
 
@@ -35,6 +39,10 @@ main = do
   
   fourkb <- randomBytes 4096
   let !znonce = createZeroNonce
+      
+  aeskey <- randomBytes 16
+  aesiv  <- randomBytes 16
+  aesctx <- OpenSSL.newAESCtx OpenSSL.Encrypt aeskey aesiv
   defaultMain [ bgroup "Signing"
                 [ bench "createKeypair" $ nfIO Sign.createKeypair
                 , bench "verify 64"  $ nf (signBench s1) $ pack [1..64]
@@ -46,7 +54,10 @@ main = do
                 [ bgroup "xsalsa20"
                   [ bench "pure streamgen 4096/10000" $ nf (streamGenBench streamk1 4096) 10000
                   , bench "pure encrypt 4kB random data" $ nf (pureEncBench znonce streamk1) fourkb
-                  , bench "enum1 encrypt 1gb random data" $ nfIO $ streamEncBench1 streamk1
+                  , bcompare
+                    [ bench "enum1 openssl aes128ctr/encrypt 1gb random data" $ nfIO $ streamEncRef1 aesctx 
+                    , bench "enum1 encrypt 1gb random data" $ nfIO $ streamEncBench1 streamk1
+                    ]
                   , bench "enum2 encrypt 1gb random data" $ nfIO $ streamEncBench2 streamk1
                   ]
                 ]
@@ -94,6 +105,17 @@ main = do
         pureEncBench :: StreamNonce -> SecretKey -> ByteString -> ByteString
         pureEncBench n k bs = Stream.encrypt n bs k
 
+        -- Reference encryption function that uses OpenSSL ciphers
+        streamEncRef1 :: OpenSSL.AESCtx -> IO ByteString
+        streamEncRef1 ctx = do
+          let goI :: ByteString -> Iteratee ByteString IO ByteString
+              goI !_ = do
+                v <- EL.head
+                case v of
+                  Nothing -> return S.empty
+                  Just _v -> liftIO (OpenSSL.aesCTR ctx _v) >>= goI 
+          run_ (enumFile "./testdata" $$ goI S.empty)
+          
         streamEncBench1 :: SecretKey -> IO ByteString
         streamEncBench1 sk = do
           let nonce = createZeroNonce

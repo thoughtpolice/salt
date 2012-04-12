@@ -7,7 +7,7 @@ testdata:
 	dd if=/dev/urandom of=testdata bs=1M count=1024
 Bench: Bench.hs
 	ghc -O2 Bench
-run:
-	./Bench -o results.html $(BENCH)
+run: Bench
+	./Bench -o results.html -r results.csv $(BENCH)
 clean:
-	rm -f *.o *.hi Bench *.png *.html *~
+	rm -f *.o *.hi Bench *.png *.html *.csv *~
