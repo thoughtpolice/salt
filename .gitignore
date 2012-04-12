@@ -10,6 +10,7 @@
 /bench/*.png
 /bench/Bench
 /bench/*.html
+/bench/*.csv
 /examples/encfile
 bench/testdata
 salt.buildinfo
