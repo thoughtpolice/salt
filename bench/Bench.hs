@@ -24,7 +24,6 @@ import Data.Enumerator
 import Data.Enumerator.Binary
 import qualified Data.Enumerator.List as EL
 
-instance NFData (Nonce k) where
 instance NFData ByteString where
 instance NFData SecretKey where
 instance NFData PublicKey where
@@ -35,7 +34,7 @@ main = do
   streamk1 <- SecretKey `liftM` randomBytes Stream.keyLength 
   
   fourkb <- randomBytes 4096
-  let !znonce = createZeroNonce Stream.nonceLength
+  let !znonce = createZeroNonce
   defaultMain [ bgroup "Signing"
                 [ bench "createKeypair" $ nfIO Sign.createKeypair
                 , bench "verify 64"  $ nf (signBench s1) $ pack [1..64]
@@ -53,16 +52,16 @@ main = do
                 ]
               , bgroup "Hashing"
                 [ bgroup "sha512"
-                  [ bench "64"  $ nf cryptoHash (pack [1..64])
-                  , bench "128" $ nf cryptoHash (pack [1..128])
-                  , bench "256" $ nf cryptoHash (pack [1..256])
-                  , bench "512" $ nf cryptoHash (pack [1..512])
+                  [ bench "64"  $ nf sha512 (pack [1..64])
+                  , bench "128" $ nf sha512 (pack [1..128])
+                  , bench "256" $ nf sha512 (pack [1..256])
+                  , bench "512" $ nf sha512 (pack [1..512])
                   ]
                 , bgroup "sha256"
-                  [ bench "64"  $ nf cryptoHashSHA256 (pack [1..64])
-                  , bench "128" $ nf cryptoHashSHA256 (pack [1..128])
-                  , bench "256" $ nf cryptoHashSHA256 (pack [1..256])
-                  , bench "512" $ nf cryptoHashSHA256 (pack [1..512])
+                  [ bench "64"  $ nf sha256 (pack [1..64])
+                  , bench "128" $ nf sha256 (pack [1..128])
+                  , bench "256" $ nf sha256 (pack [1..256])
+                  , bench "512" $ nf sha256 (pack [1..512])
                   ]
                 ]
               , bgroup "Random bytes"
@@ -88,17 +87,17 @@ main = do
 
         streamGenBench :: SecretKey -> Int -> Int -> ByteString
         streamGenBench sk sz i 
-          = go (createZeroNonce Stream.nonceLength) empty i
+          = go createZeroNonce empty i
           where go !_ !bs 0  = bs
                 go !n !_ !x = go (incNonce n) (Stream.streamGen n sz sk) (x-1)
 
-        pureEncBench :: Nonce StreamNonce -> SecretKey -> ByteString -> ByteString
+        pureEncBench :: StreamNonce -> SecretKey -> ByteString -> ByteString
         pureEncBench n k bs = Stream.encrypt n bs k
 
         streamEncBench1 :: SecretKey -> IO ByteString
         streamEncBench1 sk = do
-          let nonce = createZeroNonce Stream.nonceLength
-              goI :: ByteString -> Nonce StreamNonce -> Iteratee ByteString IO ByteString
+          let nonce = createZeroNonce
+              goI :: ByteString -> StreamNonce -> Iteratee ByteString IO ByteString
               goI !_ !n = do
                 v <- EL.head
                 case v of
@@ -109,12 +108,12 @@ main = do
         streamEncBench2 :: SecretKey -> IO ()
         streamEncBench2 sk = do 
             h <- openBinaryFile "/dev/null" WriteMode
-            let n = createZeroNonce Stream.nonceLength
+            let n = createZeroNonce
             run_ (encryptFileEnum "./testdata" sk n $$ iterHandle h)
             hClose h
             
-encryptFileEnum :: FilePath -> SecretKey -> Nonce StreamNonce -> Enumerator ByteString IO b
+encryptFileEnum :: FilePath -> SecretKey -> StreamNonce -> Enumerator ByteString IO b
 encryptFileEnum f sk n = enumFile f $= encryptEnee sk n
 
-encryptEnee :: Monad m => SecretKey -> Nonce StreamNonce -> Enumeratee ByteString ByteString m b
+encryptEnee :: Monad m => SecretKey -> StreamNonce -> Enumeratee ByteString ByteString m b
 encryptEnee k = EL.mapAccum $ \n bs -> (incNonce n, Stream.encrypt n bs k)
