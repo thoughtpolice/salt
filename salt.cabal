@@ -589,11 +589,11 @@ test-suite properties
     base           >= 4,
     bytestring     >= 0.9,
     tagged         >= 0.2,
-    QuickCheck     == 2.4.*,
-    HUnit          == 1.2.*,
-    test-framework == 0.5.*,
-    test-framework-quickcheck2 == 0.2.*,
-    test-framework-hunit == 0.2.*,
+    QuickCheck     >= 2.4,
+    HUnit          >= 1.2,
+    test-framework >= 0.5,
+    test-framework-quickcheck2 >= 0.2,
+    test-framework-hunit >= 0.2,
     salt
 
   ghc-options:      -Wall -fno-cse -fno-warn-orphans
