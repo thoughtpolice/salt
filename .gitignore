@@ -1,0 +1,4 @@
+.hsenv
+dist
+salt.buildinfo
+src/cbits/nacl-20110221/build/
