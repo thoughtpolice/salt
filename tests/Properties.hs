@@ -6,7 +6,7 @@ module Main
 import Control.Monad (liftM)
 import Data.ByteString as S (append, pack, 
                              length, ByteString, 
-                             zipWith, splitAt, replicate)
+                             zipWith, splitAt, replicate, drop)
 import Data.Bits
 import Data.Maybe
 import Data.Tagged
@@ -65,13 +65,16 @@ main = do
                 , testProperty "sha512/pure"   prop_sha512_pure
                 , testProperty "sha512/length" prop_sha512_length
                 ]
-              , testGroup "Public key"
+              , testGroup "Public key encryption"
                 [ testCase "generated key length (encryption)" case_pubkey_len
                 , testCase "generated key length (signatures)" case_signkey_len
                 , testProperty "encrypt/decrypt" (prop_pubkey_pure k1 k2 n)
                 , testProperty "createNM purity" (prop_createnm_pure k1)
                 , testProperty "encryptNM/decryptNM" (prop_pubkey_precomp_pure k1 k2 n)
-                , testProperty "sign/verify" (prop_sign_verify s1)
+                ]
+              , testGroup "Signing testProperty" 
+                [ testProperty "roundtrip" (prop_sign_verify s1)
+                , testProperty "bug14" (prop_sign_bug14 s1)
                 ]
                 -- Misc
               , testCase "Randomness" case_random
@@ -170,6 +173,14 @@ prop_createnm_pure :: KeyPair -> Bool
 prop_createnm_pure kp = createNM kp == createNM kp
 
 -- Signatures
+
+-- Verify short, invalid signatures are rejected.
+-- Bug #14
+prop_sign_bug14 :: KeyPair -> ByteString -> Bool
+prop_sign_bug14 (pk,sk) xs
+  = let s = Sign.sign sk xs
+        d = Sign.verify pk $ S.drop (S.length s-1) s
+    in isNothing d
 
 prop_sign_verify :: KeyPair -> ByteString -> Bool
 prop_sign_verify (pk,sk) xs
