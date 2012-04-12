@@ -6,7 +6,7 @@ description:
   cryptography library - the project was initiated
   by CACE (Computer Aided Cryptography Engineering,) and is currently
   lead by Dan J. Bernstein and Tanja Lange. It's designed to be
-  considerably faster and easier to use (e.g.: simple APIs, good
+  considerably faster and easier to use (e.g. simple APIs, good
   selection of default primitives) than alternative crypto libraries
   like OpenSSL.
   .
