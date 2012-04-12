@@ -116,7 +116,7 @@ sign_BYTES :: Int
 sign_BYTES = #{const crypto_sign_BYTES}
 
 foreign import ccall unsafe "glue_crypto_sign_keypair"
-  c_crypto_sign_keypair :: Ptr Word8 -> Ptr Word8 -> IO Int
+  c_crypto_sign_keypair :: Ptr Word8 -> Ptr Word8 -> IO CInt
 
 foreign import ccall unsafe "glue_crypto_sign"
   c_crypto_sign :: Ptr Word8 -> Ptr CChar ->  
@@ -124,4 +124,4 @@ foreign import ccall unsafe "glue_crypto_sign"
 
 foreign import ccall unsafe "glue_crypto_sign_open"
   c_crypto_sign_open :: Ptr Word8 -> Ptr CULLong -> 
-                        Ptr CChar -> CULLong -> Ptr CChar -> IO Int
+                        Ptr CChar -> CULLong -> Ptr CChar -> IO CInt
