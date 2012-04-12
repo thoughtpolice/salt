@@ -1,0 +1,141 @@
+<html><style type="text/css">
+span.lineno { color: white; background: #aaaaaa; border-right: solid white 12px }
+span.nottickedoff { background: yellow}
+span.istickedoff { background: white }
+span.tickonlyfalse { margin: -1px; border: 1px solid #f20913; background: #f20913 }
+span.tickonlytrue  { margin: -1px; border: 1px solid #60de51; background: #60de51 }
+span.funcount { font-size: small; color: orange; z-index: 2; position: absolute; right: 20 }
+span.decl { font-weight: bold }
+span.spaces    { background: white }
+</style>
+<pre>
+<span class="lineno">    1 </span>{-# LANGUAGE CPP #-}
+<span class="lineno">    2 </span>-- |
+<span class="lineno">    3 </span>-- Module      : Crypto.NaCl.Encrypt.Stream
+<span class="lineno">    4 </span>-- Copyright   : (c) Austin Seipp 2011-2012
+<span class="lineno">    5 </span>-- License     : MIT
+<span class="lineno">    6 </span>-- 
+<span class="lineno">    7 </span>-- Maintainer  : mad.one@gmail.com
+<span class="lineno">    8 </span>-- Stability   : experimental
+<span class="lineno">    9 </span>-- Portability : portable
+<span class="lineno">   10 </span>-- 
+<span class="lineno">   11 </span>-- Fast stream encryption.
+<span class="lineno">   12 </span>-- 
+<span class="lineno">   13 </span>module Crypto.NaCl.Encrypt.Stream
+<span class="lineno">   14 </span>       ( -- * Types
+<span class="lineno">   15 </span>         StreamNonce     -- :: * -&gt; *
+<span class="lineno">   16 </span>         -- * Stream generation
+<span class="lineno">   17 </span>       , streamGen       -- :: Nonce -&gt; SecretKey -&gt; ByteString
+<span class="lineno">   18 </span>         -- * Encryption and decryption
+<span class="lineno">   19 </span>       , encrypt         -- :: Nonce -&gt; ByteString -&gt; SecretKey -&gt; ByteString
+<span class="lineno">   20 </span>       , decrypt         -- :: Nonce -&gt; ByteString -&gt; SecretKey -&gt; ByteString
+<span class="lineno">   21 </span>         -- * Misc
+<span class="lineno">   22 </span>       , keyLength       -- :: Int
+<span class="lineno">   23 </span>       ) where
+<span class="lineno">   24 </span>import Foreign.Ptr
+<span class="lineno">   25 </span>import Foreign.C.Types
+<span class="lineno">   26 </span>import Data.Word
+<span class="lineno">   27 </span>import Data.Tagged
+<span class="lineno">   28 </span>import Control.Monad (void)
+<span class="lineno">   29 </span>
+<span class="lineno">   30 </span>import System.IO.Unsafe (unsafePerformIO)
+<span class="lineno">   31 </span>
+<span class="lineno">   32 </span>import Data.ByteString as S
+<span class="lineno">   33 </span>import Data.ByteString.Internal as SI
+<span class="lineno">   34 </span>import Data.ByteString.Unsafe as SU
+<span class="lineno">   35 </span>
+<span class="lineno">   36 </span>import Crypto.NaCl.Nonce
+<span class="lineno">   37 </span>
+<span class="lineno">   38 </span>import Crypto.NaCl.Key
+<span class="lineno">   39 </span>
+<span class="lineno">   40 </span>#include &lt;crypto_stream_xsalsa20.h&gt;
+<span class="lineno">   41 </span>
+<span class="lineno">   42 </span>data StreamNonce = StreamNonce ByteString deriving (<span class="decl"><span class="nottickedoff"><span class="decl"><span class="nottickedoff">Show</span></span></span></span>, <span class="decl"><span class="istickedoff"><span class="decl"><span class="nottickedoff">Eq</span></span></span></span>)
+<span class="lineno">   43 </span>instance Nonce StreamNonce where
+<span class="lineno">   44 </span>  {-# SPECIALIZE instance Nonce StreamNonce #-}
+<span class="lineno">   45 </span>  <span class="decl"><span class="istickedoff">size = Tagged nonceLength</span></span>
+<span class="lineno">   46 </span>  <span class="decl"><span class="istickedoff">toBS (StreamNonce b)   = b</span></span>
+<span class="lineno">   47 </span>  <span class="decl"><span class="istickedoff">fromBS x</span>
+<span class="lineno">   48 </span><span class="spaces">    </span><span class="istickedoff">| <span class="tickonlytrue">S.length x == nonceLength</span> = Just (StreamNonce x)</span>
+<span class="lineno">   49 </span><span class="spaces">    </span><span class="istickedoff">| <span class="nottickedoff">otherwise</span>                 = <span class="nottickedoff">Nothing</span></span></span>
+<span class="lineno">   50 </span>
+<span class="lineno">   51 </span>-- | Given a 'Nonce' @n@, size @s@ and 'SecretKey' @sk@, @streamGen n
+<span class="lineno">   52 </span>-- s sk@ generates a cryptographic stream of length @s@.
+<span class="lineno">   53 </span>streamGen :: StreamNonce
+<span class="lineno">   54 </span>          -- ^ Nonce
+<span class="lineno">   55 </span>          -&gt; Int
+<span class="lineno">   56 </span>          -- ^ Size
+<span class="lineno">   57 </span>          -&gt; SecretKey
+<span class="lineno">   58 </span>          -- ^ Input
+<span class="lineno">   59 </span>          -&gt; ByteString
+<span class="lineno">   60 </span>          -- ^ Resulting crypto stream
+<span class="lineno">   61 </span><span class="decl"><span class="istickedoff">streamGen (StreamNonce n) sz (SecretKey sk)</span>
+<span class="lineno">   62 </span><span class="spaces">  </span><span class="istickedoff">| <span class="tickonlyfalse">S.length sk /= keyLength</span></span>
+<span class="lineno">   63 </span><span class="spaces">  </span><span class="istickedoff">= <span class="nottickedoff">error &quot;Crypto.NaCl.Encrypt.Stream.XSalsa20.streamGen: bad key length&quot;</span></span>
+<span class="lineno">   64 </span><span class="spaces">  </span><span class="istickedoff">| <span class="tickonlytrue">otherwise</span></span>
+<span class="lineno">   65 </span><span class="spaces">  </span><span class="istickedoff">= unsafePerformIO . SI.create sz $ \out -&gt;</span>
+<span class="lineno">   66 </span><span class="spaces">    </span><span class="istickedoff">SU.unsafeUseAsCString n $ \pn -&gt;</span>
+<span class="lineno">   67 </span><span class="spaces">      </span><span class="istickedoff">SU.unsafeUseAsCString sk $ \psk -&gt;</span>
+<span class="lineno">   68 </span><span class="spaces">        </span><span class="istickedoff">void $ c_crypto_stream_xsalsa20 out (fromIntegral sz) pn psk</span></span>
+<span class="lineno">   69 </span>{-# INLINEABLE streamGen #-}
+<span class="lineno">   70 </span>
+<span class="lineno">   71 </span>-- | Given a 'Nonce' @n@, plaintext @p@ and 'SecretKey' @sk@, @encrypt n p sk@ encrypts the message @p@ using 'SecretKey' @sk@ and returns the result.
+<span class="lineno">   72 </span>-- 
+<span class="lineno">   73 </span>-- 'encrypt' guarantees the resulting ciphertext is the plaintext
+<span class="lineno">   74 </span>-- bitwise XOR'd with the result of 'streamGen'. As a result,
+<span class="lineno">   75 </span>-- 'encrypt' can also be used to decrypt messages.
+<span class="lineno">   76 </span>encrypt :: StreamNonce
+<span class="lineno">   77 </span>        -- ^ Nonce
+<span class="lineno">   78 </span>        -&gt; ByteString
+<span class="lineno">   79 </span>        -- ^ Input plaintext
+<span class="lineno">   80 </span>        -&gt; SecretKey
+<span class="lineno">   81 </span>        -- ^ Secret key
+<span class="lineno">   82 </span>        -&gt; ByteString
+<span class="lineno">   83 </span>        -- ^ Ciphertext
+<span class="lineno">   84 </span><span class="decl"><span class="istickedoff">encrypt (StreamNonce n) msg (SecretKey sk)</span>
+<span class="lineno">   85 </span><span class="spaces">  </span><span class="istickedoff">| <span class="tickonlyfalse">S.length sk /= keyLength</span></span>
+<span class="lineno">   86 </span><span class="spaces">  </span><span class="istickedoff">= <span class="nottickedoff">error &quot;Crypto.NaCl.Encrypt.Stream.XSalsa20.encrypt: bad key length&quot;</span></span>
+<span class="lineno">   87 </span><span class="spaces">  </span><span class="istickedoff">| <span class="tickonlytrue">otherwise</span></span>
+<span class="lineno">   88 </span><span class="spaces">  </span><span class="istickedoff">= let l = S.length msg</span>
+<span class="lineno">   89 </span><span class="spaces">    </span><span class="istickedoff">in unsafePerformIO . SI.create l $ \out -&gt;</span>
+<span class="lineno">   90 </span><span class="spaces">      </span><span class="istickedoff">SU.unsafeUseAsCString msg $ \cstr -&gt; </span>
+<span class="lineno">   91 </span><span class="spaces">        </span><span class="istickedoff">SU.unsafeUseAsCString n $ \pn -&gt;</span>
+<span class="lineno">   92 </span><span class="spaces">          </span><span class="istickedoff">SU.unsafeUseAsCString sk $ \psk -&gt;</span>
+<span class="lineno">   93 </span><span class="spaces">            </span><span class="istickedoff">void $ c_crypto_stream_xsalsa20_xor out cstr (fromIntegral l) pn psk</span></span>
+<span class="lineno">   94 </span>{-# INLINEABLE encrypt #-}
+<span class="lineno">   95 </span>
+<span class="lineno">   96 </span>-- | Simple alias for 'encrypt'.
+<span class="lineno">   97 </span>decrypt :: StreamNonce
+<span class="lineno">   98 </span>        -- ^ Nonce
+<span class="lineno">   99 </span>        -&gt; ByteString
+<span class="lineno">  100 </span>        -- ^ Input ciphertext
+<span class="lineno">  101 </span>        -&gt; SecretKey
+<span class="lineno">  102 </span>        -- ^ Secret key
+<span class="lineno">  103 </span>        -&gt; ByteString
+<span class="lineno">  104 </span>        -- ^ Plaintext
+<span class="lineno">  105 </span><span class="decl"><span class="istickedoff">decrypt n c sk = encrypt n c sk</span></span>
+<span class="lineno">  106 </span>{-# INLINEABLE decrypt #-}
+<span class="lineno">  107 </span>
+<span class="lineno">  108 </span>
+<span class="lineno">  109 </span>-- 
+<span class="lineno">  110 </span>-- FFI
+<span class="lineno">  111 </span>-- 
+<span class="lineno">  112 </span>
+<span class="lineno">  113 </span>-- | Length of a 'SecretKey' needed for encryption/decryption.
+<span class="lineno">  114 </span>keyLength :: Int
+<span class="lineno">  115 </span><span class="decl"><span class="istickedoff">keyLength = #{</span></span>const crypto_stream_xsalsa20_KEYBYTES}
+<span class="lineno">  116 </span>
+<span class="lineno">  117 </span>-- | Length of a 'Nonce' needed for encryption/decryption.
+<span class="lineno">  118 </span>nonceLength :: Int
+<span class="lineno">  119 </span><span class="decl"><span class="istickedoff">nonceLength = #{</span></span>const crypto_stream_xsalsa20_NONCEBYTES}
+<span class="lineno">  120 </span>
+<span class="lineno">  121 </span>foreign import ccall unsafe &quot;glue_crypto_stream_xsalsa20&quot;
+<span class="lineno">  122 </span>  c_crypto_stream_xsalsa20 :: Ptr Word8 -&gt; CULLong -&gt; Ptr CChar -&gt; 
+<span class="lineno">  123 </span>                              Ptr CChar -&gt; IO Int
+<span class="lineno">  124 </span>
+<span class="lineno">  125 </span>foreign import ccall unsafe &quot;glue_crypto_stream_xsalsa20_xor&quot;
+<span class="lineno">  126 </span>  c_crypto_stream_xsalsa20_xor :: Ptr Word8 -&gt; Ptr CChar -&gt; 
+<span class="lineno">  127 </span>                                  CULLong -&gt; Ptr CChar -&gt; Ptr CChar -&gt; IO Int
+
+</pre>
+</html>

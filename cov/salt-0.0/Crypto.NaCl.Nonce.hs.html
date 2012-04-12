@@ -1,0 +1,104 @@
+<html><style type="text/css">
+span.lineno { color: white; background: #aaaaaa; border-right: solid white 12px }
+span.nottickedoff { background: yellow}
+span.istickedoff { background: white }
+span.tickonlyfalse { margin: -1px; border: 1px solid #f20913; background: #f20913 }
+span.tickonlytrue  { margin: -1px; border: 1px solid #60de51; background: #60de51 }
+span.funcount { font-size: small; color: orange; z-index: 2; position: absolute; right: 20 }
+span.decl { font-weight: bold }
+span.spaces    { background: white }
+</style>
+<pre>
+<span class="lineno">    1 </span>{-# LANGUAGE ScopedTypeVariables #-}
+<span class="lineno">    2 </span>-- |
+<span class="lineno">    3 </span>-- Module      : Crypto.NaCl.Nonce
+<span class="lineno">    4 </span>-- Copyright   : (c) Austin Seipp 2011-2012
+<span class="lineno">    5 </span>-- License     : MIT
+<span class="lineno">    6 </span>-- 
+<span class="lineno">    7 </span>-- Maintainer  : mad.one@gmail.com
+<span class="lineno">    8 </span>-- Stability   : experimental
+<span class="lineno">    9 </span>-- Portability : GHC (ScopedTypeVariables)
+<span class="lineno">   10 </span>-- 
+<span class="lineno">   11 </span>-- Simple API for cryptographic nonces.
+<span class="lineno">   12 </span>-- 
+<span class="lineno">   13 </span>module Crypto.NaCl.Nonce
+<span class="lineno">   14 </span>  ( -- * Nonce class
+<span class="lineno">   15 </span>    Nonce, size, toBS, fromBS
+<span class="lineno">   16 </span>  , createZeroNonce   -- :: Nonce k =&gt; k
+<span class="lineno">   17 </span>  , createRandomNonce -- :: Nonce k =&gt; IO k
+<span class="lineno">   18 </span>  , clearBytes        -- :: Nonce k =&gt; Int -&gt; k -&gt; k
+<span class="lineno">   19 </span>  , incNonce          -- :: Nonce k =&gt; k -&gt; k
+<span class="lineno">   20 </span>  ) where
+<span class="lineno">   21 </span>import Foreign.Ptr
+<span class="lineno">   22 </span>import Foreign.C.Types
+<span class="lineno">   23 </span>import Control.Monad (liftM)
+<span class="lineno">   24 </span>import Data.Word
+<span class="lineno">   25 </span>import Data.Maybe
+<span class="lineno">   26 </span>import Data.Tagged
+<span class="lineno">   27 </span>import Data.ByteString as S
+<span class="lineno">   28 </span>import Data.ByteString.Internal as SI
+<span class="lineno">   29 </span>import Data.ByteString.Unsafe as SU
+<span class="lineno">   30 </span>
+<span class="lineno">   31 </span>import Crypto.NaCl.Random (randomBytes)
+<span class="lineno">   32 </span>
+<span class="lineno">   33 </span>class Nonce k where
+<span class="lineno">   34 </span>  size              :: Tagged k Int
+<span class="lineno">   35 </span>  toBS              :: k -&gt; ByteString
+<span class="lineno">   36 </span>  fromBS            :: ByteString -&gt; (Maybe k)
+<span class="lineno">   37 </span>
+<span class="lineno">   38 </span>  -- | Create an empty nonce of length @n@ where all the bytes are zero.
+<span class="lineno">   39 </span>  createZeroNonce :: k
+<span class="lineno">   40 </span>  <span class="decl"><span class="istickedoff">createZeroNonce</span>
+<span class="lineno">   41 </span><span class="spaces">    </span><span class="istickedoff">= fromJust . fromBS $ S.replicate sz 0x0</span>
+<span class="lineno">   42 </span><span class="spaces">    </span><span class="istickedoff">where sz = unTagged (size :: Tagged k Int)</span></span>
+<span class="lineno">   43 </span>  {-# INLINEABLE createZeroNonce #-}
+<span class="lineno">   44 </span>
+<span class="lineno">   45 </span>  -- | Create a random nonce, seeded by @/dev/urandom@.
+<span class="lineno">   46 </span>  createRandomNonce :: IO k
+<span class="lineno">   47 </span>  <span class="decl"><span class="istickedoff">createRandomNonce</span>
+<span class="lineno">   48 </span><span class="spaces">    </span><span class="istickedoff">= (fromJust . fromBS) `liftM` randomBytes sz</span>
+<span class="lineno">   49 </span><span class="spaces">    </span><span class="istickedoff">where sz = unTagged (size :: Tagged k Int)</span></span>
+<span class="lineno">   50 </span>  {-# INLINEABLE createRandomNonce #-}
+<span class="lineno">   51 </span>  
+<span class="lineno">   52 </span>  -- | @clearBytes n nonce@ clears the last @n@ bytes of the Nonce and
+<span class="lineno">   53 </span>  -- makes them all 0. This is useful for the pattern of generating a
+<span class="lineno">   54 </span>  -- cryptographic nonce randomly, clearing the last @n@ bytes, and then
+<span class="lineno">   55 </span>  -- using 'incNonce' to increment the 'Nonce' for communication with
+<span class="lineno">   56 </span>  -- another party.
+<span class="lineno">   57 </span>  -- 
+<span class="lineno">   58 </span>  -- Invariants:
+<span class="lineno">   59 </span>  -- 
+<span class="lineno">   60 </span>  -- * @n@ must be less than the size of the @nonce@
+<span class="lineno">   61 </span>  -- 
+<span class="lineno">   62 </span>  -- Properties:
+<span class="lineno">   63 </span>  -- 
+<span class="lineno">   64 </span>  -- &gt; clearBytes (nonceLen nonce) nonce == createZeroNonce (nonceLen nonce)
+<span class="lineno">   65 </span>  -- 
+<span class="lineno">   66 </span>  clearBytes :: Int -&gt; k -&gt; k
+<span class="lineno">   67 </span>  <span class="decl"><span class="istickedoff">clearBytes n x</span>
+<span class="lineno">   68 </span><span class="spaces">    </span><span class="istickedoff">| <span class="tickonlyfalse">n &gt; l</span>  = <span class="nottickedoff">error &quot;Crypto.NaCl.Nonce.clearBytes: n &gt; length of nonce&quot;</span></span>
+<span class="lineno">   69 </span><span class="spaces">    </span><span class="istickedoff">| <span class="tickonlyfalse">n &lt; 0</span>  = <span class="nottickedoff">error &quot;Crypto.NaCl.Nonce.clearBytes: n &lt; 0&quot;</span>  </span>
+<span class="lineno">   70 </span><span class="spaces">    </span><span class="istickedoff">| n == 0 = x</span>
+<span class="lineno">   71 </span><span class="spaces">    </span><span class="istickedoff">| <span class="tickonlytrue">otherwise</span> = (fromJust . fromBS) $! S.take (l - n) (toBS x) `S.append` S.replicate n 0x0</span>
+<span class="lineno">   72 </span><span class="spaces">    </span><span class="istickedoff">where l = unTagged (size :: Tagged k Int)</span></span>
+<span class="lineno">   73 </span>  {-# INLINEABLE clearBytes #-}
+<span class="lineno">   74 </span>
+<span class="lineno">   75 </span>  -- | Increment a Nonce by 1.
+<span class="lineno">   76 </span>  incNonce :: k -&gt; k
+<span class="lineno">   77 </span>  <span class="decl"><span class="istickedoff">incNonce n =</span>
+<span class="lineno">   78 </span><span class="spaces">    </span><span class="istickedoff">(fromJust . fromBS) $ SI.unsafeCreate l $ \out -&gt; do</span>
+<span class="lineno">   79 </span><span class="spaces">      </span><span class="istickedoff">SU.unsafeUseAsCStringLen (toBS n) $ \(b,blen) -&gt;</span>
+<span class="lineno">   80 </span><span class="spaces">        </span><span class="istickedoff">SI.memcpy out (castPtr b) (fromIntegral blen)</span>
+<span class="lineno">   81 </span><span class="spaces">      </span><span class="istickedoff">c_incnonce out (fromIntegral l)</span>
+<span class="lineno">   82 </span><span class="spaces">    </span><span class="istickedoff">where l = unTagged (size :: Tagged k Int)</span></span>
+<span class="lineno">   83 </span>  {-# INLINEABLE incNonce #-}
+<span class="lineno">   84 </span>
+<span class="lineno">   85 </span>
+<span class="lineno">   86 </span>-- 
+<span class="lineno">   87 </span>-- FFI
+<span class="lineno">   88 </span>-- 
+<span class="lineno">   89 </span>foreign import ccall unsafe &quot;glue_incnonce&quot;
+<span class="lineno">   90 </span>  c_incnonce :: Ptr Word8 -&gt; CSize -&gt; IO ()
+
+</pre>
+</html>
