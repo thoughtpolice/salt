@@ -789,7 +789,6 @@ library
   hs-source-dirs: src
   c-sources:        
     src/cbits/glue.c
-    src/cbits/devurandom.c
   extra-libraries:  nacl stdc++
 
   cc-options:       -Wall

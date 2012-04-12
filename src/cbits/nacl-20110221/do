@@ -123,6 +123,7 @@ do
     ( cd "$work" && $compiler -c ${project}_base.c ) && break
   done
   okar-$abi cr "$lib/$abi/lib${project}.a" "$work/${project}_base.o"
+  okar-$abi cr "$lib/$abi/lib${project}.a" "$lib/$abi/randombytes.o"
   ( ranlib "$lib/$abi/lib${project}.a" || exit 0 )
 done
 
