@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Salt by thoughtpolice</title>
+    <title>Salt @ GitHub</title>
     <style type="text/css">.quote { margin-top: 10px; margin-bottom: 10px; margin-left: 50px; margin-right: 10px; padding-left: 15px; border-left: 3px solid #ccc;}</style>
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
@@ -69,23 +69,20 @@ relatively portable. There are no direct dependencies outside of the
 libraries that ship with GHC.</p>
 
 <h2>Install</h2>
-<p>Download the source package from <a href="http://hackage.haskell.org/">Hackage</a> with cabal, and build it against a copy of NaCl using the included <code>./bootstrap.sh</code> script:
-</p><pre>    $ cabal update &amp;&amp; cabal unpack salt
-    $ cd salt-&lt;version&gt;/
-    $ ./bootstrap.sh
-    # you can also run tests by saying:
-    $ NACLTEST=YES ./bootstrap.sh
-    # and haddock:
-    $ HADDOCK=YES ./bootstrap.sh
+<p>Just build in one step with <code>cabal install</code>!</p>
+<pre>
+    $ cabal update &amp;&amp; cabal install salt
 </pre>
-<b>Nota bene</b>: the <code>./bootstrap.sh</code> script will expect <code>curl</code> and <code>cabal</code> to be on your <code>$PATH</code>!<p></p>
 
-<p>This will download the source code for NaCl, build it in an appropriate place, and then install the Haskell bindings via <code>cabal</code>. <b>This is unavoidable at the moment</b>,
- as the NaCl build system does not provide any means to install its 
-libraries/headers onto the system after build. Furthermore, the 
-compilation procedure selects code (much of it in raw assembly) that is 
-optimized on a per-CPU basis. This probably explains why you've never 
-heard of it, and why it's not in your package manager.</p>
+<p>This will build the source code for NaCl - included in the source - and
+install it under a directory under <code>$HOME/.haskell.salt</code>. This process
+will take quite a while the first time, and will only be necessary when the
+underlying NaCl version changes. <strong>Don't remove this directory!</strong>
+</p>
+
+<p>This step is needed because NaCl has a build process that benchmarks many
+implementations of itself and selects the fastest primitives. Many optimized
+implementations are raw machine-generated assembly code.</p>
 
 <p>Currently, you must build by linking against the optimized versions 
 of the various encryption routines. The slower, reference versions of 
@@ -102,20 +99,13 @@ preserve the high-speed CPU-optimized versions, short of hacking on NaCl
  itself. This will be possible to support using the slower, reference 
 implementations written in C, however.</p>
 
-<p>The NaCl compilation will take a while, since it must benchmark 
-multiple copies of itself to select the best primitive implementations. 
-The <code>bootstrap.sh</code> script will download and build NaCl under a local <code>~/.hs-nacl</code>
- directory. Do not remove this directory! Otherwise, your applications 
-will later fail to link as cabal will complain that it can't find the 
-appropriate libraries.</p>
-
 <h2>Documentation, benchmarks, coverage & more</h2>
 <p>
 </p><ul>
   <li><a href="http://travis-ci.org">travis-ci.org</a> results: <a href="http://travis-ci.org/thoughtpolice/salt"><img src="https://secure.travis-ci.org/thoughtpolice/salt.png?branch=master" alt="Build Status"></a></li>
   <li><a href="https://github.com/thoughtpolice/salt/wiki">Wiki</a> (help and guidance!)</li>
   <li><a href="http://thoughtpolice.github.com/salt/doc">Haddock documentation</a> (extensive and thorough!)</li>
-  <li><a href="http://thoughtpolice.github.com/salt/bench/results.html">Criterion benchmarks</a> (nearly 2.3Gbps on benchmarks!)</li>
+  <li><a href="http://thoughtpolice.github.com/salt/bench/results.html">Criterion benchmarks</a> (nearly 2.3Gbps on benchmarks; that's 4x faster than HsOpenSSL!)</li>
   <li><a href="http://thoughtpolice.github.com/salt/cov/hpc_index.html">Library coverage from test suite</a> (battle tested!)</li>
 </ul>
 <p></p>
@@ -153,7 +143,7 @@ appropriate libraries.</p>
       </section>
     </div>
     <footer>
-      <p>Project maintained by <a href="https://github.com/thoughtpolice">thoughtpolice</a></p>
+      <p>Project maintained by <a href="https://github.com/thoughtpolice">Austin Seipp</a></p>
       <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
     </footer>
     <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
