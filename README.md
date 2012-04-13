@@ -31,7 +31,7 @@ See [AUTHORS.txt](https://raw.github.com/thoughtpolice/salt/master/AUTHORS.txt).
 
 # License
 
-MIT. See `LICENSE.txt` for terms of copyright and redistribution.
+MIT. See [LICENSE.txt](https://raw.github.com/thoughtpolice/salt/master/LICENSE.txt) for terms of copyright and redistribution.
 
 [NaCl]: http://nacl.cace-project.eu
 [main page]: http://thoughtpolice.github.com/salt
