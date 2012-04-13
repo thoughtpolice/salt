@@ -15,73 +15,94 @@ import Crypto.NaCl.Hash as H
 import Crypto.NaCl.Nonce as N
 import Crypto.NaCl.Random as R
 import Crypto.NaCl.Key
-
 import Crypto.NaCl.Sign as Sign
-
 import Crypto.NaCl.Encrypt.Stream as Stream
 
+import qualified OpenSSL as OpenSSL
 import qualified OpenSSL.Cipher as OpenSSL (newAESCtx, aesCTR, Mode(Encrypt), AESCtx)
+import qualified OpenSSL.RSA as OpenSSL
+import qualified OpenSSL.EVP.Digest as OpenSSL (getDigestByName, digestBS', Digest)
+import qualified OpenSSL.EVP.Verify as OpenSSL
+import qualified OpenSSL.EVP.Sign as OpenSSL
+import qualified OpenSSL.Random as OpenSSL
 
 import Control.DeepSeq
 
-import Data.Enumerator
-import Data.Enumerator.Binary
+import Data.Enumerator hiding (map)
+import Data.Enumerator.Binary hiding (map)
 import qualified Data.Enumerator.List as EL
 
 instance NFData ByteString where
 instance NFData SecretKey where
 instance NFData PublicKey where
+instance NFData OpenSSL.RSAKeyPair where
 
 main :: IO ()
-main = do
+main = OpenSSL.withOpenSSL $ do
   s1 <- Sign.createKeypair
   streamk1 <- SecretKey `liftM` randomBytes Stream.keyLength 
   
   fourkb <- randomBytes 4096
-  let !znonce = createZeroNonce
+  let !znonce = createZeroNonce :: StreamNonce
       
-  aeskey <- randomBytes 16
-  aesiv  <- randomBytes 16
+  Just ssl_sha256 <- OpenSSL.getDigestByName "SHA256"
+  Just ssl_sha512 <- OpenSSL.getDigestByName "SHA512"
+  aeskey <- R.randomBytes 16
+  aesiv  <- R.randomBytes 16
   aesctx <- OpenSSL.newAESCtx OpenSSL.Encrypt aeskey aesiv
-  defaultMain [ bgroup "Signing"
-                [ bench "createKeypair" $ nfIO Sign.createKeypair
-                , bench "verify 64"  $ nf (signBench s1) $ pack [1..64]
-                , bench "verify 128" $ nf (signBench s1) $ pack [1..128]
-                , bench "verify 256" $ nf (signBench s1) $ pack [1..256]
-                , bench "verify 512" $ nf (signBench s1) $ pack [1..512]
-                ]
-              , bgroup "Stream"
-                [ bgroup "xsalsa20"
-                  [ bench "pure streamgen 4096/10000" $ nf (streamGenBench streamk1 4096) 10000
-                  , bench "pure encrypt 4kB random data" $ nf (pureEncBench znonce streamk1) fourkb
-                  , bcompare
-                    [ bench "enum1 openssl aes128ctr/encrypt 1gb random data" $ nfIO $ streamEncRef1 aesctx 
-                    , bench "enum1 encrypt 1gb random data" $ nfIO $ streamEncBench1 streamk1
+  rsak   <- OpenSSL.generateRSAKey 1024 17 Nothing
+  defaultMain [ bgroup "hash"
+                [ versus "sha256"
+                    [ ( "64", nf sha256 $ pack [1..64]
+                            , nf (OpenSSL.digestBS' ssl_sha256) $ pack [1..64])
+                    , ( "128", nf sha256 $ pack [1..128] 
+                             , nf (OpenSSL.digestBS' ssl_sha256) $ pack [1..128])                               
+                    , ( "256", nf sha256 $ pack [1..256] 
+                             , nf (OpenSSL.digestBS' ssl_sha256) $ pack [1..256])
+                    , ( "512", nf sha256 $ pack [1..512] 
+                             , nf (OpenSSL.digestBS' ssl_sha256) $ pack [1..512])
                     ]
-                  , bench "enum2 encrypt 1gb random data" $ nfIO $ streamEncBench2 streamk1
-                  ]
+                , versus "sha512"
+                    [ ( "64", nf sha512 $ pack [1..64]
+                            , nf (OpenSSL.digestBS' ssl_sha256) $ pack [1..64])
+                    , ( "128", nf sha512 $ pack [1..128] 
+                             , nf (OpenSSL.digestBS' ssl_sha256) $ pack [1..128])
+                    , ( "256", nf sha512 $ pack [1..256] 
+                             , nf (OpenSSL.digestBS' ssl_sha256) $ pack [1..256])
+                    , ( "512", nf sha512 $ pack [1..512] 
+                             , nf (OpenSSL.digestBS' ssl_sha256) $ pack [1..512])
+                    ]
                 ]
-              , bgroup "Hashing"
-                [ bgroup "sha512"
-                  [ bench "64"  $ nf sha512 (pack [1..64])
-                  , bench "128" $ nf sha512 (pack [1..128])
-                  , bench "256" $ nf sha512 (pack [1..256])
-                  , bench "512" $ nf sha512 (pack [1..512])
+              , versus "random"
+                  [ ( "32", nfIO $ R.randomBytes 32
+                          , nfIO $ OpenSSL.randBytes 32)
+                  ,
+                    ( "64", nfIO $ R.randomBytes 64
+                          , nfIO $ OpenSSL.randBytes 64)
+                  ,
+                    ( "128", nfIO $ R.randomBytes 128
+                           , nfIO $ OpenSSL.randBytes 128)
+                  ,
+                    ( "256", nfIO $ R.randomBytes 256
+                           , nfIO $ OpenSSL.randBytes 256)
                   ]
-                , bgroup "sha256"
-                  [ bench "64"  $ nf sha256 (pack [1..64])
-                  , bench "128" $ nf sha256 (pack [1..128])
-                  , bench "256" $ nf sha256 (pack [1..256])
-                  , bench "512" $ nf sha256 (pack [1..512])
+              , versus "sign"
+                  [ ( "createKeypair", nfIO Sign.createKeypair
+                                     , nfIO (OpenSSL.generateRSAKey 1024 17 Nothing))
+                  , ( "verify/512", nfIO $ signBenchRef ssl_sha512 rsak $ pack [1..512]
+                                  , nfIO $ return $ signBench s1 $ pack [1..512])
                   ]
-                ]
-              , bgroup "Random bytes"
-                [ bench "32"  $ nfIO $ randomBytes 32
-                , bench "64"  $ nfIO $ randomBytes 64
-                , bench "128" $ nfIO $ randomBytes 128
-                , bench "256" $ nfIO $ randomBytes 256
+              , versus "encrypt"
+                  [ ( "enumerator/1gb", nfIO $ streamEncBench1 streamk1
+                                      , nfIO $ streamEncRef1 aesctx)
+                  ]
+              , bgroup "misc"
+                [ bench "pure streamgen 4096/10000" $ nf (streamGenBench streamk1 4096) 10000
+                , bench "pure encrypt 4kB random data" $ nf (pureEncBench znonce streamk1) fourkb
+--              , bench "enum2 encrypt 1gb random data" $ nfIO $ streamEncBench2 streamk1
                 ]
               ]
+  
   where {-
         incNonceBench :: NonceLength StreamNonce -> Int -> Nonce StreamNonce
         incNonceBench sz x 
@@ -90,6 +111,10 @@ main = do
                 go n i = go (incNonce n) $! i-1
         -}
     
+        signBenchRef :: OpenSSL.Digest -> OpenSSL.RSAKeyPair -> ByteString -> IO Bool
+        signBenchRef d k xs = do
+          sm <- OpenSSL.signBS d k xs
+          return True
         signBench :: KeyPair -> ByteString -> Bool
         signBench (pk, sk) xs
           = let sm = Sign.sign sk xs
@@ -139,3 +164,10 @@ encryptFileEnum f sk n = enumFile f $= encryptEnee sk n
 
 encryptEnee :: Monad m => SecretKey -> StreamNonce -> Enumeratee ByteString ByteString m b
 encryptEnee k = EL.mapAccum $ \n bs -> (incNonce n, Stream.encrypt n bs k)
+
+versus x zs = bgroup x $ Prelude.map to $ zs
+  where to (name,nacl,ossl) 
+          = bgroup name [ bcompare [ bench "openssl" ossl
+                                   , bench "nacl" nacl
+                                   ]
+                        ]
