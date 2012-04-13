@@ -1,0 +1,16 @@
+Reference,Name,% faster than reference
+hash/sha256/64/openssl,hash/sha256/64/nacl,19
+hash/sha256/128/openssl,hash/sha256/128/nacl,11
+hash/sha256/256/openssl,hash/sha256/256/nacl,28
+hash/sha256/512/openssl,hash/sha256/512/nacl,29
+hash/sha512/64/openssl,hash/sha512/64/nacl,32
+hash/sha512/128/openssl,hash/sha512/128/nacl,17
+hash/sha512/256/openssl,hash/sha512/256/nacl,7
+hash/sha512/512/openssl,hash/sha512/512/nacl,7
+random/32/openssl,random/32/nacl,-143
+random/64/openssl,random/64/nacl,-187
+random/128/openssl,random/128/nacl,-228
+random/256/openssl,random/256/nacl,-257
+sign/createKeypair/openssl,sign/createKeypair/nacl,100
+sign/verify/512/openssl,sign/verify/512/nacl,-33
+encrypt/enumerator/1gb/openssl,encrypt/enumerator/1gb/nacl,76
