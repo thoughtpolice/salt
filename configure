@@ -27,7 +27,9 @@ if [ ! -d "$OUTDIR" ]; then
         printf "now building NaCl; grab some coffee... "
         D=`pwd`
         cd $NACLSRCDIR
+        export SALT_ABI=$ARCH
         ./do
+        unset SALT_ABI
         if [ $? != 0 ]; then
             echo "error (return code was $?)"
             exit 1
@@ -44,7 +46,6 @@ if [ ! -d "$OUTDIR" ]; then
 
     cp -r $NACLSRCDIR/build/$SHORTHOST/include/$ARCH/* $OUTDIR/include
     cp -r $NACLSRCDIR/build/$SHORTHOST/lib/$ARCH/* $OUTDIR/lib
-
 else
     echo "yes"
 fi

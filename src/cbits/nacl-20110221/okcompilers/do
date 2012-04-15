@@ -189,7 +189,13 @@ then
     mv "oldbin/okcpp-$oldabi" "bin/okcpp-$newabi"
     mv "oldbin/okar-$oldabi" "bin/okar-$newabi"
     mv "oldbin/oklibs-$oldabi" "bin/oklibs-$newabi"
-    echo "echo $newabi" >&7
+    if [ ! -z "$SALT_ABI" ]; then
+      if [ "$newabi" = "$SALT_ABI" ]; then
+        echo "echo $newabi" >&7
+      fi
+    else
+      echo "echo $newabi" >&7
+    fi
   done
 else
   cp -p oldbin/* bin
