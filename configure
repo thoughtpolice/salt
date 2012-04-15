@@ -24,7 +24,7 @@ printf "checking if NaCl has been built... "
 if [ ! -d "$OUTDIR" ]; then
     if [ ! -d "$NACLSRCDIR/build" ]; then
         echo "no"
-        printf "now building NaCl; grab some coffee... "
+        printf "now building... "
         D=`pwd`
         cd $NACLSRCDIR
         export SALT_ABI=$ARCH
