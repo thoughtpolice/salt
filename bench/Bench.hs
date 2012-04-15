@@ -8,6 +8,7 @@ import System.IO
 import Control.Monad (liftM)
 import Criterion.Main hiding (run)
 import Data.ByteString as S
+import qualified Data.ByteString.Char8 as S8
 
 import Control.Monad.Trans
 
@@ -113,8 +114,11 @@ main = OpenSSL.withOpenSSL $ do
     
         signBenchRef :: OpenSSL.Digest -> OpenSSL.RSAKeyPair -> ByteString -> IO Bool
         signBenchRef d k xs = do
+          -- this is a stupid api
           sm <- OpenSSL.signBS d k xs
-          return True
+          v <- OpenSSL.verifyBS d (S8.unpack sm) k xs
+          return $ if (v == OpenSSL.VerifySuccess) then True else False
+          
         signBench :: KeyPair -> ByteString -> Bool
         signBench (pk, sk) xs
           = let sm = Sign.sign sk xs
