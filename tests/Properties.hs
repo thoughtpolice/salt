@@ -72,7 +72,7 @@ main = do
                 , testProperty "createNM purity" (prop_createnm_pure k1)
                 , testProperty "encryptNM/decryptNM" (prop_pubkey_precomp_pure k1 k2 n)
                 ]
-              , testGroup "Signing testProperty" 
+              , testGroup "Signing" 
                 [ testProperty "roundtrip" (prop_sign_verify s1)
                 , testProperty "bug14" (prop_sign_bug14 s1)
                 ]
