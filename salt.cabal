@@ -53,9 +53,7 @@ extra-source-files:
   tests/*.hs
   TODO
   -- good god
-  src/cbits/nacl-20110221
   src/cbits/nacl-20110221/PROTOTYPES.c
-  src/cbits/nacl-20110221/okcompilers
   src/cbits/nacl-20110221/okcompilers/archivers
   src/cbits/nacl-20110221/okcompilers/main.cpp
   src/cbits/nacl-20110221/okcompilers/c
@@ -65,7 +63,6 @@ extra-source-files:
   src/cbits/nacl-20110221/okcompilers/lib.cpp
   src/cbits/nacl-20110221/okcompilers/cpp
   src/cbits/nacl-20110221/okcompilers/abiname.c
-  src/cbits/nacl-20110221/inttypes
   src/cbits/nacl-20110221/inttypes/crypto_uint32.c
   src/cbits/nacl-20110221/inttypes/unsigned.h
   src/cbits/nacl-20110221/inttypes/crypto_uint8.c
@@ -76,21 +73,17 @@ extra-source-files:
   src/cbits/nacl-20110221/inttypes/crypto_uint64.c
   src/cbits/nacl-20110221/inttypes/crypto_int32.c
   src/cbits/nacl-20110221/inttypes/signed.h
-  src/cbits/nacl-20110221/inttypes/crypto_uint16.  c
-  src/cbits/nacl-20110221/randombytes
+  src/cbits/nacl-20110221/inttypes/crypto_uint16.c
   src/cbits/nacl-20110221/randombytes/devurandom.h
   src/cbits/nacl-20110221/randombytes/test.c
   src/cbits/nacl-20110221/randombytes/do
   src/cbits/nacl-20110221/randombytes/devurandom.c
-  src/cbits/nacl-20110221/crypto_box
   src/cbits/nacl-20110221/crypto_box/wrapper-box.cpp
   src/cbits/nacl-20110221/crypto_box/try.c
   src/cbits/nacl-20110221/crypto_box/wrapper-keypair.cpp
   src/cbits/nacl-20110221/crypto_box/measure.c
-  src/cbits/nacl-20110221/crypto_box/curve25519xsalsa20poly1305
   src/cbits/nacl-20110221/crypto_box/curve25519xsalsa20poly1305/selected
   src/cbits/nacl-20110221/crypto_box/curve25519xsalsa20poly1305/checksum
-  src/cbits/nacl-20110221/crypto_box/curve25519xsalsa20poly1305/ref
   src/cbits/nacl-20110221/crypto_box/curve25519xsalsa20poly1305/ref/keypair.c
   src/cbits/nacl-20110221/crypto_box/curve25519xsalsa20poly1305/ref/box.c
   src/cbits/nacl-20110221/crypto_box/curve25519xsalsa20poly1305/ref/api.h
@@ -99,41 +92,31 @@ extra-source-files:
   src/cbits/nacl-20110221/crypto_box/curve25519xsalsa20poly1305/used
   src/cbits/nacl-20110221/crypto_box/wrapper-open.cpp
   src/cbits/nacl-20110221/measure-anything.c
-  src/cbits/nacl-20110221/crypto_auth
   src/cbits/nacl-20110221/crypto_auth/try.c
   src/cbits/nacl-20110221/crypto_auth/wrapper-verify.cpp
   src/cbits/nacl-20110221/crypto_auth/wrapper-auth.cpp
-  src/cbits/nacl-20110221/crypto_auth/hmacsha512256
   src/cbits/nacl-20110221/crypto_auth/hmacsha512256/selected
   src/cbits/nacl-20110221/crypto_auth/hmacsha512256/checksum
-  src/cbits/nacl-20110221/crypto_auth/hmacsha512256/ref
   src/cbits/nacl-20110221/crypto_auth/hmacsha512256/ref/verify.c
   src/cbits/nacl-20110221/crypto_auth/hmacsha512256/ref/hmac.c
   src/cbits/nacl-20110221/crypto_auth/hmacsha512256/ref/api.h
   src/cbits/nacl-20110221/crypto_auth/hmacsha512256/used
   src/cbits/nacl-20110221/crypto_auth/measure.c
-  src/cbits/nacl-20110221/crypto_stream
   src/cbits/nacl-20110221/crypto_stream/try.c
-  src/cbits/nacl-20110221/crypto_stream/salsa20
-  src/cbits/nacl-20110221/crypto_stream/salsa20/amd64_xmm6
   src/cbits/nacl-20110221/crypto_stream/salsa20/amd64_xmm6/stream.s
   src/cbits/nacl-20110221/crypto_stream/salsa20/amd64_xmm6/implementors
   src/cbits/nacl-20110221/crypto_stream/salsa20/amd64_xmm6/api.h
   src/cbits/nacl-20110221/crypto_stream/salsa20/checksum
-  src/cbits/nacl-20110221/crypto_stream/salsa20/ref
   src/cbits/nacl-20110221/crypto_stream/salsa20/ref/implementors
   src/cbits/nacl-20110221/crypto_stream/salsa20/ref/xor.c
   src/cbits/nacl-20110221/crypto_stream/salsa20/ref/api.h
   src/cbits/nacl-20110221/crypto_stream/salsa20/ref/stream.c
-  src/cbits/nacl-20110221/crypto_stream/salsa20/x86_xmm5
   src/cbits/nacl-20110221/crypto_stream/salsa20/x86_xmm5/stream.s
   src/cbits/nacl-20110221/crypto_stream/salsa20/x86_xmm5/implementors
   src/cbits/nacl-20110221/crypto_stream/salsa20/x86_xmm5/api.h
   src/cbits/nacl-20110221/crypto_stream/salsa20/used
-  src/cbits/nacl-20110221/crypto_stream/xsalsa20
   src/cbits/nacl-20110221/crypto_stream/xsalsa20/selected
   src/cbits/nacl-20110221/crypto_stream/xsalsa20/checksum
-  src/cbits/nacl-20110221/crypto_stream/xsalsa20/ref
   src/cbits/nacl-20110221/crypto_stream/xsalsa20/ref/implementors
   src/cbits/nacl-20110221/crypto_stream/xsalsa20/ref/xor.c
   src/cbits/nacl-20110221/crypto_stream/xsalsa20/ref/api.h
@@ -143,18 +126,14 @@ extra-source-files:
   src/cbits/nacl-20110221/crypto_stream/wrapper-xor.cpp
   src/cbits/nacl-20110221/crypto_stream/wrapper-stream.cpp
   src/cbits/nacl-20110221/OPERATIONS
-  src/cbits/nacl-20110221/crypto_scalarmult
   src/cbits/nacl-20110221/crypto_scalarmult/wrapper-base.cpp
   src/cbits/nacl-20110221/crypto_scalarmult/try.c
   src/cbits/nacl-20110221/crypto_scalarmult/measure.c
   src/cbits/nacl-20110221/crypto_scalarmult/wrapper-mult.cpp
-  src/cbits/nacl-20110221/crypto_scalarmult/curve25519
-  src/cbits/nacl-20110221/crypto_scalarmult/curve25519/donna_c64
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/donna_c64/implementors
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/donna_c64/smult.c
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/donna_c64/api.h
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/donna_c64/base.c
-  src/cbits/nacl-20110221/crypto_scalarmult/curve25519/athlon
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/athlon/fromdouble.s
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/athlon/mainloop.s
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/athlon/implementors
@@ -167,110 +146,83 @@ extra-source-files:
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/athlon/square.s
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/athlon/todouble.s
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/checksum
-  src/cbits/nacl-20110221/crypto_scalarmult/curve25519/ref
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/ref/implementors
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/ref/smult.c
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/ref/api.h
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/ref/base.c
   src/cbits/nacl-20110221/crypto_scalarmult/curve25519/used
-  src/cbits/nacl-20110221/crypto_core
   src/cbits/nacl-20110221/crypto_core/wrapper-empty.cpp
-  src/cbits/nacl-20110221/crypto_core/hsalsa20
   src/cbits/nacl-20110221/crypto_core/hsalsa20/checksum
-  src/cbits/nacl-20110221/crypto_core/hsalsa20/ref2
   src/cbits/nacl-20110221/crypto_core/hsalsa20/ref2/implementors
   src/cbits/nacl-20110221/crypto_core/hsalsa20/ref2/api.h
   src/cbits/nacl-20110221/crypto_core/hsalsa20/ref2/core.c
-  src/cbits/nacl-20110221/crypto_core/hsalsa20/ref
   src/cbits/nacl-20110221/crypto_core/hsalsa20/ref/implementors
   src/cbits/nacl-20110221/crypto_core/hsalsa20/ref/api.h
   src/cbits/nacl-20110221/crypto_core/hsalsa20/ref/core.c
   src/cbits/nacl-20110221/crypto_core/hsalsa20/used
   src/cbits/nacl-20110221/crypto_core/try.c
-  src/cbits/nacl-20110221/crypto_core/salsa20
   src/cbits/nacl-20110221/crypto_core/salsa20/checksum
-  src/cbits/nacl-20110221/crypto_core/salsa20/ref
   src/cbits/nacl-20110221/crypto_core/salsa20/ref/implementors
   src/cbits/nacl-20110221/crypto_core/salsa20/ref/api.h
   src/cbits/nacl-20110221/crypto_core/salsa20/ref/core.c
   src/cbits/nacl-20110221/crypto_core/salsa20/used
   src/cbits/nacl-20110221/crypto_core/measure.c
-  src/cbits/nacl-20110221/crypto_verify
-  src/cbits/nacl-20110221/crypto_verify/16
   src/cbits/nacl-20110221/crypto_verify/16/checksum
-  src/cbits/nacl-20110221/crypto_verify/16/ref
   src/cbits/nacl-20110221/crypto_verify/16/ref/verify.c
   src/cbits/nacl-20110221/crypto_verify/16/ref/api.h
   src/cbits/nacl-20110221/crypto_verify/16/used
   src/cbits/nacl-20110221/crypto_verify/wrapper-empty.cpp
   src/cbits/nacl-20110221/crypto_verify/try.c
-  src/cbits/nacl-20110221/crypto_verify/32
   src/cbits/nacl-20110221/crypto_verify/32/checksum
-  src/cbits/nacl-20110221/crypto_verify/32/ref
   src/cbits/nacl-20110221/crypto_verify/32/ref/verify.c
   src/cbits/nacl-20110221/crypto_verify/32/ref/api.h
   src/cbits/nacl-20110221/crypto_verify/32/used
   src/cbits/nacl-20110221/crypto_verify/measure.c
-  src/cbits/nacl-20110221/crypto_onetimeauth
   src/cbits/nacl-20110221/crypto_onetimeauth/try.c
   src/cbits/nacl-20110221/crypto_onetimeauth/wrapper-verify.cpp
   src/cbits/nacl-20110221/crypto_onetimeauth/wrapper-auth.cpp
-  src/cbits/nacl-20110221/crypto_onetimeauth/poly1305
-  src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/amd64
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/amd64/constants.s
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/amd64/verify.c
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/amd64/api.h
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/amd64/auth.s
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/selected
-  src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/53
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/53/verify.c
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/53/api.h
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/53/auth.c
-  src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/x86
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/x86/constants.s
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/x86/verify.c
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/x86/api.h
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/x86/auth.s
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/checksum
-  src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/ref
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/ref/verify.c
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/ref/api.h
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/ref/auth.c
   src/cbits/nacl-20110221/crypto_onetimeauth/poly1305/used
   src/cbits/nacl-20110221/crypto_onetimeauth/measure.c
   src/cbits/nacl-20110221/do
-  src/cbits/nacl-20110221/crypto_secretbox
   src/cbits/nacl-20110221/crypto_secretbox/wrapper-box.cpp
   src/cbits/nacl-20110221/crypto_secretbox/try.c
   src/cbits/nacl-20110221/crypto_secretbox/measure.c
   src/cbits/nacl-20110221/crypto_secretbox/wrapper-open.cpp
-  src/cbits/nacl-20110221/crypto_secretbox/xsalsa20poly1305
   src/cbits/nacl-20110221/crypto_secretbox/xsalsa20poly1305/selected
   src/cbits/nacl-20110221/crypto_secretbox/xsalsa20poly1305/checksum
-  src/cbits/nacl-20110221/crypto_secretbox/xsalsa20poly1305/ref
   src/cbits/nacl-20110221/crypto_secretbox/xsalsa20poly1305/ref/box.c
   src/cbits/nacl-20110221/crypto_secretbox/xsalsa20poly1305/ref/api.h
   src/cbits/nacl-20110221/crypto_secretbox/xsalsa20poly1305/used
-  src/cbits/nacl-20110221/crypto_hash
   src/cbits/nacl-20110221/crypto_hash/try.c
   src/cbits/nacl-20110221/crypto_hash/wrapper-hash.cpp
-  src/cbits/nacl-20110221/crypto_hash/sha512
   src/cbits/nacl-20110221/crypto_hash/sha512/selected
   src/cbits/nacl-20110221/crypto_hash/sha512/checksum
-  src/cbits/nacl-20110221/crypto_hash/sha512/ref
   src/cbits/nacl-20110221/crypto_hash/sha512/ref/hash.c
   src/cbits/nacl-20110221/crypto_hash/sha512/ref/implementors
   src/cbits/nacl-20110221/crypto_hash/sha512/ref/api.h
   src/cbits/nacl-20110221/crypto_hash/sha512/used
-  src/cbits/nacl-20110221/crypto_hash/sha256
   src/cbits/nacl-20110221/crypto_hash/sha256/checksum
-  src/cbits/nacl-20110221/crypto_hash/sha256/ref
   src/cbits/nacl-20110221/crypto_hash/sha256/ref/hash.c
   src/cbits/nacl-20110221/crypto_hash/sha256/ref/implementors
   src/cbits/nacl-20110221/crypto_hash/sha256/ref/api.h
   src/cbits/nacl-20110221/crypto_hash/sha256/used
   src/cbits/nacl-20110221/crypto_hash/measure.c
-  src/cbits/nacl-20110221/cpucycles
   src/cbits/nacl-20110221/cpucycles/ia64cpuinfo.c
   src/cbits/nacl-20110221/cpucycles/celllinux.c
   src/cbits/nacl-20110221/cpucycles/mips.h
@@ -320,48 +272,37 @@ extra-source-files:
   src/cbits/nacl-20110221/cpucycles/x86tscfreq.h
   src/cbits/nacl-20110221/try-anything.c
   src/cbits/nacl-20110221/PROTOTYPES.cpp
-  src/cbits/nacl-20110221/crypto_hashblocks
   src/cbits/nacl-20110221/crypto_hashblocks/wrapper-empty.cpp
   src/cbits/nacl-20110221/crypto_hashblocks/try.c
-  src/cbits/nacl-20110221/crypto_hashblocks/sha512
-  src/cbits/nacl-20110221/crypto_hashblocks/sha512/inplace
   src/cbits/nacl-20110221/crypto_hashblocks/sha512/inplace/implementors
   src/cbits/nacl-20110221/crypto_hashblocks/sha512/inplace/api.h
   src/cbits/nacl-20110221/crypto_hashblocks/sha512/inplace/blocks.c
   src/cbits/nacl-20110221/crypto_hashblocks/sha512/selected
   src/cbits/nacl-20110221/crypto_hashblocks/sha512/checksum
-  src/cbits/nacl-20110221/crypto_hashblocks/sha512/ref
   src/cbits/nacl-20110221/crypto_hashblocks/sha512/ref/implementors
   src/cbits/nacl-20110221/crypto_hashblocks/sha512/ref/api.h
   src/cbits/nacl-20110221/crypto_hashblocks/sha512/ref/blocks.c
   src/cbits/nacl-20110221/crypto_hashblocks/sha512/used
-  src/cbits/nacl-20110221/crypto_hashblocks/sha256
-  src/cbits/nacl-20110221/crypto_hashblocks/sha256/inplace
   src/cbits/nacl-20110221/crypto_hashblocks/sha256/inplace/implementors
   src/cbits/nacl-20110221/crypto_hashblocks/sha256/inplace/api.h
   src/cbits/nacl-20110221/crypto_hashblocks/sha256/inplace/blocks.c
   src/cbits/nacl-20110221/crypto_hashblocks/sha256/checksum
-  src/cbits/nacl-20110221/crypto_hashblocks/sha256/ref
   src/cbits/nacl-20110221/crypto_hashblocks/sha256/ref/implementors
   src/cbits/nacl-20110221/crypto_hashblocks/sha256/ref/api.h
   src/cbits/nacl-20110221/crypto_hashblocks/sha256/ref/blocks.c
   src/cbits/nacl-20110221/crypto_hashblocks/sha256/used
   src/cbits/nacl-20110221/crypto_hashblocks/measure.c
   src/cbits/nacl-20110221/MACROS
-  src/cbits/nacl-20110221/cpuid
   src/cbits/nacl-20110221/cpuid/do
   src/cbits/nacl-20110221/cpuid/cpuid.c
   src/cbits/nacl-20110221/cpuid/unknown.c
   src/cbits/nacl-20110221/cpuid/cbytes.c
   src/cbits/nacl-20110221/cpuid/x86.c
-  src/cbits/nacl-20110221/crypto_sign
   src/cbits/nacl-20110221/crypto_sign/try.c
   src/cbits/nacl-20110221/crypto_sign/wrapper-sign.cpp
   src/cbits/nacl-20110221/crypto_sign/wrapper-sign-open.cpp
   src/cbits/nacl-20110221/crypto_sign/wrapper-keypair.cpp
   src/cbits/nacl-20110221/crypto_sign/measure.c
-  src/cbits/nacl-20110221/crypto_sign/ed25519
-  src/cbits/nacl-20110221/crypto_sign/ed25519/ref10
   src/cbits/nacl-20110221/crypto_sign/ed25519/ref10/ge_sub.q
   src/cbits/nacl-20110221/crypto_sign/ed25519/ref10/ge_msub.c
   src/cbits/nacl-20110221/crypto_sign/ed25519/ref10/fe_invert.c
@@ -434,7 +375,6 @@ extra-source-files:
   src/cbits/nacl-20110221/crypto_sign/ed25519/designers
   src/cbits/nacl-20110221/crypto_sign/ed25519/selected
   src/cbits/nacl-20110221/crypto_sign/ed25519/description
-  src/cbits/nacl-20110221/crypto_sign/ed25519/ref
   src/cbits/nacl-20110221/crypto_sign/ed25519/ref/fe25519.h
   src/cbits/nacl-20110221/crypto_sign/ed25519/ref/sc25519.c
   src/cbits/nacl-20110221/crypto_sign/ed25519/ref/implementors
@@ -448,7 +388,6 @@ extra-source-files:
   src/cbits/nacl-20110221/crypto_sign/ed25519/used
   src/cbits/nacl-20110221/version
 
-  
 extra-tmp-files:
   salt.buildinfo
   
