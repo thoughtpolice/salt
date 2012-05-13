@@ -20,9 +20,9 @@ module Crypto.NaCl.Key
 import Data.ByteString
 
 newtype PublicKey = PublicKey { unPublicKey :: ByteString }
-        deriving (Eq, Show)
+        deriving (Eq, Show, Ord)
 
 newtype SecretKey = SecretKey { unSecretKey :: ByteString }
-        deriving (Eq, Show)
+        deriving (Eq, Show, Ord)
 
 type KeyPair = (PublicKey, SecretKey)
