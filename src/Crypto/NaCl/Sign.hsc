@@ -26,6 +26,7 @@ module Crypto.NaCl.Sign
          createKeypair                 -- :: IO KeyPair
          -- * Signing and verifying messages
        , sign                          -- :: SecretKey -> ByteString -> ByteString
+       , sign'                         -- :: SecretKey -> ByteString -> ByteString
        , verify                        -- :: PublicKey -> ByteString -> Maybe ByteString
        , signPublicKeyLength           -- :: Int
        , signSecretKeyLength           -- :: Int
@@ -75,6 +76,20 @@ sign (SecretKey sk) xs =
       SI.createAndTrim (mlen+sign_BYTES) $ \out ->
        fromIntegral `liftM` c_crypto_sign out mstr (fromIntegral mlen) psk
 {-# INLINEABLE sign #-}
+
+-- | Sign a message with a particular 'SecretKey', only returning the signature
+-- without the message.
+sign' :: SecretKey
+      -- ^ Signers secret key
+      -> ByteString
+      -- ^ Input message
+      -> ByteString
+      -- ^ Message signature, without the message
+sign' sk xs =
+  let sm = sign sk xs
+      l  = S.length sm
+  in S.take (l - S.length xs) sm
+{-# INLINEABLE sign' #-}
 
 -- | Verifies a signed message with a 'PublicKey'. Returns @Nothing@ if
 -- verification fails, or @Just xs@ where @xs@ is the original message if it

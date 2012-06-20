@@ -75,6 +75,8 @@ main = do
               , testGroup "Signing" 
                 [ testProperty "roundtrip" (prop_sign_verify s1)
                 , testProperty "bug14" (prop_sign_bug14 s1)
+                , testProperty "sign' length" (prop_sign'_length s1)
+                , testProperty "sign' length #2" (prop_sign'_length2 s1)
                 ]
                 -- Misc
               , testCase "Randomness" case_random
@@ -187,6 +189,21 @@ prop_sign_verify (pk,sk) xs
   = let s = Sign.sign sk xs
         d = Sign.verify pk s
     in maybe False (== xs) d
+
+-- Generally the signature format is '<signature><original message>'
+-- and <signature> is of a fixed length (crypto_sign_BYTES), which in
+-- ed25519's case is 64. sign' drops the message appended at the end,
+-- so we just make sure we have constant length signatures.
+prop_sign'_length :: KeyPair -> ByteString -> ByteString -> Bool
+prop_sign'_length (_,sk) xs xs2
+  = let s1 = Sign.sign' sk xs
+        s2 = Sign.sign' sk xs2
+    in (S.length s1 == S.length s2)
+
+-- FIXME: specific to ed25519; maybe the sign module should export
+-- crypto_sign_BYTES?
+prop_sign'_length2 :: KeyPair -> ByteString -> Bool
+prop_sign'_length2 (_,sk) xs = 64 == (S.length $ Sign.sign' sk xs)
 
 -- Secret-key authenticated encryption
 
