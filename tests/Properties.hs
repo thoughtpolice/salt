@@ -77,6 +77,7 @@ main = do
                 , testProperty "bug14" (prop_sign_bug14 s1)
                 , testProperty "sign' length" (prop_sign'_length s1)
                 , testProperty "sign' length #2" (prop_sign'_length2 s1)
+                , testProperty "verify' works" (prop_verify' s1)
                 ]
                 -- Misc
               , testCase "Randomness" case_random
@@ -204,6 +205,9 @@ prop_sign'_length (_,sk) xs xs2
 -- crypto_sign_BYTES?
 prop_sign'_length2 :: KeyPair -> ByteString -> Bool
 prop_sign'_length2 (_,sk) xs = 64 == (S.length $ Sign.sign' sk xs)
+
+prop_verify' :: KeyPair -> ByteString -> Bool
+prop_verify' (pk,sk) xs = Sign.verify' pk xs $ Sign.sign' sk xs
 
 -- Secret-key authenticated encryption
 

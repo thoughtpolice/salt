@@ -28,6 +28,7 @@ module Crypto.NaCl.Sign
        , sign                          -- :: SecretKey -> ByteString -> ByteString
        , sign'                         -- :: SecretKey -> ByteString -> ByteString
        , verify                        -- :: PublicKey -> ByteString -> Maybe ByteString
+       , verify'                       -- :: PublicKey -> ByteString -> ByteString -> Bool
        , signPublicKeyLength           -- :: Int
        , signSecretKeyLength           -- :: Int
        ) where
@@ -114,6 +115,19 @@ verify (PublicKey pk) xs =
             l <- peek pmlen
             return $ Just $ SI.fromForeignPtr out 0 (fromIntegral l)
 {-# INLINEABLE verify #-}
+
+-- | Verify that a message came from someone\'s 'PublicKey'
+-- using an input message and a signature derived from 'sign''
+verify' :: PublicKey
+        -- ^ Signers\' public key
+        -> ByteString
+        -- ^ Input message, without signature
+        -> ByteString
+        -- ^ Message signature
+        -> Bool
+verify' pk xs sig = verify pk sm == Just xs
+  where sm = sig `S.append` xs
+{-# INLINEABLE verify' #-}
 
 --
 -- FFI
