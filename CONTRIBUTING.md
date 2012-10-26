@@ -33,8 +33,6 @@ Other fields may be added in the same vein for attribution or other purposes
 the NaCl source, but do not add a note here. This is to sanely keep track
 of what needs to be possibly kept up to date.
 
-Likewise, if something here is no longer needed, then remove it.
-
   * Don't build CurveCP when doing a NaCl build.
 
     **Commit**: thoughtpolice/salt@48d437af07442daf34408ceab7c513d37f2fc5f2
