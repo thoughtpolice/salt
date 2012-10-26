@@ -15,7 +15,8 @@ documentation, and examples.
 
 # Join in
 
-File bugs in the GitHub [issue tracker][].
+Be sure to read the [contributing guidelines][contribute]. File bugs in 
+the GitHub [issue tracker][].
 
 Master [git repository][gh]:
 
@@ -35,6 +36,7 @@ MIT. See [LICENSE.txt](https://raw.github.com/thoughtpolice/salt/master/LICENSE.
 
 [NaCl]: http://nacl.cace-project.eu
 [main page]: http://thoughtpolice.github.com/salt
+[contribute]: https://github.com/thoughtpolice/salt/blob/master/CONTRIBUTING.md
 [issue tracker]: http://github.com/thoughtpolice/salt/issues
 [gh]: http://github.com/thoughtpolice/salt
 [bb]: http://bitbucket.org/thoughtpolice/salt
