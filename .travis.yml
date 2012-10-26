@@ -1,6 +1,15 @@
 language: haskell
-install:
+before_install:
+  # Uncomment the next 2 lines whenever hackage is down.
+  #  - mkdir -p ~/.cabal
+  #  - cp .hackage-backup-config ~/.cabal/config
   - cabal update
-  - cabal install
-  - cabal install QuickCheck HUnit test-framework test-framework-quickcheck2 test-framework-hunit
-
+  - cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstall
+install:
+  - autoreconf -i --force
+  # we have to configure rather than install in order to get benchmarks
+  - cabal configure --enable-tests --enable-benchmarks
+  - cabal build
+script:
+  - cabal test --show-details=always
+  - cabal bench
