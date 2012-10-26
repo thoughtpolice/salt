@@ -20,27 +20,27 @@ import Test.Framework.Providers.HUnit (testCase)
 import Crypto.NaCl.Hash (sha512, sha256)
 import Crypto.NaCl.Random (randomBytes)
 
-import Crypto.NaCl.Encrypt.PublicKey as PubKey
-import Crypto.NaCl.Encrypt.SecretKey as SecretKey
+import Crypto.NaCl.Encrypt.PublicKey as PK
+import Crypto.NaCl.Encrypt.SecretKey as SK
 import Crypto.NaCl.Encrypt.Stream as Stream
 
 import Crypto.NaCl.Sign as Sign
-import Crypto.NaCl.Nonce as N
+import qualified Crypto.NaCl.Internal as I
 import Crypto.NaCl.Auth as Auth
 import Crypto.NaCl.Key as K
 
 main :: IO ()
 main = do
-  k1 <- PubKey.createKeypair
-  k2 <- PubKey.createKeypair
-  n  <- createRandomNonce
+  k1 <- PK.createKeypair
+  k2 <- PK.createKeypair
+  n  <- I.createRandomNonce
   
   s1 <- Sign.createKeypair
   
-  key <- SecretKey `liftM` randomBytes SecretKey.keyLength
-  n2  <- createRandomNonce
+  key <- SecretKey `liftM` randomBytes SK.keyLength
+  n2  <- I.createRandomNonce
   
-  n3_xsalsa20 <- createRandomNonce
+  n3_xsalsa20 <- I.createRandomNonce
   defaultMain [ testGroup "Secret key" 
                 [ testProperty "authenticated encrypt/decrypt" (prop_secretkey_pure key n2)
                 , testGroup "Stream encryption"
@@ -55,9 +55,6 @@ main = do
                 ]
               , testGroup "Nonce"
                 [ testProperty "incNonce/pure" prop_nonce_pure
-                , testProperty "clearBytes invariant" prop_nonce_clear_inv
-                , testProperty "clearBytes/pure" prop_nonce_clear_pure
-                , testProperty "clearBytes/works" prop_nonce_clear_works
                 ]
               , testGroup "Hashing" 
                 [ testProperty "sha256/pure"   prop_sha256_pure
@@ -95,16 +92,16 @@ instance Arbitrary K.SecretKey where
 
 instance Arbitrary PKNonce where
   arbitrary = do
-    let n = unTagged (size :: Tagged PKNonce Int)
-    (fromJust . fromBS . pack) `liftM` vectorOf n arbitrary
+    let n = unTagged (I.size :: Tagged PKNonce Int)
+    (fromJust . I.fromBS . pack) `liftM` vectorOf n arbitrary
 instance Arbitrary SKNonce where
   arbitrary = do
-    let n = unTagged (size :: Tagged SKNonce Int)
-    (fromJust . fromBS . pack) `liftM` vectorOf n arbitrary
+    let n = unTagged (I.size :: Tagged SKNonce Int)
+    (fromJust . I.fromBS . pack) `liftM` vectorOf n arbitrary
 instance Arbitrary StreamNonce where
   arbitrary = do
-    let n = unTagged (size :: Tagged StreamNonce Int)
-    (fromJust . fromBS . pack) `liftM` vectorOf n arbitrary
+    let n = unTagged (I.size :: Tagged StreamNonce Int)
+    (fromJust . I.fromBS . pack) `liftM` vectorOf n arbitrary
 
 newtype SmallBS = SBS ByteString deriving (Eq, Show)
 instance Arbitrary SmallBS where
@@ -148,7 +145,7 @@ case_random = doit 20 $ \i -> do
 
 case_pubkey_len :: Assertion
 case_pubkey_len = doit 20 $ \_ -> do
-  (pk,sk) <- PubKey.createKeypair
+  (pk,sk) <- PK.createKeypair
   S.length (unPublicKey pk) @?= publicKeyLength
   S.length (unSecretKey sk) @?= secretKeyLength
 
@@ -160,16 +157,16 @@ case_signkey_len = doit 20 $ \_ -> do
 
 prop_pubkey_pure :: KeyPair -> KeyPair -> PKNonce -> ByteString -> Bool
 prop_pubkey_pure (pk1,sk1) (pk2,sk2) n xs
-  = let enc = PubKey.encrypt n xs pk2 sk1
-        dec = PubKey.decrypt n enc pk1 sk2
+  = let enc = PK.encrypt n xs pk2 sk1
+        dec = PK.decrypt n enc pk1 sk2
     in maybe False (== xs) dec
        
 prop_pubkey_precomp_pure :: KeyPair -> KeyPair -> PKNonce -> ByteString -> Bool
 prop_pubkey_precomp_pure (pk1,sk1) (pk2,sk2) n xs
-  = let nm1 = PubKey.createNM (pk2,sk1)
-        nm2 = PubKey.createNM (pk1,sk2)
-        enc = PubKey.encryptNM nm1 n xs
-        dec = PubKey.decryptNM nm2 n enc
+  = let nm1 = PK.createNM (pk2,sk1)
+        nm2 = PK.createNM (pk1,sk2)
+        enc = PK.encryptNM nm1 n xs
+        dec = PK.decryptNM nm2 n enc
     in maybe False (== xs) dec
 
 prop_createnm_pure :: KeyPair -> Bool
@@ -213,32 +210,14 @@ prop_verify' (pk,sk) xs = Sign.verify' pk xs $ Sign.sign' sk xs
 
 prop_secretkey_pure :: SecretKey -> SKNonce -> ByteString -> Bool
 prop_secretkey_pure k n xs
-  = let enc = SecretKey.encrypt n xs k
-        dec = SecretKey.decrypt n enc k
+  = let enc = SK.encrypt n xs k
+        dec = SK.decrypt n enc k
     in maybe False (== xs) dec
 
 -- Nonces
 
 prop_nonce_pure :: StreamNonce -> Bool
-prop_nonce_pure n = incNonce n == incNonce n
-
-prop_nonce_clear_inv :: StreamNonce -> Bool
-prop_nonce_clear_inv n
-  = clearBytes sz n == (createZeroNonce :: StreamNonce)
-  where sz = unTagged (size :: Tagged StreamNonce Int)
-
-prop_nonce_clear_pure :: StreamNonce -> NonNegative Int -> Property
-prop_nonce_clear_pure n (NonNegative i)
-  = i <= sz ==> clearBytes i n == clearBytes i n
-  where sz = unTagged (size :: Tagged StreamNonce Int)
-
-prop_nonce_clear_works :: StreamNonce -> NonNegative Int -> Property
-prop_nonce_clear_works n (NonNegative i)
-  = i < sz ==>
-    let n2    = clearBytes i n
-        (p,_) = S.splitAt (sz - i) (toBS n)
-    in n2 == (fromJust . fromBS $ (S.append p $ S.replicate i 0x0))
-  where sz = unTagged (size :: Tagged StreamNonce Int)
+prop_nonce_pure n = I.incNonce n == I.incNonce n
 
 -- Authentication
 

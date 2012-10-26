@@ -10,18 +10,23 @@
 -- 
 -- Authenticated, secret-key encryption. The selected underlying
 -- primitive used is @crypto_secretbox_xsalsa20poly1305@, a particular
--- combination of Salsa20 and Poly1305. See the specification,
+-- combination of XSalsa20 and Poly1305. See the specification,
 -- \"Cryptography in NaCl\":
 -- <http://cr.yp.to/highspeed/naclcrypto-20090310.pdf>
 -- 
 module Crypto.NaCl.Encrypt.SecretKey
-       ( -- * Types
+       ( -- * Nonces
         SKNonce            -- :: *
+       , zeroNonce         -- :: SKNonce
+       , randomNonce       -- :: IO SKNonce
+       , incNonce          -- :: SKNonce -> SKNonce
+         
          -- * Encryption/decryption
-       , encrypt
-       , decrypt
+       , encrypt           -- :: SKNonce -> ByteString -> SecretKey -> ByteString
+       , decrypt           -- :: SKNonce -> ByteString -> SecretKey -> Maybe ByteString
+         
          -- * Misc
-       , keyLength
+       , keyLength         -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
@@ -36,22 +41,41 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
-import Crypto.NaCl.Nonce
+import qualified Crypto.NaCl.Internal as I
 
 import Crypto.NaCl.Key
 
 #include <crypto_secretbox.h>
 
+--
+-- Nonces
+--
 data SKNonce = SKNonce ByteString deriving (Show, Eq)
-instance Nonce SKNonce where
-  {-# SPECIALIZE instance Nonce SKNonce #-}
+instance I.Nonce SKNonce where
+  {-# SPECIALIZE instance I.Nonce SKNonce #-}
   size = Tagged nonceLength
   toBS (SKNonce b)   = b
   fromBS x
     | S.length x == nonceLength = Just (SKNonce x)
     | otherwise                 = Nothing
 
+-- | A nonce which is just a byte array of zeroes.
+zeroNonce :: SKNonce
+zeroNonce = I.createZeroNonce
 
+-- | Create a random nonce for public key encryption
+randomNonce :: IO SKNonce
+randomNonce = I.createRandomNonce
+
+-- | Increment a nonce by one.
+incNonce :: SKNonce -> SKNonce
+incNonce x = I.incNonce x
+
+--
+-- Main interface
+--
+
+-- | TODO FIXME
 encrypt :: SKNonce
         -- ^ Nonce
         -> ByteString
@@ -78,6 +102,7 @@ encrypt (SKNonce n) msg (SecretKey k) = unsafePerformIO $ do
   return $ SU.unsafeDrop msg_BOXZEROBYTES r
 {-# INLINEABLE encrypt #-}
 
+-- | TODO FIXME
 decrypt :: SKNonce
         -- ^ Nonce
         -> ByteString

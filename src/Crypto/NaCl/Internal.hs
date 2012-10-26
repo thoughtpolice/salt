@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 -- |
--- Module      : Crypto.NaCl.Nonce
+-- Module      : Crypto.NaCl.Internal
 -- Copyright   : (c) Austin Seipp 2011-2012
 -- License     : MIT
 -- 
@@ -8,14 +8,13 @@
 -- Stability   : experimental
 -- Portability : GHC (ScopedTypeVariables)
 -- 
--- Simple API for cryptographic nonces.
+-- Internal module.
 -- 
-module Crypto.NaCl.Nonce
+module Crypto.NaCl.Internal
   ( -- * Nonce class
     Nonce, size, toBS, fromBS
   , createZeroNonce   -- :: Nonce k => k
   , createRandomNonce -- :: Nonce k => IO k
-  , clearBytes        -- :: Nonce k => Int -> k -> k
   , incNonce          -- :: Nonce k => k -> k
   ) where
 import Foreign.Ptr
@@ -49,29 +48,6 @@ class Nonce k where
     where sz = unTagged (size :: Tagged k Int)
   {-# INLINEABLE createRandomNonce #-}
   
-  -- | @clearBytes n nonce@ clears the last @n@ bytes of the Nonce and
-  -- makes them all 0. This is useful for the pattern of generating a
-  -- cryptographic nonce randomly, clearing the last @n@ bytes, and then
-  -- using 'incNonce' to increment the 'Nonce' for communication with
-  -- another party.
-  -- 
-  -- Invariants:
-  -- 
-  -- * @n@ must be less than the size of the @nonce@
-  -- 
-  -- Properties:
-  -- 
-  -- > clearBytes (nonceLen nonce) nonce == createZeroNonce (nonceLen nonce)
-  -- 
-  clearBytes :: Int -> k -> k
-  clearBytes n x
-    | n > l  = error "Crypto.NaCl.Nonce.clearBytes: n > length of nonce"
-    | n < 0  = error "Crypto.NaCl.Nonce.clearBytes: n < 0"  
-    | n == 0 = x
-    | otherwise = (fromJust . fromBS) $! S.take (l - n) (toBS x) `S.append` S.replicate n 0x0
-    where l = unTagged (size :: Tagged k Int)
-  {-# INLINEABLE clearBytes #-}
-
   -- | Increment a Nonce by 1.
   incNonce :: k -> k
   incNonce n =
@@ -86,5 +62,6 @@ class Nonce k where
 -- 
 -- FFI
 -- 
+
 foreign import ccall unsafe "glue_incnonce"
   c_incnonce :: Ptr Word8 -> CSize -> IO ()

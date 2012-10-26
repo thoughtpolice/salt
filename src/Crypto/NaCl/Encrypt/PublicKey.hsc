@@ -7,18 +7,25 @@
 -- Maintainer  : mad.one@gmail.com
 -- Stability   : experimental
 -- Portability : portable
--- 
--- Public-key encryption. The selected underlying primitive is is
+--
+-- Authenticated public-key encryption.
+--
+-- The underlying encryption primitive is known as
 -- @curve25519xsalsa20poly1305@, a particular combination of
 -- Curve25519, Salsa20, and Poly1305. See the specification,
 -- \"Cryptography in NaCl\":
 -- <http://cr.yp.to/highspeed/naclcrypto-20090310.pdf>
--- 
+--
 module Crypto.NaCl.Encrypt.PublicKey
-       ( -- * Types
+       ( -- * Nonces
          PKNonce                       -- :: *
+       , zeroNonce                     -- :: PKNonce
+       , randomNonce                   -- :: IO PKNonce
+       , incNonce                      -- :: PKNonce -> PKNonce
+         
        -- * Keypair creation
        , createKeypair                 -- :: IO KeyPair
+         
        -- * Encryption, Decryption
        , encrypt                       -- :: Nonce -> ByteString -> PublicKey -> SecretKey -> ByteString
        , decrypt                       -- :: Nonce -> ByteString -> PublicKey -> SecretKey -> Maybe ByteString
@@ -48,24 +55,39 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
-import Crypto.NaCl.Nonce
+import qualified Crypto.NaCl.Internal as I
 
 import Crypto.NaCl.Key
 
 #include <crypto_box.h>
 
+--
+-- Nonces
+--
 newtype PKNonce = PKNonce ByteString deriving (Show, Eq)
-instance Nonce PKNonce where
-  {-# SPECIALIZE instance Nonce PKNonce #-}
+instance I.Nonce PKNonce where
+  {-# SPECIALIZE instance I.Nonce PKNonce #-}
   size = Tagged nonceLength
   toBS (PKNonce b)   = b
   fromBS x
     | S.length x == nonceLength = Just (PKNonce x)
     | otherwise                 = Nothing
 
+-- | A nonce which is just a byte array of zeroes.
+zeroNonce :: PKNonce
+zeroNonce = I.createZeroNonce
 
--- TODO:
---  * internal refactors (try to reduce boilerplate)
+-- | Create a random nonce for public key encryption
+randomNonce :: IO PKNonce
+randomNonce = I.createRandomNonce
+
+-- | Increment a nonce by one.
+incNonce :: PKNonce -> PKNonce
+incNonce x = I.incNonce x
+
+--
+-- Main interface
+--
 
 -- | Randomly generate a public and private key
 -- for doing authenticated encryption.
@@ -208,7 +230,7 @@ decryptNM (NM nm) n cipher = unsafePerformIO $ do
   -- as you can tell, this is unsafe
   r <- withForeignPtr m $ \pm ->
     SU.unsafeUseAsCString c $ \pc ->
-      SU.unsafeUseAsCString (toBS n) $ \pn -> 
+      SU.unsafeUseAsCString (I.toBS n) $ \pn -> 
         SU.unsafeUseAsCString nm $ \pnm ->
           c_crypto_box_open_afternm pm pc (fromIntegral clen) pn pnm
 

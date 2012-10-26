@@ -14,13 +14,19 @@
 -- <http://cr.yp.to/highspeed/naclcrypto-20090310.pdf>
 -- 
 module Crypto.NaCl.Encrypt.Stream
-       ( -- * Types
+       ( -- * Nonces
          StreamNonce     -- :: * -> *
+       , zeroNonce       -- :: StreamNonce
+       , randomNonce     -- :: IO StreamNonce
+       , incNonce        -- :: StreamNonce -> StreamNonce
+         
          -- * Stream generation
        , streamGen       -- :: Nonce -> SecretKey -> ByteString
+
          -- * Encryption and decryption
        , encrypt         -- :: Nonce -> ByteString -> SecretKey -> ByteString
        , decrypt         -- :: Nonce -> ByteString -> SecretKey -> ByteString
+         
          -- * Misc
        , keyLength       -- :: Int
        ) where
@@ -36,20 +42,39 @@ import Data.ByteString as S
 import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
-import Crypto.NaCl.Nonce
+import qualified Crypto.NaCl.Internal as I
 
 import Crypto.NaCl.Key
 
 #include <crypto_stream_xsalsa20.h>
 
+--
+-- Nonces
+--
 data StreamNonce = StreamNonce ByteString deriving (Show, Eq)
-instance Nonce StreamNonce where
-  {-# SPECIALIZE instance Nonce StreamNonce #-}
+instance I.Nonce StreamNonce where
+  {-# SPECIALIZE instance I.Nonce StreamNonce #-}
   size = Tagged nonceLength
   toBS (StreamNonce b)   = b
   fromBS x
     | S.length x == nonceLength = Just (StreamNonce x)
     | otherwise                 = Nothing
+
+-- | A nonce which is just a byte array of zeroes.
+zeroNonce :: StreamNonce
+zeroNonce = I.createZeroNonce
+
+-- | Create a random nonce for public key encryption
+randomNonce :: IO StreamNonce
+randomNonce = I.createRandomNonce
+
+-- | Increment a nonce by one.
+incNonce :: StreamNonce -> StreamNonce
+incNonce x = I.incNonce x
+
+--
+-- Main interface
+--
 
 -- | Given a 'Nonce' @n@, size @s@ and 'SecretKey' @sk@, @streamGen n
 -- s sk@ generates a cryptographic stream of length @s@.

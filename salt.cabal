@@ -405,7 +405,7 @@ library
     Crypto.NaCl.Encrypt.Stream
     Crypto.NaCl.Hash
     Crypto.NaCl.Key
-    Crypto.NaCl.Nonce
+    Crypto.NaCl.Internal
     Crypto.NaCl.Random
     Crypto.NaCl.Sign
 

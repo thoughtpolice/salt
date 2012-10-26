@@ -13,7 +13,7 @@ import qualified Data.ByteString.Char8 as S8
 import Control.Monad.Trans
 
 import Crypto.NaCl.Hash as H
-import Crypto.NaCl.Nonce as N
+import Crypto.NaCl.Internal as I
 import Crypto.NaCl.Random as R
 import Crypto.NaCl.Key
 import Crypto.NaCl.Sign as Sign
@@ -129,7 +129,7 @@ main = OpenSSL.withOpenSSL $ do
         streamGenBench sk sz i 
           = go createZeroNonce empty i
           where go !_ !bs 0  = bs
-                go !n !_ !x = go (incNonce n) (Stream.streamGen n sz sk) (x-1)
+                go !n !_ !x = go (I.incNonce n) (Stream.streamGen n sz sk) (x-1)
 
         pureEncBench :: StreamNonce -> SecretKey -> ByteString -> ByteString
         pureEncBench n k bs = Stream.encrypt n bs k
@@ -153,7 +153,7 @@ main = OpenSSL.withOpenSSL $ do
                 v <- EL.head
                 case v of
                   Nothing -> return S.empty
-                  Just _v -> goI (Stream.encrypt n _v sk) (incNonce n)
+                  Just _v -> goI (Stream.encrypt n _v sk) (I.incNonce n)
           run_ (enumFile "./testdata" $$ goI S.empty nonce)
 
         streamEncBench2 :: SecretKey -> IO ()
@@ -167,7 +167,7 @@ encryptFileEnum :: FilePath -> SecretKey -> StreamNonce -> Enumerator ByteString
 encryptFileEnum f sk n = enumFile f $= encryptEnee sk n
 
 encryptEnee :: Monad m => SecretKey -> StreamNonce -> Enumeratee ByteString ByteString m b
-encryptEnee k = EL.mapAccum $ \n bs -> (incNonce n, Stream.encrypt n bs k)
+encryptEnee k = EL.mapAccum $ \n bs -> (I.incNonce n, Stream.encrypt n bs k)
 
 versus x zs = bgroup x $ Prelude.map to $ zs
   where to (name,nacl,ossl) 

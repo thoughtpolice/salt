@@ -4,7 +4,7 @@ CPU=`cat /proc/cpuinfo | grep "model name" | head -1 | awk '{$$1="";$$2="";$$3="
 
 all: testdata run
 testdata:
-	dd if=/dev/urandom of=testdata bs=1M count=1024
+	dd if=/dev/urandom of=testdata bs=4096 count=1024
 Bench: Bench.hs
 	ghc -O2 Bench
 run: Bench
