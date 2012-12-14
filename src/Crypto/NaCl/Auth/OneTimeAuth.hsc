@@ -11,9 +11,11 @@
 -- Fast, cryptographically strong one-time authentication
 -- 
 module Crypto.NaCl.Auth.OneTimeAuth 
-       ( authenticateOnce     -- :: ByteString -> ByteString -> ByteString
-       , verifyOnce           -- :: ByteString -> ByteString -> ByteString -> Bool
-       , oneTimeAuthKeyLength -- :: Int
+       ( OneTimeAuthKey           -- :: *
+       , OneTimeAuthenticator(..) -- :: *
+       , authenticateOnce         -- :: ByteString -> ByteString -> ByteString
+       , verifyOnce               -- :: ByteString -> ByteString -> ByteString -> Bool
+       , oneTimeAuthKeyLength     -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
@@ -30,28 +32,37 @@ import Crypto.NaCl.Key
 
 #include <crypto_onetimeauth.h>
 
-authenticateOnce :: SecretKey
+-- | A type which represents the appropriate index for
+-- a 'Crypto.NaCl.Key.Key' for signatures.
+data OneTimeAuthKey -- :: *
+
+-- | An authenticator.
+data OneTimeAuthenticator
+     = OneTimeAuthenticator { unOneTimeAuthenticator :: ByteString }
+     deriving (Eq, Show, Ord)
+
+authenticateOnce :: Key Secret OneTimeAuthKey
                  -- ^ Secret key
-                 -> ByteString 
-                 -- ^ Message
                  -> ByteString
+                 -- ^ Message
+                 -> OneTimeAuthenticator
                  -- ^ Authenticator
-authenticateOnce (SecretKey k) msg = 
+authenticateOnce (Key k) msg = OneTimeAuthenticator $
   unsafePerformIO . SI.create auth_BYTES $ \out ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk ->
         void $ c_crypto_onetimeauth out cstr (fromIntegral clen) pk
 {-# INLINEABLE authenticateOnce #-}
 
-verifyOnce :: SecretKey
+verifyOnce :: Key Secret OneTimeAuthKey
            -- ^ Secret key 
-           -> ByteString 
+           -> OneTimeAuthenticator
            -- ^ Authenticator returned via 'authenticateOnce'
            -> ByteString 
            -- ^ Message
            -> Bool
            -- ^ Result: @True@ if verified, @False@ otherwise
-verifyOnce (SecretKey k) auth msg =
+verifyOnce (Key k) (OneTimeAuthenticator auth) msg =
   unsafePerformIO $ SU.unsafeUseAsCString auth $ \pauth ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk -> do

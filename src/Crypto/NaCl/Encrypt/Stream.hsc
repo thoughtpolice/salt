@@ -15,20 +15,21 @@
 -- 
 module Crypto.NaCl.Encrypt.Stream
        ( -- * Nonces
-         StreamNonce     -- :: * -> *
-       , zeroNonce       -- :: StreamNonce
-       , randomNonce     -- :: IO StreamNonce
-       , incNonce        -- :: StreamNonce -> StreamNonce
+         StreamNonce            -- :: * -> *
+       , zeroNonce              -- :: StreamNonce
+       , randomNonce            -- :: IO StreamNonce
+       , incNonce               -- :: StreamNonce -> StreamNonce
          
          -- * Stream generation
-       , streamGen       -- :: Nonce -> SecretKey -> ByteString
+       , streamGen              -- :: Nonce -> SecretKey -> ByteString
 
          -- * Encryption and decryption
-       , encrypt         -- :: Nonce -> ByteString -> SecretKey -> ByteString
-       , decrypt         -- :: Nonce -> ByteString -> SecretKey -> ByteString
+       , StreamingEncryptionKey -- :: *
+       , encrypt                -- :: Nonce -> ByteString -> SecretKey -> ByteString
+       , decrypt                -- :: Nonce -> ByteString -> SecretKey -> ByteString
          
          -- * Misc
-       , keyLength       -- :: Int
+       , keyLength              -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
@@ -76,17 +77,21 @@ incNonce x = I.incNonce x
 -- Main interface
 --
 
+-- | A type which represents the appropriate index for
+-- a 'Crypto.NaCl.Key.Key' for signatures.
+data StreamingEncryptionKey -- :: *
+
 -- | Given a 'Nonce' @n@, size @s@ and 'SecretKey' @sk@, @streamGen n
 -- s sk@ generates a cryptographic stream of length @s@.
 streamGen :: StreamNonce
           -- ^ Nonce
           -> Int
           -- ^ Size
-          -> SecretKey
+          -> Key Secret StreamingEncryptionKey
           -- ^ Input
           -> ByteString
           -- ^ Resulting crypto stream
-streamGen (StreamNonce n) sz (SecretKey sk)
+streamGen (StreamNonce n) sz (Key sk)
   | S.length sk /= keyLength
   = error "Crypto.NaCl.Encrypt.Stream.XSalsa20.streamGen: bad key length"
   | otherwise
@@ -107,11 +112,11 @@ encrypt :: StreamNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input plaintext
-        -> SecretKey
+        -> Key Secret StreamingEncryptionKey
         -- ^ Secret key
         -> ByteString
         -- ^ Ciphertext
-encrypt (StreamNonce n) msg (SecretKey sk)
+encrypt (StreamNonce n) msg (Key sk)
   | S.length sk /= keyLength
   = error "Crypto.NaCl.Encrypt.Stream.XSalsa20.encrypt: bad key length"
   | otherwise
@@ -128,7 +133,7 @@ decrypt :: StreamNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input ciphertext
-        -> SecretKey
+        -> Key Secret StreamingEncryptionKey
         -- ^ Secret key
         -> ByteString
         -- ^ Plaintext

@@ -24,6 +24,7 @@ module Crypto.NaCl.Encrypt.PublicKey
        , incNonce                      -- :: PKNonce -> PKNonce
          
        -- * Keypair creation
+       , PublicEncryptionKey           -- :: *
        , createKeypair                 -- :: IO KeyPair
          
        -- * Encryption, Decryption
@@ -89,9 +90,13 @@ incNonce x = I.incNonce x
 -- Main interface
 --
 
+-- | A type which represents the appropriate index for
+-- a 'Crypto.NaCl.Key.Key' for signatures.
+data PublicEncryptionKey -- :: *
+
 -- | Randomly generate a public and private key
 -- for doing authenticated encryption.
-createKeypair :: IO KeyPair
+createKeypair :: IO (KeyPair PublicEncryptionKey)
 createKeypair = do
   pk <- SI.mallocByteString publicKeyLength
   sk <- SI.mallocByteString secretKeyLength
@@ -100,20 +105,20 @@ createKeypair = do
     void $ withForeignPtr sk $ \psk ->
       c_crypto_box_keypair ppk psk
       
-  return (PublicKey $ SI.fromForeignPtr pk 0 publicKeyLength, 
-          SecretKey $ SI.fromForeignPtr sk 0 secretKeyLength)
+  return (Key $ SI.fromForeignPtr pk 0 publicKeyLength, 
+          Key $ SI.fromForeignPtr sk 0 secretKeyLength)
 
 encrypt :: PKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Message
-        -> PublicKey
+        -> Key Public PublicEncryptionKey
         -- ^ Recievers public key
-        -> SecretKey
+        -> Key Secret PublicEncryptionKey
         -- ^ Senders secret key
         -> ByteString 
         -- ^ Ciphertext
-encrypt (PKNonce n) msg (PublicKey pk) (SecretKey sk) = unsafePerformIO $ do
+encrypt (PKNonce n) msg (Key pk) (Key sk) = unsafePerformIO $ do
   (c, m) <- prepEnc msg
   let mlen = S.length m
   
@@ -133,12 +138,12 @@ decrypt :: PKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input ciphertext
-        -> PublicKey
+        -> Key Public PublicEncryptionKey
         -- ^ Senders public key
-        -> SecretKey
+        -> Key Secret PublicEncryptionKey
         -- ^ Recievers secret key
         -> Maybe ByteString -- ^ Ciphertext
-decrypt (PKNonce n) cipher (PublicKey pk) (SecretKey sk) = unsafePerformIO $ do
+decrypt (PKNonce n) cipher (Key pk) (Key sk) = unsafePerformIO $ do
   (m, c) <- prepDec cipher
   let clen = S.length c
   
@@ -192,8 +197,8 @@ newtype NM = NM ByteString deriving (Eq, Show)
 -- | Creates an intermediate piece of 'NM' data for sending/receiving
 -- messages to/from the same person. The resulting 'NM' can be used for
 -- any number of messages between client/server.
-createNM :: KeyPair -> NM
-createNM (PublicKey pk, SecretKey sk) = unsafePerformIO $ do
+createNM :: KeyPair PublicEncryptionKey -> NM
+createNM (Key pk, Key sk) = unsafePerformIO $ do
   nm <- SI.mallocByteString nmLength
   void $ withForeignPtr nm $ \pnm ->
     SU.unsafeUseAsCString pk $ \ppk ->
@@ -263,11 +268,13 @@ prepDec bs = do
 nonceLength :: Int
 nonceLength = #{const crypto_box_NONCEBYTES}
 
--- | Length of a 'PublicKey' in bytes.
+-- | Length of a 'Crypto.NaCl.Key.Public' signing 'Crypto.NaCl.Key.Key' in
+-- bytes.
 publicKeyLength :: Int
 publicKeyLength  = #{const crypto_box_PUBLICKEYBYTES}
 
--- | Length of a 'SecretKey' in bytes.
+-- | Length of a 'Crypto.NaCl.Key.Secret' signing 'Crypto.NaCl.Key.Key' in
+-- bytes.
 secretKeyLength :: Int
 secretKeyLength  = #{const crypto_box_SECRETKEYBYTES}
 

@@ -16,17 +16,18 @@
 -- 
 module Crypto.NaCl.Encrypt.SecretKey
        ( -- * Nonces
-        SKNonce            -- :: *
-       , zeroNonce         -- :: SKNonce
-       , randomNonce       -- :: IO SKNonce
-       , incNonce          -- :: SKNonce -> SKNonce
+         SKNonce             -- :: *
+       , zeroNonce           -- :: SKNonce
+       , randomNonce         -- :: IO SKNonce
+       , incNonce            -- :: SKNonce -> SKNonce
          
          -- * Encryption/decryption
-       , encrypt           -- :: SKNonce -> ByteString -> SecretKey -> ByteString
-       , decrypt           -- :: SKNonce -> ByteString -> SecretKey -> Maybe ByteString
+       , SecretEncryptionKey -- :: *
+       , encrypt             -- :: SKNonce -> ByteString -> SecretKey -> ByteString
+       , decrypt             -- :: SKNonce -> ByteString -> SecretKey -> Maybe ByteString
          
          -- * Misc
-       , keyLength         -- :: Int
+       , keyLength           -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
@@ -75,16 +76,20 @@ incNonce x = I.incNonce x
 -- Main interface
 --
 
+-- | A type which represents the appropriate index for
+-- a 'Crypto.NaCl.Key.Key' for signatures.
+data SecretEncryptionKey -- :: *
+
 -- | TODO FIXME
 encrypt :: SKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input
-        -> SecretKey
+        -> Key Secret SecretEncryptionKey
         -- ^ Secret key
         -> ByteString
         -- ^ Ciphertext
-encrypt (SKNonce n) msg (SecretKey k) = unsafePerformIO $ do
+encrypt (SKNonce n) msg (Key k) = unsafePerformIO $ do
   let mlen = S.length msg + msg_ZEROBYTES
   c <- SI.mallocByteString mlen
   
@@ -107,11 +112,11 @@ decrypt :: SKNonce
         -- ^ Nonce
         -> ByteString
         -- ^ Input
-        -> SecretKey        
+        -> Key Secret SecretEncryptionKey
         -- ^ Secret key
         -> Maybe ByteString 
         -- ^ Ciphertext
-decrypt (SKNonce n) cipher (SecretKey k) = unsafePerformIO $ do
+decrypt (SKNonce n) cipher (Key k) = unsafePerformIO $ do
   let clen = S.length cipher + msg_BOXZEROBYTES
   m <- SI.mallocByteString clen
   

@@ -22,13 +22,16 @@
 -- visit <http://ed25519.cr.yp.to>.
 -- 
 module Crypto.NaCl.Sign
-       ( -- * Keypair creation
-         createKeypair                 -- :: IO KeyPair
+       ( -- * Types
+         SigningKey                    -- :: *
+       , Signature(..)                 -- :: *
+         -- * Keypair creation
+       , createKeypair                 -- :: IO (KeyPair SigningKey)
          -- * Signing and verifying messages
-       , sign                          -- :: SecretKey -> ByteString -> ByteString
-       , sign'                         -- :: SecretKey -> ByteString -> ByteString
-       , verify                        -- :: PublicKey -> ByteString -> Maybe ByteString
-       , verify'                       -- :: PublicKey -> ByteString -> ByteString -> Bool
+       , sign                          -- :: Key Secret SigningKey -> ByteString -> ByteString
+       , sign'                         -- :: Key Secret SigningKey -> ByteString -> Signature
+       , verify                        -- :: Key Public SigningKey -> ByteString -> Maybe ByteString
+       , verify'                       -- :: Key Public SigningKey -> ByteString -> Signature
        , signPublicKeyLength           -- :: Int
        , signSecretKeyLength           -- :: Int
        ) where
@@ -50,9 +53,17 @@ import Crypto.NaCl.Key
 
 #include <crypto_sign.h>
 
+-- | A type which represents the appropriate index for
+-- a 'Crypto.NaCl.Key.Key' for signatures.
+data SigningKey -- :: *
+
+-- | A 'Signature'. Used with 'sign\'' and 'verify\''.
+newtype Signature = Signature { unSignature :: ByteString }
+        deriving (Eq, Show, Ord)
+
 -- | Randomly generate a public and private key for doing
 -- authenticated signing and verification.
-createKeypair :: IO KeyPair
+createKeypair :: IO (KeyPair SigningKey)
 createKeypair = do
   pk <- SI.mallocByteString signPublicKeyLength
   sk <- SI.mallocByteString signSecretKeyLength
@@ -61,17 +72,17 @@ createKeypair = do
     void $ withForeignPtr sk $ \psk ->
       c_crypto_sign_keypair ppk psk
       
-  return (PublicKey $ SI.fromForeignPtr pk 0 signPublicKeyLength,
-          SecretKey $ SI.fromForeignPtr sk 0 signSecretKeyLength)
+  return (Key $ SI.fromForeignPtr pk 0 signPublicKeyLength,
+          Key $ SI.fromForeignPtr sk 0 signSecretKeyLength)
 
 -- | Sign a message with a particular 'SecretKey'.
-sign :: SecretKey 
+sign :: Key Secret SigningKey
      -- ^ Signers secret key
      -> ByteString 
      -- ^ Input message
      -> ByteString
      -- ^ Resulting signed message
-sign (SecretKey sk) xs =
+sign (Key sk) xs =
   unsafePerformIO $ SU.unsafeUseAsCStringLen xs $ \(mstr,mlen) ->
     SU.unsafeUseAsCString sk $ \psk ->
       SI.createAndTrim (mlen+sign_BYTES) $ \out ->
@@ -80,28 +91,28 @@ sign (SecretKey sk) xs =
 
 -- | Sign a message with a particular 'SecretKey', only returning the signature
 -- without the message.
-sign' :: SecretKey
+sign' :: Key Secret SigningKey
       -- ^ Signers secret key
       -> ByteString
       -- ^ Input message
-      -> ByteString
+      -> Signature
       -- ^ Message signature, without the message
 sign' sk xs =
   let sm = sign sk xs
       l  = S.length sm
-  in S.take (l - S.length xs) sm
+  in Signature $! S.take (l - S.length xs) sm
 {-# INLINEABLE sign' #-}
 
 -- | Verifies a signed message with a 'PublicKey'. Returns @Nothing@ if
 -- verification fails, or @Just xs@ where @xs@ is the original message if it
 -- succeeds.
-verify :: PublicKey
+verify :: Key Public SigningKey
        -- ^ Signers public key
        -> ByteString
        -- ^ Signed message
        -> Maybe ByteString
        -- ^ Verification check
-verify (PublicKey pk) xs =
+verify (Key pk) xs =
   unsafePerformIO $ SU.unsafeUseAsCStringLen xs $ \(smstr,smlen) ->
     SU.unsafeUseAsCString pk $ \ppk ->
       alloca $ \pmlen -> do
@@ -117,15 +128,15 @@ verify (PublicKey pk) xs =
 {-# INLINEABLE verify #-}
 
 -- | Verify that a message came from someone\'s 'PublicKey'
--- using an input message and a signature derived from 'sign''
-verify' :: PublicKey
+-- using an input message and a signature derived from 'sign\''
+verify' :: Key Public SigningKey
         -- ^ Signers\' public key
         -> ByteString
         -- ^ Input message, without signature
-        -> ByteString
+        -> Signature
         -- ^ Message signature
-        -> Bool
-verify' pk xs sig = verify pk sm == Just xs
+        -> Maybe ByteString
+verify' pk xs (Signature sig) = verify pk sm
   where sm = sig `S.append` xs
 {-# INLINEABLE verify' #-}
 

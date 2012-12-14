@@ -11,9 +11,11 @@
 -- Fast, cryptographically strong authentication.
 -- 
 module Crypto.NaCl.Auth.Auth
-       ( authenticate   -- :: ByteString -> ByteString -> ByteString
-       , verify         -- :: ByteString -> ByteString -> ByteString -> Bool
-       , authKeyLength  -- :: Int
+       ( AuthKey           -- :: *
+       , Authenticator(..) -- :: *
+       , authenticate      -- :: ByteString -> ByteString -> ByteString
+       , verify            -- :: ByteString -> ByteString -> ByteString -> Bool
+       , authKeyLength     -- :: Int
        ) where
 import Foreign.Ptr
 import Foreign.C.Types
@@ -30,28 +32,36 @@ import Crypto.NaCl.Key
 
 #include <crypto_auth.h>
 
-authenticate :: SecretKey
+-- | A type which represents the appropriate index for
+-- a 'Crypto.NaCl.Key.Key' for signatures.
+data AuthKey -- :: *
+
+-- | An authenticator.
+data Authenticator = Authenticator { unAuthenticator :: ByteString }
+     deriving (Eq, Show, Ord)
+
+authenticate :: Key Secret AuthKey
              -- ^ Secret key
              -> ByteString
              -- ^ Message 
-             -> ByteString
+             -> Authenticator
              -- ^ Authenticator
-authenticate (SecretKey k) msg = 
+authenticate (Key k) msg = Authenticator $
   unsafePerformIO . SI.create auth_BYTES $ \out ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk ->
         void $ c_crypto_auth out cstr (fromIntegral clen) pk
 {-# INLINEABLE authenticate #-}
 
-verify :: SecretKey
+verify :: Key Secret AuthKey
        -- ^ Key
-       -> ByteString 
+       -> Authenticator
        -- ^ Authenticator returned via 'authenticate'
        -> ByteString 
        -- ^ Message
        -> Bool
        -- ^ Result: @True@ if properly verified, @False@ otherwise
-verify (SecretKey k) auth msg =
+verify (Key k) (Authenticator auth) msg =
   unsafePerformIO $ SU.unsafeUseAsCString auth $ \pauth ->
     SU.unsafeUseAsCStringLen msg $ \(cstr, clen) ->
       SU.unsafeUseAsCString k $ \pk -> do
