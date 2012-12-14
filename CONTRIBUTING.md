@@ -11,6 +11,17 @@ Rules for contribution:
   * Always run tests. If benchmarks regress, give OS information,
     and we'll discuss.
 
+You can use GitHub pull requests OR just email me patches directly
+(see `git format-patch --help`,) whatever you are more comfortable with.
+
+One nice aspect of submitting a pull request is that
+[travis-ci.org](http://travis-ci.org) bots will automatically merge, build
+and run tests against your commits, and continue as you update the request,
+so you can be sure you didn't typo stuff or something before a final merge.
+
+For multi-commit requests, I will often squash them into the smallest
+possible logical changes and commit with author attribution.
+
 ### Notes on sign-offs and attributions, etc.
 
 When you commit, **please use -s to add a Signed-off-by line**. I manage
