@@ -45,11 +45,10 @@ tested-with:         GHC==7.0.4,
 
 extra-source-files:
   configure
-  AUTHORS.txt
+  AUTHORS.txt README.md CONTRIBUTING.md
   bench/Bench.hs bench/makefile
   src/cbits/*.c
   examples/*.hs
-  README.md
   tests/*.hs
   TODO
   -- good god
