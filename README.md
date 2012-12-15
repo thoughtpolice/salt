@@ -1,12 +1,12 @@
 # Fast cryptographic networking for Haskell
 
+[![Build Status](https://secure.travis-ci.org/thoughtpolice/salt.png?branch=master)](http://travis-ci.org/thoughtpolice/salt)
+
 [NaCl][] (pronounced "salt") is a fast library for cryptographic
 networking. Think of it like OpenSSL, but faster, easier, and more
 secure.
 
-These are the awesome Haskell bindings.
-
-[travis-ci.org](http://travis-ci.org) results: [![Build Status](https://secure.travis-ci.org/thoughtpolice/salt.png?branch=master)](http://travis-ci.org/thoughtpolice/salt)
+[travis-ci.org](http://travis-ci.org) results: 
 
 # Installation
 
