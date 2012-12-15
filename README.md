@@ -6,7 +6,7 @@
 networking. Think of it like OpenSSL, but faster, easier, and more
 secure.
 
-[travis-ci.org](http://travis-ci.org) results: 
+These are the awesome Haskell bindings.
 
 # Installation
 
