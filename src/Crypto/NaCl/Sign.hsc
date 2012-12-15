@@ -136,8 +136,7 @@ verify' :: Key Public SigningKey
         -> Signature
         -- ^ Message signature
         -> Maybe ByteString
-verify' pk xs (Signature sig) = verify pk sm
-  where sm = sig `S.append` xs
+verify' pk xs (Signature sig) = verify pk (sig `S.append` xs)
 {-# INLINEABLE verify' #-}
 
 --
