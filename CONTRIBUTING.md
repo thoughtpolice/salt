@@ -10,6 +10,8 @@ Rules for contribution:
     If it's a branch, squash the commits together to make one.
   * Always run tests. If benchmarks regress, give OS information,
     and we'll discuss.
+  * Always reference the issue you're working on in the bug tracker
+    in your commit message, and if it fixes the issue, close it.
 
 You can use GitHub pull requests OR just email me patches directly
 (see `git format-patch --help`,) whatever you are more comfortable with.
