@@ -1,5 +1,5 @@
 name:                salt
-version:             0.0
+version:             0.0.0.0
 synopsis:            Cryptographic networking for Haskell
 description:
   NaCl (pronounced \"salt\") is a safe, high-speed, easy to use
