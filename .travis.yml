@@ -1,7 +1,7 @@
 language: haskell
 before_install:
   # Uncomment the next line whenever hackage is down.
-  - mkdir -p ~/.cabal && cp .hackage-backup-config ~/.cabal/config
+  # - mkdir -p ~/.cabal && cp .hackage-backup-config ~/.cabal/config
   - cabal update
   - cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstall
 install:
