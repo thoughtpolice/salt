@@ -1,26 +1,25 @@
-{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Crypto.NaCl.Sign
 -- Copyright   : (c) Austin Seipp 2011-2012
 -- License     : MIT
--- 
+--
 -- Maintainer  : mad.one@gmail.com
 -- Stability   : experimental
 -- Portability : portable
--- 
+--
 -- This module gives you the ability to create signed
 -- messages and verify them against a signer's public key.
--- 
+--
 -- This module uses an optimized implementation of Ed25519. It is over
 -- 200x faster than the reference edwards implementation that comes
 -- with nacl-20110221. It will be the default signature primitive in
 -- the next version of nacl. You must be aware of this if you
 -- interoperate with any services that use the unpatched version of
 -- nacl-20110221.
--- 
+--
 -- For more information (including how to get a copy of the software)
 -- visit <http://ed25519.cr.yp.to>.
--- 
+--
 module Crypto.NaCl.Sign
        ( -- * Types
          SigningKey                    -- :: *
@@ -35,12 +34,9 @@ module Crypto.NaCl.Sign
        , signPublicKeyLength           -- :: Int
        , signSecretKeyLength           -- :: Int
        ) where
-import Foreign.Ptr
-import Foreign.C.Types
 import Foreign.ForeignPtr (withForeignPtr)
 import Foreign.Marshal.Alloc (alloca)
 import Foreign.Storable
-import Data.Word
 import Control.Monad (void, liftM)
 
 import System.IO.Unsafe (unsafePerformIO)
@@ -50,8 +46,7 @@ import Data.ByteString.Internal as SI
 import Data.ByteString.Unsafe as SU
 
 import Crypto.NaCl.Key
-
-#include <crypto_sign.h>
+import Crypto.NaCl.FFI
 
 -- | A type which represents the appropriate index for
 -- a 'Crypto.NaCl.Key.Key' for signatures.
@@ -71,14 +66,14 @@ createKeypair = do
   void $ withForeignPtr pk $ \ppk ->
     void $ withForeignPtr sk $ \psk ->
       c_crypto_sign_keypair ppk psk
-      
+
   return (Key $ SI.fromForeignPtr pk 0 signPublicKeyLength,
           Key $ SI.fromForeignPtr sk 0 signSecretKeyLength)
 
 -- | Sign a message with a particular 'SecretKey'.
 sign :: Key Secret SigningKey
      -- ^ Signers secret key
-     -> ByteString 
+     -> ByteString
      -- ^ Input message
      -> ByteString
      -- ^ Resulting signed message
@@ -117,10 +112,10 @@ verify (Key pk) xs =
     SU.unsafeUseAsCString pk $ \ppk ->
       alloca $ \pmlen -> do
         out <- SI.mallocByteString smlen
-        
-        r <- withForeignPtr out $ \pout -> 
+
+        r <- withForeignPtr out $ \pout ->
                c_crypto_sign_open pout pmlen smstr (fromIntegral smlen) ppk
-        
+
         if r /= 0 then return Nothing
           else do
             l <- peek pmlen
@@ -138,29 +133,3 @@ verify' :: Key Public SigningKey
         -> Maybe ByteString
 verify' pk xs (Signature sig) = verify pk (sig `S.append` xs)
 {-# INLINEABLE verify' #-}
-
---
--- FFI
--- 
-
--- | Length of a signers 'PublicKey', in bytes.
-signPublicKeyLength :: Int
-signPublicKeyLength = #{const crypto_sign_PUBLICKEYBYTES}
-
--- | Length of a signers 'SecretKey', in bytes.
-signSecretKeyLength :: Int
-signSecretKeyLength = #{const crypto_sign_SECRETKEYBYTES}
-
-sign_BYTES :: Int
-sign_BYTES = #{const crypto_sign_BYTES}
-
-foreign import ccall unsafe "glue_crypto_sign_keypair"
-  c_crypto_sign_keypair :: Ptr Word8 -> Ptr Word8 -> IO CInt
-
-foreign import ccall unsafe "glue_crypto_sign"
-  c_crypto_sign :: Ptr Word8 -> Ptr CChar ->  
-                   CULLong -> Ptr CChar -> IO CULLong
-
-foreign import ccall unsafe "glue_crypto_sign_open"
-  c_crypto_sign_open :: Ptr Word8 -> Ptr CULLong -> 
-                        Ptr CChar -> CULLong -> Ptr CChar -> IO CInt

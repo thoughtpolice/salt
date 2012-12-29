@@ -402,6 +402,7 @@ library
     Crypto.NaCl.Encrypt.PublicKey
     Crypto.NaCl.Encrypt.SecretKey
     Crypto.NaCl.Encrypt.Stream
+    Crypto.NaCl.FFI
     Crypto.NaCl.Hash
     Crypto.NaCl.Key
     Crypto.NaCl.Internal
